@@ -1,0 +1,47 @@
+---
+nodes:
+  - !Node
+    name : RasPi_1
+    ip : 192.168.10.10
+    architecture : ARM
+    role : MASTER
+    setup : true
+  - !Node
+    name : RasPi_2
+    ip : 192.168.10.11
+    architecture : ARM
+    role : BACKUP
+    setup : true
+  - !Node
+    name : myPC
+    ip : 192.168.10.12
+    architecture : x86
+    role : NODE
+    setup : false
+cloud: !Cloud
+  platform : AWS
+  link : aws.amazon.com
+  username : user
+  password : pass
+
+--- !Node
+name : RasPi_n
+ip : 192.168.10.10
+architecture : ARM
+setup : true
+
+--- !Function
+name : foo1
+cloud : true
+timeout : 500 #ms
+language : python
+
+--- !Sequence
+name : sequence1
+sequence :
+  - section :
+    - function : foo1
+    - function : foo2
+  - section :
+    - function : foo3
+
