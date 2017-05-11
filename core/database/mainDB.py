@@ -1,5 +1,6 @@
-import psycopg2
+#!thesis/DB
 
+import psycopg2
 
 class Database():
     ip = 'localhost'

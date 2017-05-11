@@ -1,5 +1,5 @@
 from mainDB import Database
 from initSetup import setup
-import utils
+from nodeUtils import deleteNode, insertNode, updateResources
 
-__all__ = ["Database", "setup"]
+__all__ = ["Database", "setup", "deleteNode", "insertNode", "updateResources"]

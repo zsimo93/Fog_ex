@@ -14,8 +14,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         memory = psutil.virtual_memory().available
 
         response = {
-            'cpu' : cpu,
-            'memory' : memory
+            'cpu': cpu,
+            'memory': memory
         }
 
         self.request.sendall(json.dumps(response))

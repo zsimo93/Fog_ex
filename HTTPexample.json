@@ -1,0 +1,32 @@
+{
+    "type":"node",
+    "name": "RasPi_n",
+    "ip": "192.168.10.10",
+    "architecture": "ARM",
+    "setup": true,
+    "ssh_user": "username",
+    "ssh_pass": "password"
+}
+
+{
+    "type":"function",
+    "name": "foo1",
+    "cloud": true,
+    "timeout": 500, 
+    "language": "python"
+}
+
+{
+    "type": "sequence",
+    "name" : "sequence1",
+    "sequence": {
+        "section": {
+            "function" : "foo1",
+            "function" : "foo2"
+        },
+        "section": {
+            "function" : "foo3"
+        }
+    }
+}
+

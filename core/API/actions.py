@@ -8,5 +8,11 @@ def newAction(requets):
 def updateAction(request, token):
     pass
 
+def uploadAction(request, token):
+    pass
+
 def deleteAction(request, token):
+    pass
+
+def invokeAction(request, token):
     pass

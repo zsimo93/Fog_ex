@@ -3,6 +3,7 @@ import yaml
 import io
 import json
 
+
 class Node(yaml.YAMLObject):
     yaml_tag = u'!Node'
     role='NODE'

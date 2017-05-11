@@ -25,6 +25,4 @@ def deleteNode(request, token):
     
     if not res:
         abort(404)
-    
 
-    pass

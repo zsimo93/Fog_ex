@@ -2,6 +2,7 @@ import socket
 import json
 import sys
 
+
 def heartbeat(HOST):
     PORT = 9999
     data = "heartbeat"
@@ -20,7 +21,7 @@ def heartbeat(HOST):
         cpu = recJson["cpu"]
         memory = recJson["memory"]
 
-        print "Memory {} MB".format(memory/1048576) 
+        print "Memory {} MB".format(memory / 1048576)
         print "CPU {} %".format(cpu)
 
         # update record in DB

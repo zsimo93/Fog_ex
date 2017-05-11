@@ -1,0 +1,53 @@
+--- MQTT payloads
+
+{
+    "type": "deploy",
+    "message" : {
+        "name" : "foo1",
+        "num_of_params" : 0,
+        "URL"
+    }
+
+}
+
+
+
+{
+    "type": "execute",
+    "message" : {
+        "id" : "foo1",
+        "cpu" : ,
+        "memory" : ,
+        "time_out[ms]" : , 
+        "params" : {
+            "name" : "value",
+            "name2" : "value2"
+        }, 
+        "sequence" : {
+            "next" : {
+                "id": ,
+                "topic": 
+
+            },
+            "next" : {
+
+            }
+
+        }
+    }
+}
+
+{
+    "type": "execute",
+    "message" : {
+        "id" : "foo1",
+        "cpu" : 0.5 ,
+        "memory" : 1000 ,
+        "time_out[ms]" : , 
+        "params" : {
+            "name" : "value",
+            "name2" : "value2"
+        },
+        "sequence" : {}
+    }
+}
