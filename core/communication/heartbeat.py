@@ -1,9 +1,10 @@
 import socket
 import json
 import sys
+from core.databaseRedis import nodeUtils as db
 
 
-def heartbeat(HOST):
+def getRes(HOST):
     PORT = 9999
     data = "heartbeat"
 
@@ -11,8 +12,10 @@ def heartbeat(HOST):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
+        
         # Connect to server and send data
-        sock.connect((HOST, PORT))
+        print("attempt connection to " + HOST)
+        sock = socket.create_connection((HOST, PORT), timeout= 1)
         sock.sendall(data + "\n")
 
         # Receive data from the server and shut down
@@ -26,12 +29,24 @@ def heartbeat(HOST):
 
         # update record in DB
 
-    except Exception:
-        # handle disconnection
-        print ("disconnected")
-
+    except socket.timeout:
+        print("disconnected " + HOST)
+        recJson = None
     finally:
-        print ("closing socket")
         sock.close()
 
-heartbeat(sys.argv[0])
+    return recJson
+
+
+def sendAll():
+    nodes = db.getNodesIP()
+
+    for n in nodes:
+        res = getRes(n.ip)
+        if(res):
+            db.updateResources(n.id, res)
+        else:
+            db.deleteNode(n.id)
+
+if __name__ == '__main__':
+    getRes(sys.argv[0])

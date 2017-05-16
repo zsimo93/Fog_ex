@@ -1,17 +1,27 @@
 #!thesis/api
 
 from flask import Flask, request
-import nodes, actions
+import nodes, actions, sequences
 
 app = Flask(__name__)
 
+########################
 @app.route('/api/nodes', methods=['POST'])
-def new():
+def newNode():
     return nodes.newNode(request)
 
 @app.route('/api/nodes/<token>', methods=['DELETE'])
 def deleteNode(token):
     return nodes.deleteNode(request, token)
+
+@app.route('/api/nodes', methods=['GET'])
+def getNodes():
+    return nodes.getNodes(request)
+
+#########################
+@app.route('/api/actions', methods=['GET'])
+def getActions():
+    return actions.getActions(request)
 
 @app.route('/api/actions', methods=['POST'])
 def newAction():
@@ -33,7 +43,22 @@ def deleteAction(token):
 def invokeAction(token):
     return actions.invokeAction(request, token)
 
+#########################
+@app.route('/api/sequences', methods=['GET'])
+def getSequences():
+    return sequences.getSequences(request)
 
+@app.route('/api/sequences', methods=['POST'])
+def newSequence():
+    return sequences.newSequence(request)
+
+@app.route('/api/sequences/<token>', methods=['DELETE'])
+def deleteSeq(token):
+    return sequences.deleteSequence(request, token)
+
+@app.route('/api/sequences/<token>/invoke', methods=['POST'])
+def invokeSeq(token):
+    return sequences.invokeSequence(request, token)
 
 def run():
     app.run(port=8080)

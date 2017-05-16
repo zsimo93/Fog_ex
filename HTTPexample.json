@@ -5,28 +5,21 @@
     "architecture": "ARM",
     "setup": true,
     "ssh_user": "username",
-    "ssh_pass": "password"
+    "ssh_password": "password"
 }
 
 {
     "type":"function",
     "name": "foo1",
+    "language": "python",
     "cloud": true,
-    "timeout": 500, 
-    "language": "python"
+    "timeout": 500
+    
 }
 
 {
     "type": "sequence",
     "name" : "sequence1",
-    "sequence": {
-        "section": {
-            "function" : "foo1",
-            "function" : "foo2"
-        },
-        "section": {
-            "function" : "foo3"
-        }
-    }
+    "sequence": [["foo1", "foo2"], ["foo3"]]
 }
 

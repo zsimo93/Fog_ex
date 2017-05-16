@@ -11,7 +11,16 @@ class Node(yaml.YAMLObject):
         self.role = role
         self.setup = setup
 
-    
+
+class NodeID():
+    def __init__(self, id, ip):
+        self.id = id
+        self.ip = ip
+
+    def __repr__(self):
+        return "id: " + self.id + " ip: " + self.ip
+
+
 class Sequence(yaml.YAMLObject):
     yaml_tag = u'!Sequence'
     name = None
