@@ -1,7 +1,7 @@
 import socket
 import json
 import sys
-from core.databaseRedis import nodeUtils as db
+from core.databaseRedis import nodesDB as db
 
 
 def getRes(HOST):

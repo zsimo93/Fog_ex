@@ -1,8 +1,8 @@
 #!thesis/api
 
 from flask import make_response, jsonify
-from validator import validateSequence as validate
-from core.databaseRedis import sequenceUtils as utils
+from validator import validateSequence as validate, cleanUpSeq as clean
+from core.databaseRedis import sequencesDB as db
 
 def newSequence(request):
 
@@ -12,36 +12,37 @@ def newSequence(request):
 
     name = resp.pop("name")
     
-    if not utils.availableSeqName(name):
+    if not db.availableSeqName(name):
         return make_response(jsonify({'error': name + " already in use"}), 406)
 
     # check all functions in list are available
     l = resp['sequence']
-    a = utils.checkSequence(l)
+    a = db.checkSequence(l)
     if a:
         return make_response(jsonify({"error": "Action " + a + " not present"}), 400)
     
-    utils.insertSequence(name, resp)
+    resp = clean(resp) # remove unwanted fields before storing in DB
+    db.insertSequence(name, resp)
     return make_response(name, 201)
 
 
 def deleteSequence(request, token):
     
-    if not utils.availableSeqName(token):
+    if not db.availableSeqName(token):
         return make_response(jsonify({'error': "No sequence with name" + token}), 406)
 
-    utils.deleteSequence(token)
+    db.deleteSequence(token)
     return make_response("OK", 200)
 
 
 def invokeSequence(request, token):
     
-    if not utils.availableSeqName(token):
+    if not db.availableSeqName(token):
         return make_response(jsonify({'error': "No sequence with name" + token}), 406)
 
     # TODO placement, invocation...
     pass
 
 def getSequences(request):
-    seq = utils.getSequences()
+    seq = db.getSequences()
     return make_response(jsonify({"sequences": seq}), 200)

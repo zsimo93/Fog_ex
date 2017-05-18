@@ -48,9 +48,16 @@ def getActions():
     db = Database().db
 
     keys = db.keys("ACT_*")
-    newK = list(map(lambda x: x[4:], keys))
 
-    return newK
+    ret = []
+    for k in keys:
+        data = {
+            "name": k[4:],
+            "description": db.get(k)["description"]
+        }
+        ret.append(data)
+
+    return ret
 
     
 # remove the node ref from the availability list

@@ -3,6 +3,9 @@
     IF ALL DATA IS REPLICATED, DOES THE DEPLOYMENT CONSTRINTS STILL MAKE SENSE?
 - component to start containers with actions
 - containers
+- model for constraints and predication
+
+- 
 
 
 - core.API.validator    # TODO add other constraints

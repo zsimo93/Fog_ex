@@ -1,7 +1,7 @@
 #!thesis/DB
 
 from mainDB import Database
-from core.databaseRedis.actionUtils import removeNodeAV
+from core.databaseRedis.actionsDB import removeNodeAV
 from core.common.entities import NodeID
 import json
 

@@ -11,6 +11,7 @@
 {
     "type":"function",
     "name": "foo1",
+    "description" : "",
     "language": "python",
     "cloud": true,
     "timeout": 500
@@ -20,6 +21,7 @@
 {
     "type": "sequence",
     "name" : "sequence1",
+    "description" : "",
     "sequence": [["foo1", "foo2"], ["foo3"]]
 }
 

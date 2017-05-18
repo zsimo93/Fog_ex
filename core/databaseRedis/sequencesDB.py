@@ -1,5 +1,5 @@
 from mainDB import Database
-from actionUtils import availableActionName as notPresent
+from actionsDB import availableActionName as notPresent
 import json
 
 
@@ -39,13 +39,18 @@ def getSequences():
     db = Database().db
 
     keys = db.keys("SEQ_*")
-    newK = list(map(lambda x: x[4:], keys))
+    ret = []
+    for k in keys:
+        data = {
+            "name": k[4:],
+            "description": db.get(k)["description"]
+        }
+        ret.append(data)
 
-    return newK
+    return ret
 
 # return the first incorrect name, none if all actions are ok
 def checkSequence(list):
-
     flatten = [item for sublist in list for item in sublist]
 
     for a in flatten:

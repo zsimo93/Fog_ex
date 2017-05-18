@@ -1,7 +1,10 @@
 import urllib2, urllib
-
+from core.databaseRedis import nodesDB as db
+# Thread???
 
 def sendBinaryFile(token, binary=None):
+
+    ips = map(lambda x: x.ip , db.getNodesIP) 
 
     file = open("C:/Users/Simone/workspace_thesis/downloads/file.zip", "r")
 

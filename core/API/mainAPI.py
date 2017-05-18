@@ -31,6 +31,10 @@ def newAction():
 def uploadAction(token):
     return actions.uploadAction(request, token)
 
+@app.route('/api/actions/<token>', methods=['GET'])
+def downloadAction(token):
+    return actions.downloadAction(token)
+
 @app.route('/api/actions/<token>', methods=['PUT'])
 def updateAction(token):
     return actions.updateAction(request, token)
