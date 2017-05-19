@@ -1,7 +1,7 @@
 #!thesis/api
 
 from flask import make_response, jsonify, send_file
-from core.databaseRedis import actionsDB as db
+from core.databaseMongo import actionsDB as db
 from validator import validateActionRequest as validate, cleanUpAct as clean
 from core.utils import saveAction 
 

@@ -1,5 +1,5 @@
 from core.API import mainAPI
-from core.databaseRedis import mainDB
+from core.databaseMongo import mainDB
 
 
 mainAPI.run()
@@ -13,8 +13,10 @@ function = {
     "language": "python"
 }
 
-response = {'cpu': 13.7,
-            'memory': 14507.30}
+resources = {'cpu': 13.7,
+             'memory': 14507.30}
+
+
 
 """
 

@@ -2,7 +2,7 @@
 
 from flask import make_response, jsonify
 from validator import validateSequence as validate, cleanUpSeq as clean
-from core.databaseRedis import sequencesDB as db
+from core.databaseMongo import sequencesDB as db
 
 def newSequence(request):
 

@@ -1,19 +1,14 @@
 #!thesis/api
 
 from flask import make_response, jsonify
-from core.databaseRedis import nodesDB as db
+from core.databaseMongo import nodesDB as db
 from validator import validateNodeRequest as validate, cleanUpNode as clean
-from core.utils import uniqueName
 
 def newNode(request):
     
     valid, resp = validate(request)
     if not valid:
         return make_response(jsonify(resp), 400)
-
-    id = uniqueName()
-    resp['id'] = id
-    resp['mqtt_Topic'] = "node/" + id
 
     if resp.pop('setup'):
         user = resp.pop("ssh_user")
@@ -22,7 +17,7 @@ def newNode(request):
         #TODO RUN SETUP
 
     resp = clean(resp)  # remove unwanted fields before storing in DB
-    db.insertNode(resp)
+    id = db.insertNode(resp)
 
     return make_response(id, 200)
 
@@ -30,7 +25,8 @@ def newNode(request):
 def deleteNode(request, token):
     
     if not db.getNode(token):
-        return make_response(jsonify({'error': "No node with id " + token}), 406)
+        return make_response(jsonify({'error': "No node with id " + token}),
+                             406)
 
     db.deleteNode(token)
     

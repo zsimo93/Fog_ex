@@ -1,17 +1,18 @@
 #!thesis/DB
 
 from mainDB import Database
-from core.databaseRedis.actionsDB import removeNodeAV
+from core.databaseMongo.actionsDB import removeNodeAV
 from core.common.entities import NodeID
-import json
+from bson.objectid import ObjectId
 
 
 def deleteNode(token):
     db = Database().db
+    n = db.nodes
+    nrs = db.nodesRes
 
-    db.delete("NODE_" + token)
-    db.delete("NRES_" + token)
-
+    n.remove({'_id': ObjectId(token)})
+    nrs.remove({'_id': ObjectId(token)})
     removeNodeAV(token)
 
 
@@ -27,48 +28,49 @@ dict = {
 """
 def insertNode(dict):
     db = Database().db
+    n = db.nodes
+    nrs = db.nodesRes
 
-    id = dict.pop('id')
-    # insert node info's
-    key = "NODE_" + id
-    value = json.dumps(dict)
-    db.set(key, value)
-    # prepare for node resources
-    key = "NRES_" + id
-    value = json.dumps({'cpu': '', 'memory': ''})
-    db.set(key, value)
+    id = n.insert_one(dict).inserted_id
+
+    info = {
+        '_id': id,
+        'cpu': '',
+        'memory': ''}
+    nrs.insert_one(info)
+
+    return str(id)
 
 
 def getNodesIP():
     db = Database().db
+    n = db.nodes
 
-    keys = db.keys("NODE_*")
+    ips = []
 
-    ips = list()
-
-    for k in keys:
-        r = db.get(k)
-        obj = json.loads(r)
-        ip = obj['ip']
-        ips.append(NodeID(k[5:], ip))
+    for k in n.find():
+        ips.append(NodeID(k['_id'], k['ip']))
     return ips
 
 
 def getNode(token):
     db = Database().db
+    n = db.nodes
 
-    return db.get("NODE_" + token)
+    return n.find_one({'_id': ObjectId(token)})
 
 
 def getRes(token):
     db = Database().db
+    nrs = db.nodesRes
 
-    return db.get("NRES_" + token)
+    return nrs.find_one({'_id': ObjectId(token)})
 
 
 def getFullNode(token):
-    node = json.loads(getNode(token))
-    res = json.loads(getRes(token))
+    node = getNode(token)
+    del node['_id']
+    res = getRes(token)
     node['cpu'] = res['cpu']
     node['memory'] = res['memory']
     node['id'] = token
@@ -78,8 +80,9 @@ def getFullNode(token):
 
 def getNodes():
     db = Database().db
+    n = db.nodes
 
-    keys = db.keys("NODE_*")
+    keys = map(lambda x: str(x["_id"]), n.find())
 
     nodes = []
 
@@ -96,20 +99,24 @@ value = {'cpu': 13.7,
 """
 def updateResources(token, value):
     db = Database().db
+    nrs = db.nodesRes
+    id = ObjectId(token)
+    ins = value
 
-    key = "NRES_" + token
-    db.set(key, json.dumps(value))
+    ins["_id"] = id
+    nrs.find_one_and_replace({'_id': id}, ins)
 
 
 def updateNode(token, col, value):
     db = Database().db
-    key = "NODE_" + token
+    n = db.nodes
+
     try:
-        tmp = json.loads(db.get(key))
+        tmp = n.find_one({'_id': ObjectId(token)})
         tmp.pop(col)
         tmp[col] = value
 
-        db.set(key, json.dumps(tmp))
+        n.find_one_and_replace({'_id': ObjectId(token)}, tmp)
         return tmp
 
     except Exception:
