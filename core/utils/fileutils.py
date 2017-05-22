@@ -1,5 +1,4 @@
 import zipfile, shutil, os
-import core.communication.binaryReplication as replica
 
 zip_tmp_dir = "/tmp"
 actions_dir = "/actions"

@@ -1,8 +1,8 @@
-from core.API import mainAPI
+from core.APIGateway import run
 from core.databaseMongo import mainDB
+from core.container import dockerInterface
 
-
-mainAPI.run()
+run()
 
 
 function = {

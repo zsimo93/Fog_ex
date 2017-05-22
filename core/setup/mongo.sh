@@ -1,1 +1,1 @@
-docker run --name some-mongo -v /home/$USER/mongo:/data/db:z --network host -d mongo
+docker run --name mongoDB -v /home/$USER/mongo:/data/db:z --network host -d mongo

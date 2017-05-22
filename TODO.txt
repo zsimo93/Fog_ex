@@ -1,6 +1,3 @@
-- cleanup method when a function is removed
-- component to distribute actions' file
-    IF ALL DATA IS REPLICATED, DOES THE DEPLOYMENT CONSTRINTS STILL MAKE SENSE?
 - component to start containers with actions
 - containers
 - model for constraints and predication
@@ -9,8 +6,7 @@
 
 
 - core.API.validator    # TODO add other constraints
-- core.API.actions  # TODO Move somewhere else?, replication in other nodes
-                    # TODO remove files from all nodes
+- core.API.actions  
                     # TODO placement, invocation...
 
 - core.API.nodes    #TODO run setup

@@ -1,68 +1,65 @@
-import psutil
-import yaml
-import io
-import json
+from threading import Thread
+import docker
+import commands
+import urllib
+from time import sleep
 
 
-class Node(yaml.YAMLObject):
-    yaml_tag = u'!Node'
-    role='NODE'
-    setup = True
-    def __init__(self, name, ip, architecture, role='NODE', setup = True):
-        self.name = name
-        self.ip = ip
-        self.architecture = architecture
-        self.role = role
-        self.setup = setup
+client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 
-    def __repr__(self):
-        return "%s(%s,%s,%s,%s,%s)" % (
-        self.__class__.__name__, self.name, self.ip, self.architecture, self.role, self.setup)
+def get(ip, port, path):
+    url = "http://" + ip + ":" + str(port) + path
+    print url
 
-class Sequence(yaml.YAMLObject):
-    yaml_tag = u'!Sequence'
-    name = None
-    sequence = list()
-    def __init__(self, name, sequence):
-        self.name = name
-        self.sequence = sequence
+    #req = urllib2.Request(url)
+    response = urllib.urlopen(url)
+    return response.read()
 
+def runContainer(name, cpu, memory):
+    a = client.containers.run(name,
+                              mem_limit=memory,
+                              # cpu_shares=cpu,
+                              detach=True)
+    id = str(a.id)
 
-class Cloud(yaml.YAMLObject):
-    yaml_tag = u'!Cloud'
-    def __init__(self, platform, link, username, password):
-        self.platform = platform
-        self.link = link
-        self.username = username
-        self.password = password
+    ip = getIP(id)
 
-    def __repr__(self):
-        return "%s(%s,%s,%s,%s)" % (
-        self.__class__.__name__, self.platform, self.link, self.username, self.password)
+    return a, ip
 
-class Function(yaml.YAMLObject):
-    yaml_tag = u'!Function'
-    def __init__(self, name, cloud, timeout, language):
-        self.name = name
-        self.cloud = cloud
-        self.timeout = timeout
-        self.language = language
-
-    def __repr__(self):
-        return "%s(%s,%s,%s,%s)" % (
-        self.__class__.__name__, self.name, self.cloud, self.timeout, self.language)
+def stop(cont):
+    cont.stop()
+    cont.remove()
+    return
 
 
-print(psutil.cpu_percent(interval=0.1))
-print(psutil.virtual_memory().available)
-print(psutil.disk_usage("C:"))
+def getIP(id):
+    command = "docker inspect --format '{{ .NetworkSettings.IPAddress }}' " + id
 
-stream = io.open('example.yml')
-obj1, obj2, obj3, obj4= yaml.load_all(stream)
+    ret = commands.getoutput(command)
+    
+    return ret
 
-print obj1['nodes']
-print obj1['cloud']
 
-print json.dumps(obj2.__dict__)
 
-print type(obj4.sequence[0])
+def invoke():
+    r = "no match"
+
+    try :
+        cont , ip = runContainer("python-image", 2, "150m")
+        file_path = fileUtils.loadFile(req['name'])
+
+        sleep(0.2)
+        invokePython.init(file_path, ip)
+        r = invokePython.run(req['param'], ip)
+        
+#        r = get(str(ip), 8080, "/run")
+        
+    except Exception, e:
+        r = str(e)
+    finally:
+        Thread(target=stop, args=(cont, )).start()
+
+        
+    return r
+
+print invoke()

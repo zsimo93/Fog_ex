@@ -2,8 +2,13 @@
 
 from mainDB import Database
 from core.databaseMongo.actionsDB import removeNodeAV
-from core.common.entities import NodeID
 from bson.objectid import ObjectId
+
+
+class NodeID():
+    def __init__(self, id, ip):
+        self.id = id
+        self.ip = ip
 
 
 def deleteNode(token):

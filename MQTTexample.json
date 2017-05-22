@@ -1,18 +1,6 @@
 --- MQTT payloads
 
 {
-    "type": "deploy",
-    "message" : {
-        "name" : "foo1",
-        "num_of_params" : 0,
-        "URL"
-    }
-
-}
-
-
-
-{
     "type": "execute",
     "message" : {
         "id" : "foo1",

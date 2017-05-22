@@ -1,9 +1,9 @@
 echo "Installing Docker"
-curl -sSL https://get.docker.com | sh
-
-echo "Pulling Mosquitto"
-docker pull docker pull ffaerber/mqtt-broker-on-arm
-
+#curl -sSL https://get.docker.com | sh
+groupadd docker &&
+usermod -aG docker $USER
 echo "Pulling nginx web server"
-docker pull tiangolo/uwsgi-nginx-flask:flask-upload
-
+#docker pull tiangolo/uwsgi-nginx-flask:flask-upload
+#mount socket to use docker in docker.
+#also install docker in container.
+#docker run -v /var/run/docker.sock:/var/run/docker.sock -d apiGateway
