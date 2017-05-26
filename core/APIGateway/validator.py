@@ -15,7 +15,8 @@ def validateActionRequest(request):
         if req['name'] == "":
             return (False, {"error": "Action name needed"})
         if not req['language'].lower() in supportedLanguages:
-            return (False, {"error": "Language supported are: " + str(supportedLanguages)})
+            return (False, {"error": "Language supported are: " +
+                    str(supportedLanguages)})
         if not req['cloud'].lower() in ("true", "false"):
             return (False, {"error": "Cloud must be a boolean"})
         req['description']
@@ -70,7 +71,8 @@ def validateNodeRequest(request):
         if not pattern.match(req['ip']):
             return (False, {"error": "Invalid IP"})
         if not req['architecture'].lower() in supportedArch:
-            return (False, {"error": "Supported architecture are: " + str(supportedArch)})
+            return (False, {"error": "Supported architecture are: " +
+                    str(supportedArch)})
         if not type(req['setup']) == bool:
             return (False, {"error": "Setup must be a boolean"})
     except KeyError, e:

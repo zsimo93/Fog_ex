@@ -2,7 +2,7 @@
 
 from flask import make_response, jsonify, send_file
 from core.databaseMongo import actionsDB as db
-from core.databaseMongo.fs import fileUtils as fs
+from core.gridFS import fileUtils as fs
 from validator import validateActionRequest as validate
 from core.utils.httpUtils import post
 
@@ -33,7 +33,7 @@ def newAction(request):
     return make_response(name, 201)
 
 
-
+"""
 def downloadAction(token):
     if db.availableActionName(token):   # action name not present
         return make_response(jsonify({'error': "No action with name " + token}),
@@ -41,7 +41,7 @@ def downloadAction(token):
 
     (path, type) = fs.loadFile(token)
     return send_file(path, mimetype=type)
-
+"""
 def updateAction(request, token):
     if db.availableActionName(token):   # action name not present
         return make_response(jsonify({'error': "No action with name " + token}),

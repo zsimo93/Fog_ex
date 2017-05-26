@@ -2,7 +2,22 @@
 - containers
 - model for constraints and predication
 
-- 
+- setup component (SSH)
+- select new Backup and start it
+
+- When backup take place of master:
+    change ip, 
+    invoke mainDB.removeNodeReplicaSet with its old value in db
+    update old ip and role in DB
+
+    choose new Backup and start components...
+
+- Algorithm to choose function deployment
+- Algorithm to choose function placement
+
+- Sequences management
+    - pass intermediate result
+    - managing multiple running on same node...
 
 
 - core.API.validator    # TODO add other constraints

@@ -1,65 +1,107 @@
-from threading import Thread
-import docker
-import commands
-import urllib
-from time import sleep
+from pymongo import MongoClient
+
+c = MongoClient(host='172.17.0.2', port=27017)
+db = c.my_db
+
+class DatabaseMaster():
+    """
+    config = {'_id': 'foo', 'version': 1,
+              'members': [
+                  {'_id': 0, 'host': '172.17.0.2:27017', 'priority' : 1},
+                  {'_id': 1, 'host': '172.17.0.3:27017', 'priority' : 0},
+                  {'_id': 2, 'host': '172.17.0.4:27017', 'priority' : 0}]}
+    """
+    def __init__(config):
+        c.admin.command("replSetInitiate", config)
 
 
-client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-
-def get(ip, port, path):
-    url = "http://" + ip + ":" + str(port) + path
-    print url
-
-    #req = urllib2.Request(url)
-    response = urllib.urlopen(url)
-    return response.read()
-
-def runContainer(name, cpu, memory):
-    a = client.containers.run(name,
-                              mem_limit=memory,
-                              # cpu_shares=cpu,
-                              detach=True)
-    id = str(a.id)
-
-    ip = getIP(id)
-
-    return a, ip
-
-def stop(cont):
-    cont.stop()
-    cont.remove()
-    return
-
-
-def getIP(id):
-    command = "docker inspect --format '{{ .NetworkSettings.IPAddress }}' " + id
-
-    ret = commands.getoutput(command)
+def insertNodeReplicaSet(value):
     
-    return ret
+    config = c.admin.command("replSetGetConfig")['config']
+    members = sorted(config['members'], key=lambda m : m['_id'])
+    
+    priority = 1
+    votes = 1
+
+    id = freeID(members)
+
+    if len(config['members']) >= 7:
+        priority = 0
+        votes = 0
+
+    member = {
+        "votes": votes,
+        "priority": priority,
+        "host": value['ip'] + ":27017",
+        "_id": id
+    }
+
+    value['replica_id'] = id
+
+    config['members'].append(member)
+
+    c.admin.command("replSetReconfig", config, force=True)
+
+    return value
 
 
+def removeNodeReplicaSet(value):
 
-def invoke():
-    r = "no match"
+    config = c.admin.command("replSetGetConfig")['config']
+    members = config['members']
 
-    try :
-        cont , ip = runContainer("python-image", 2, "150m")
-        file_path = fileUtils.loadFile(req['name'])
+    id = value["replica_id"]
 
-        sleep(0.2)
-        invokePython.init(file_path, ip)
-        r = invokePython.run(req['param'], ip)
-        
-#        r = get(str(ip), 8080, "/run")
-        
-    except Exception, e:
-        r = str(e)
-    finally:
-        Thread(target=stop, args=(cont, )).start()
+    new_members = []
+    non_vonting = []
+    voting = 0
+    to_remove = None
+    
+    # remove old node from list and take all non voting members
+    for f in members:
+        if f["_id"] != id:
+            new_members.append(f)
+            if f['votes'] != 0:
+                voting += 1
+            else:
+                non_vonting.append(f)
+        else:
+            to_remove = f
 
-        
-    return r
+    # if old node was a voting one and there are non voting nodes, promote one.
+    if to_remove['votes'] != 0 and len(non_vonting) > 0:
+        newV = non_vonting[0]
+        new_members.remove(newV)
+        newV["priority"] = 1
+        newV["votes"] = 1
+        new_members.append(newV)
 
-print invoke()
+    config['members'] = new_members
+
+    c.admin.command("replSetReconfig", config, force=True)
+
+
+def freeID(l):
+    if len(l) == 255:
+        raise NoMoreNodes
+
+    last = l[-1]["_id"]
+    if last < 255:
+        return last + 1
+
+    id = 0
+    # find free id
+    for m in l:
+        if m['_id'] > id:
+            break
+        else:
+            id += 1
+    return id
+
+value = {
+    'id': 'AAABBBCCCDE',
+    'name': 'raspi2',
+    'ip': '172.17.0.6',
+    'role': 'NODE',
+    'architecture': 'ARM',
+}

@@ -1,9 +1,9 @@
-from mainDB import Database
+import mainDB
 from actionsDB import availableActionName as notPresent
 
 
 def insertSequence(name, value):
-    db = Database().db
+    db = mainDB.db
     s = db.sequences
 
     value["_id"] = name
@@ -13,7 +13,7 @@ def insertSequence(name, value):
 
 
 def availableSeqName(name):
-    db = Database().db
+    db = mainDB.db
     s = db.sequences
 
     n = s.find({"_id" : name}).count()
@@ -22,14 +22,14 @@ def availableSeqName(name):
 
 
 def deleteSequence(token):
-    db = Database().db
+    db = mainDB.db
     s = db.sequences
     
     s.remove({"_id" : token})
 
 
 def getSequences():
-    db = Database().db
+    db = mainDB.db
     s = db.sequences
 
     ret = []

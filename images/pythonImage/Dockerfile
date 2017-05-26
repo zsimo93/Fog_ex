@@ -6,6 +6,8 @@ ENV FLASK_PROXY_PORT 8080
 
 RUN mkdir -p /pythonAction
 ADD actionproxy.py /pythonAction/
-ADD pythonrunner.py /pythonAction/
+RUN mkdir -p /action
 
-CMD ["/bin/bash", "-c", "cd pythonAction && python -u pythonrunner.py"]
+EXPOSE 8080
+
+CMD ["/bin/bash", "-c", "cd pythonAction && python -u actionproxy.py"]

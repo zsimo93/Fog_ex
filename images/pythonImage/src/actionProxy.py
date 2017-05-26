@@ -5,36 +5,14 @@ import os
 import codecs
 import json
 
-import logging
-
-logging.basicConfig(filename="/tmp/logger.log")
-
+workdir = "/action"
 proxy = Flask(__name__)
 
-workdir = "/action"
 
 @proxy.route("/run", methods=["POST"])
 def run():
-
-    # load file and virtualenv
-    files = os.listdir(workdir)
-
-    path_to_virtualenv = workdir + '/virtualenv'
-    if os.path.isdir(path_to_virtualenv):
-        # activate the virtualenv using activate_this.py contained in the virtualenv
-        logging.error("virtualenv found")
-        activate_this_file = path_to_virtualenv + '/bin/activate_this.py'
-        if os.path.exists(activate_this_file):
-            with open(activate_this_file) as f:
-                code = compile(f.read(), activate_this_file, 'exec')
-                exec(code, dict(__file__=activate_this_file))
-        else:
-            sys.stderr.write('Invalid virtualenv. Zip file does not include /virtualenv/bin/' + os.path.basename(activate_this_file) + '\n')
-
-
     args = request.json
-    logging.error(args)
-
+    print args
     code = None
     filename = None
     files = [f for f in os.listdir(workdir) if isfile(join(workdir, f)) and f.endswith(".py")]
@@ -72,4 +50,18 @@ def run():
 
 
 if __name__ == '__main__':
+    files = os.listdir(workdir)
+
+    path_to_virtualenv = workdir + '/virtualenv'
+    if os.path.isdir(path_to_virtualenv):
+        # activate the virtualenv using activate_this.py contained in the virtualenv
+        activate_this_file = path_to_virtualenv + '/bin/activate_this.py'
+        if os.path.exists(activate_this_file):
+            with open(activate_this_file) as f:
+                code = compile(f.read(), activate_this_file, 'exec')
+                exec(code, dict(__file__=activate_this_file))
+        else:
+            sys.stderr.write('Invalid virtualenv. Zip file does not include /virtualenv/bin/' + os.path.basename(activate_this_file) + '\n')
+
+
     proxy.run(host="0.0.0.0", port=8080)

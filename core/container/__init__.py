@@ -1,3 +1,3 @@
-import dockerInterface, invokePython
+import dockerInterface
 
-__all__ = ["dockerInterface", "invokePython"]
+__all__ = ["dockerInterface"]

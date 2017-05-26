@@ -1,9 +1,9 @@
 #!thesis/DB
 
-from mainDB import Database
+import mainDB
 
 def insertAction(name, value):
-    db = Database().db
+    db = mainDB.db
     a = db.actions
     av = db.actionsAV
 
@@ -17,14 +17,14 @@ def insertAction(name, value):
 
 
 def getAction(name):
-    db = Database().db
+    db = mainDB.db
     a = db.actions
 
     return a.find_one({"_id" : name})
 
 
 def availableActionName(name):
-    db = Database().db
+    db = mainDB.db
     a = db.actions
     n = a.find({"_id" : name}).count()
     
@@ -32,7 +32,7 @@ def availableActionName(name):
     
 
 def deleteAction(token):
-    db = Database().db
+    db = mainDB.db
     a = db.actions
     av = db.actionsAV
 
@@ -41,7 +41,7 @@ def deleteAction(token):
 
 
 def updateAvailability(actName, nodeToken):
-    db = Database().db
+    db = mainDB.db
     av = db.actionsAV
 
     val = av.find_one({"_id" : actName})
@@ -51,7 +51,7 @@ def updateAvailability(actName, nodeToken):
 
 
 def getAvailability(actName):
-    db = Database().db
+    db = mainDB.db
     av = db.actionsAV
 
     r = av.find_one({"_id": actName})
@@ -61,7 +61,7 @@ def getAvailability(actName):
 
 # remove the node ref from the availability list
 def removeNodeAV(nodeToken):
-    db = Database().db
+    db = mainDB.db
     av = db.actionsAV
 
     for a in av.find():
@@ -75,7 +75,7 @@ def removeNodeAV(nodeToken):
 
 
 def getActions():
-    db = Database().db
+    db = mainDB.db
     a = db.actions
 
     ret = []

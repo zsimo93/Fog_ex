@@ -31,9 +31,9 @@ def newAction():
 def uploadAction(token):
     return actions.uploadAction(request, token)"""
 
-@app.route('/api/actions/<token>', methods=['GET'])
+"""@app.route('/api/actions/<token>', methods=['GET'])
 def downloadAction(token):
-    return actions.downloadAction(token)
+    return actions.downloadAction(token)"""
 
 @app.route('/api/actions/<token>', methods=['PUT'])
 def updateAction(token):
@@ -75,7 +75,7 @@ def function2(token):
 
 
 def run():
-    app.run(port=8080, threaded=True)
+    app.run(port=8080, threaded=True, debug=True)
 
 if __name__ == '__main__':
     app.run(port=8080)

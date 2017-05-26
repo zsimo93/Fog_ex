@@ -1,6 +1,6 @@
 #!thesis/DB
 
-from mainDB import Database
+import mainDB
 from core.databaseMongo.actionsDB import removeNodeAV
 from bson.objectid import ObjectId
 
@@ -12,31 +12,35 @@ class NodeID():
 
 
 def deleteNode(token):
-    db = Database().db
+    db = mainDB.db
     n = db.nodes
     nrs = db.nodesRes
 
-    n.remove({'_id': ObjectId(token)})
-    nrs.remove({'_id': ObjectId(token)})
+    old_val = n.delete_one({'_id': ObjectId(token)})
+    
+    mainDB.removeNodeReplicaSet(old_val)
+
+    nrs.delete_one({'_id': ObjectId(token)})
     removeNodeAV(token)
 
 
 """
-dict = {
+value = {
     'id': 'AAABBBCCCDE',
     'name': 'raspi2',
-    'ip': '192.168.1.10',
+    'ip': '172.17.0.6',
     'role': 'NODE',
     'architecture': 'ARM',
-    'mqtt_Topic': 'node/raspi2',
 }
 """
-def insertNode(dict):
-    db = Database().db
+def insertNode(value):
+    db = mainDB.db
     n = db.nodes
     nrs = db.nodesRes
 
-    id = n.insert_one(dict).inserted_id
+    value = mainDB.insertNodeReplicaSet(value)
+
+    id = n.insert_one(value).inserted_id
 
     info = {
         '_id': id,
@@ -48,7 +52,7 @@ def insertNode(dict):
 
 
 def getNodesIP():
-    db = Database().db
+    db = mainDB.db
     n = db.nodes
 
     ips = []
@@ -59,14 +63,14 @@ def getNodesIP():
 
 
 def getNode(token):
-    db = Database().db
+    db = mainDB.db
     n = db.nodes
 
     return n.find_one({'_id': ObjectId(token)})
 
 
 def getRes(token):
-    db = Database().db
+    db = mainDB.db
     nrs = db.nodesRes
 
     return nrs.find_one({'_id': ObjectId(token)})
@@ -84,7 +88,7 @@ def getFullNode(token):
 
 
 def getNodes():
-    db = Database().db
+    db = mainDB.db
     n = db.nodes
 
     keys = map(lambda x: str(x["_id"]), n.find())
@@ -98,12 +102,14 @@ def getNodes():
     return nodes
 
     
-"""
-value = {'cpu': 13.7,
-         'memory': 14507.30}
-"""
+
 def updateResources(token, value):
-    db = Database().db
+    """
+    token = Node's id
+    value = {'cpu': 13.7,
+         'memory': 14507.30}
+    """
+    db = mainDB.db
     nrs = db.nodesRes
     id = ObjectId(token)
     ins = value
@@ -113,7 +119,7 @@ def updateResources(token, value):
 
 
 def updateNode(token, col, value):
-    db = Database().db
+    db = mainDB.db
     n = db.nodes
 
     try:
