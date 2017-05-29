@@ -1,6 +1,5 @@
 #!thesis/api
 
-from flask import make_response, jsonify, send_file
 from core.databaseMongo import actionsDB as db
 from core.gridFS import fileUtils as fs
 from validator import validateActionRequest as validate

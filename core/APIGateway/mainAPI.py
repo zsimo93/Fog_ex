@@ -1,7 +1,7 @@
 #!thesis/api
 
 from flask import Flask, request
-import nodes, actions, sequences, internal
+import nodes, actions, sequences, internalGW.internal as internal
 
 app = Flask(__name__)
 

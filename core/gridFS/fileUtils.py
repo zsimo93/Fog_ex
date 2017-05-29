@@ -12,19 +12,20 @@ def saveFile(file, actionName):
 
 
 def loadFile(actionName):
-    f = fs.find_one(actionName)
-
-    name = f.filename
-    f.seek(0)
-    data = f.read()
-
     path = "/tmp/" + actionName
 
     try:
         os.stat(path)
         return path
-    
+
     except Exception:
+        
+        f = fs.find_one(actionName)
+
+        name = f.filename
+        f.seek(0)
+        data = f.read()
+
         os.mkdir(path)
 
         pathfile = "/tmp/" + actionName + "/" + name
@@ -42,3 +43,6 @@ def loadFile(actionName):
 
 def removeFile(actionName):
     fs.delete(actionName)
+
+def tempResult(data, actionName):
+    fs.put(data, action=actionName)

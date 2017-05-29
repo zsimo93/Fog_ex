@@ -1,6 +1,5 @@
 #!thesis/api
 
-from flask import make_response, jsonify
 from validator import validateSequence as validate, cleanUpSeq as clean
 from core.databaseMongo import sequencesDB as db
 
@@ -21,7 +20,7 @@ def newSequence(request):
     if a:
         return make_response(jsonify({"error": "Action " + a + " not present"}), 400)
     
-    resp = clean(resp) # remove unwanted fields before storing in DB
+    resp = clean(resp)  # remove unwanted fields before storing in DB
     db.insertSequence(name, resp)
     return make_response(name, 201)
 

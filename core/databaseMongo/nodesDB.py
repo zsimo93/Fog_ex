@@ -1,6 +1,5 @@
 #!thesis/DB
 
-import mainDB
 from core.databaseMongo.actionsDB import removeNodeAV
 from bson.objectid import ObjectId
 

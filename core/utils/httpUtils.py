@@ -10,7 +10,7 @@ def get(ip, port, path):
     return response.text
 
 
-def post(ip, port, path, payload):
+def post(ip, port, path, payload, timeout):
     url = "http://" + ip + ":" + str(port) + path
-    response = requests.post(url, json=payload) 
+    response = requests.post(url, json=payload, timeout=timeout)
     return response.text

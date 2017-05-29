@@ -1,5 +1,3 @@
-- component to start containers with actions
-- containers
 - model for constraints and predication
 
 - setup component (SSH)
@@ -17,8 +15,10 @@
 
 - Sequences management
     - pass intermediate result
-    - managing multiple running on same node...
 
+
+- delete files of actions PROBLEM IF MULTIPLE CALLED
+                                GIVE diff NAMES
 
 - core.API.validator    # TODO add other constraints
 - core.API.actions  

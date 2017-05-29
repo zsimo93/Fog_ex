@@ -1,6 +1,4 @@
-import nodesDB 
-import actionsDB
-import sequencesDB
+import mainDB 
 
 __all__ = ["nodesDB", "actionsDB",
            "sequencesDB"]

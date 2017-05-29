@@ -1,7 +1,5 @@
 #!thesis/DB
 
-import mainDB
-
 def insertAction(name, value):
     db = mainDB.db
     a = db.actions

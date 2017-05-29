@@ -9,7 +9,7 @@ def runContainer(name, cpu, memory, path_dir):
     }
     a = client.containers.run(name,
                               mem_limit=memory,
-                              # cpu_shares=cpu,
+                              cpu_shares=cpu,
                               volumes=volumes,
                               detach=True)
     id = str(a.id)
