@@ -1,4 +1,5 @@
 #!thesis/DB
+import mainDB
 
 def insertAction(name, value):
     db = mainDB.db
@@ -80,7 +81,8 @@ def getActions():
     for k in a.find():
         data = {
             "name": k["_id"],
-            "description": k["description"]
+            "description": k["description"],
+            "in/out": k["in/out"]
         }
         ret.append(data)
 

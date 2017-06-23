@@ -8,27 +8,14 @@ import json
 workdir = "/action"
 proxy = Flask(__name__)
 
+code = None
+filename = None
 
 @proxy.route("/run", methods=["POST"])
 def run():
     args = request.json
     print args
-    code = None
-    filename = None
-    files = [f for f in os.listdir(workdir) if isfile(join(workdir, f)) and f.endswith(".py")]
-    if len(files) == 1:
-        filename = join(workdir, files[0])
-        with codecs.open(filename, 'r', 'utf-8') as m:
-                code = m.read()
-    else:
-        for f in files:
-            if f == "__main__.py":
-                filename = join(workdir, f)
-                with codecs.open(filename, 'r', 'utf-8') as m:
-                    code = m.read()
-                sys.path.insert(0, workdir)
-                os.chdir(workdir)
-                break
+
 
     fn = compile(code, filename=filename, mode='exec')
 
@@ -63,5 +50,18 @@ if __name__ == '__main__':
         else:
             sys.stderr.write('Invalid virtualenv. Zip file does not include /virtualenv/bin/' + os.path.basename(activate_this_file) + '\n')
 
-
+    files = [f for f in os.listdir(workdir) if isfile(join(workdir, f)) and f.endswith(".py")]
+    if len(files) == 1:
+        filename = join(workdir, files[0])
+        with codecs.open(filename, 'r', 'utf-8') as m:
+                code = m.read()
+    else:
+        for f in files:
+            if f == "__main__.py":
+                filename = join(workdir, f)
+                with codecs.open(filename, 'r', 'utf-8') as m:
+                    code = m.read()
+                sys.path.insert(0, workdir)
+                os.chdir(workdir)
+                break
     proxy.run(host="0.0.0.0", port=8080)

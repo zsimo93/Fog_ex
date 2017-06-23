@@ -1,16 +1,15 @@
 #!thesis/api
-
+from flask import Flask, request, make_response, jsonify
 from core.databaseMongo import actionsDB as db
 from core.gridFS import fileUtils as fs
 from validator import validateActionRequest as validate
-from core.utils.httpUtils import post
-
+from executionmanager import ActionExecutionHandler
 
 def newAction(request):
     valid, resp = validate(request)
 
     if 'file' not in request.files:
-        return make_response("file!!!", 400)
+        return make_response("No field 'file' in form", 400)
 
     file = request.files['file']
     
@@ -59,22 +58,13 @@ def deleteAction(request, token):
     fs.removeFile(token)
     return make_response("OK", 200)
 
-
-def invokeAction(request, token):
-    if db.availableActionName(token):  # action name not present
-        return make_response(jsonify({'error': "No action with name " + token}),
-                             406)
-    
-    param = request.json["message"]
-
-    # TODO placement, invocation...
-
-    ip = selectBestNode(token)
-
-    ret = post(ip, "8080", "/internal/invoke", param)
-
-    return make_response(ret, 200)
-
+"""
+{ 
+  "param": {"text": "hello world"}
+  "cpu": 2,
+  "memory": "250m",
+}
+"""
 
 def getActions(request):
     actions = db.getActions()

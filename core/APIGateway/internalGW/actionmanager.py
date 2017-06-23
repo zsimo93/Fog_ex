@@ -1,4 +1,3 @@
-from core.databaseMongo import actionsDB as db
 from core.gridFS import fileUtils
 from core.container.dockerInterface import runContainer
 from core.utils.httpUtils import post
@@ -12,7 +11,8 @@ from threading import Thread
     "cpu": 0,
     "memory": 0,
     "param": {}
-}"""
+}
+"""
 
 
 class ActionManager():
@@ -21,10 +21,8 @@ class ActionManager():
         self.cpu = request['cpu']
         self.memory = request['memory']
         self.param = param
-        
-        fromDB = db.getAction(request['name'])
-        self.timeout = fromDB['timeout']
-        self.language = fromDB['language']
+        self.timeout = request['timeout']
+        self.language = request['language']
 
 
     def stopContainer(self):
@@ -32,15 +30,15 @@ class ActionManager():
         self.cont.stop()
         self.cont.remove()
         print "done"  # log it instead
-        deleteActionFiles(self.action)
+        deleteActionFiles(self.path)
         return
 
 
     def startCont(self):
-        path = fileUtils.loadFile(self.action)
+        self.path = fileUtils.loadFile(self.action)
         self.cont , self.ip = runContainer("python-image",
                                            self.cpu, self.memory,
-                                           path)
+                                           self.path)
 
     def startThreadContainer(self):
         return Thread(target=self.startCont)

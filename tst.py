@@ -1,107 +1,49 @@
-from pymongo import MongoClient
+from core.databaseMongo import nodesDB, actionsDB
 
-c = MongoClient(host='172.17.0.2', port=27017)
-db = c.my_db
-
-class DatabaseMaster():
-    """
-    config = {'_id': 'foo', 'version': 1,
-              'members': [
-                  {'_id': 0, 'host': '172.17.0.2:27017', 'priority' : 1},
-                  {'_id': 1, 'host': '172.17.0.3:27017', 'priority' : 0},
-                  {'_id': 2, 'host': '172.17.0.4:27017', 'priority' : 0}]}
-    """
-    def __init__(config):
-        c.admin.command("replSetInitiate", config)
-
-
-def insertNodeReplicaSet(value):
-    
-    config = c.admin.command("replSetGetConfig")['config']
-    members = sorted(config['members'], key=lambda m : m['_id'])
-    
-    priority = 1
-    votes = 1
-
-    id = freeID(members)
-
-    if len(config['members']) >= 7:
-        priority = 0
-        votes = 0
-
-    member = {
-        "votes": votes,
-        "priority": priority,
-        "host": value['ip'] + ":27017",
-        "_id": id
+"""
+nodes = [
+    {
+        "name": "r1",
+        "ip": "127.0.0.1"
+    },
+    {
+        "name": "r2",
+        "ip": "127.0.0.1"
+    },
+    {
+        "name": "r3",
+        "ip": "127.0.0.1"
     }
+]
 
-    value['replica_id'] = id
+resources = [
+    {
+        'cpu': 2.0,
+        'memory': 1000000000L
+    },
+    {
+        'cpu': 4.0,
+        'memory': 1000000000L
+    },
+    {
+        'cpu': 10.0,
+        'memory': 1000000000L
+    }
+]
 
-    config['members'].append(member)
+ids = []
 
-    c.admin.command("replSetReconfig", config, force=True)
+for i in range(0, 3):
+    id = nodesDB.insertNode(nodes[i])
+    ids.append(id)
+    nodesDB.updateResources(id, resources[i])
 
-    return value
+print ids"""
 
+actionsDB.updateAvailability("addStr", "8DCBC489D0")
+actionsDB.updateAvailability("addStr", "CD10945031")
 
-def removeNodeReplicaSet(value):
-
-    config = c.admin.command("replSetGetConfig")['config']
-    members = config['members']
-
-    id = value["replica_id"]
-
-    new_members = []
-    non_vonting = []
-    voting = 0
-    to_remove = None
-    
-    # remove old node from list and take all non voting members
-    for f in members:
-        if f["_id"] != id:
-            new_members.append(f)
-            if f['votes'] != 0:
-                voting += 1
-            else:
-                non_vonting.append(f)
-        else:
-            to_remove = f
-
-    # if old node was a voting one and there are non voting nodes, promote one.
-    if to_remove['votes'] != 0 and len(non_vonting) > 0:
-        newV = non_vonting[0]
-        new_members.remove(newV)
-        newV["priority"] = 1
-        newV["votes"] = 1
-        new_members.append(newV)
-
-    config['members'] = new_members
-
-    c.admin.command("replSetReconfig", config, force=True)
+actionsDB.updateAvailability("UpperDate", "CD10945031")
+actionsDB.updateAvailability("UpperDate", "73465FFAD7")
 
 
-def freeID(l):
-    if len(l) == 255:
-        raise NoMoreNodes
-
-    last = l[-1]["_id"]
-    if last < 255:
-        return last + 1
-
-    id = 0
-    # find free id
-    for m in l:
-        if m['_id'] > id:
-            break
-        else:
-            id += 1
-    return id
-
-value = {
-    'id': 'AAABBBCCCDE',
-    'name': 'raspi2',
-    'ip': '172.17.0.6',
-    'role': 'NODE',
-    'architecture': 'ARM',
-}

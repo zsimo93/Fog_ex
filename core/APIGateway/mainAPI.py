@@ -1,7 +1,7 @@
 #!thesis/api
 
 from flask import Flask, request
-import nodes, actions, sequences, internalGW.internal as internal
+import nodes, actions, sequences, invoker, internalGW.internal as internal
 
 app = Flask(__name__)
 
@@ -27,14 +27,6 @@ def getActions():
 def newAction():
     return actions.newAction(request)
 
-"""@app.route('/api/actions/<token>', methods=['POST'])
-def uploadAction(token):
-    return actions.uploadAction(request, token)"""
-
-"""@app.route('/api/actions/<token>', methods=['GET'])
-def downloadAction(token):
-    return actions.downloadAction(token)"""
-
 @app.route('/api/actions/<token>', methods=['PUT'])
 def updateAction(token):
     return actions.updateAction(request, token)
@@ -43,10 +35,10 @@ def updateAction(token):
 def deleteAction(token):
     return actions.deleteAction(request, token)
 
-@app.route('/api/actions/<token>/invoke', methods=['POST'])
+"""@app.route('/api/actions/<token>/invoke', methods=['POST'])
 def invokeAction(token):
     return actions.invokeAction(request, token)
-
+"""
 #########################
 @app.route('/api/sequences', methods=['GET'])
 def getSequences():
@@ -60,9 +52,15 @@ def newSequence():
 def deleteSeq(token):
     return sequences.deleteSequence(request, token)
 
-@app.route('/api/sequences/<token>/invoke', methods=['POST'])
+"""@app.route('/api/sequences/<token>/invoke', methods=['POST'])
 def invokeSeq(token):
     return sequences.invokeSequence(request, token)
+"""
+
+# #######################
+@app.route('/api/invoke/<token>', methods=['POST'])
+def invoke(token):
+    return invoker.invoke(token, request)
 
 # ######################## TODO ###############################
 @app.route('/internal/invoke', methods=['POST'])

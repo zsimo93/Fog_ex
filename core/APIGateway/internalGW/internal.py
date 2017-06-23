@@ -8,23 +8,21 @@ __action__ = {
     "name": "",
     "cpu": 0,
     "memory": 0,
-    "param": {}
 }
 
 request.json = {
     "type": "action",
-    "data": __action__
+    "param": {},
+    "action": __action__
 }
 
 request.json = {
     "type": "block",
-    "data": {
-        "param": {},
-        "block": [
-            __action__,
-            __action__
-        ]
-    }
+    "param": {}
+    "block": [
+        __action__,
+        __action__
+    ]
 }
 """
 
@@ -34,11 +32,11 @@ def invoke(request):
     # current node ARM or x86?
 
     if(req['type'] == "action"):
-        action = req['data']
-        param = action.pop('param')
+        action = req['action']
+        param = req['param']
         r = ActionManager(action, param=param).initAndRun()
     else:
-        r = BlockManager(req['data']).run()
+        r = BlockManager(req['block'], req['param']).run()
 
     return make_response(r)
 

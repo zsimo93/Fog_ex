@@ -1,5 +1,3 @@
-import urllib2
-import urllib
 import requests
 
 
@@ -10,7 +8,7 @@ def get(ip, port, path):
     return response.text
 
 
-def post(ip, port, path, payload, timeout):
+def post(ip, port, path, payload, timeout=5):
     url = "http://" + ip + ":" + str(port) + path
     response = requests.post(url, json=payload, timeout=timeout)
     return response.text

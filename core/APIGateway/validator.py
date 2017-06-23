@@ -1,4 +1,4 @@
-import re
+import re, json
 
 
 def validateActionRequest(request):
@@ -10,7 +10,7 @@ def validateActionRequest(request):
     if not req:
         return (False, {"error": "Not a multipart-form"})
     try:
-        if req['type'] != "function":
+        if req['type'] != "action":
             return (False, {"error": "Wrong message type"})
         if req['name'] == "":
             return (False, {"error": "Action name needed"})
@@ -19,6 +19,11 @@ def validateActionRequest(request):
                     str(supportedLanguages)})
         if not req['cloud'].lower() in ("true", "false"):
             return (False, {"error": "Cloud must be a boolean"})
+        req['in/out'] = json.loads(req['in/out'])
+        if (type(req['in/out']['in']) != list or
+           type(req['in/out']['out']) != list) :
+            return (False, {"error": "the in/out field must contain the keys in \
+                             and out with values lists"})
         req['description']
         int(req['timeout'])
         # TODO add other constraints
@@ -31,7 +36,7 @@ def validateActionRequest(request):
         return (False, {"error": "No file field!!!"})
 
     if request.files['file'].filename == '':
-        return (False, {"error": "no fileselected"})
+        return (False, {"error": "no file selected"})
 
 
     ret = {
@@ -39,7 +44,8 @@ def validateActionRequest(request):
         'description': req['description'],
         'language': req['language'],
         'cloud': req['cloud'] == 'true',
-        'timeout': int(req['timeout'])
+        'timeout': int(req['timeout']),
+        'in/out': req['in/out']
     }
 
     print ret
@@ -98,16 +104,19 @@ def cleanUpNode(req):
 
 def validateSequence(request):
     req = request.json
-
+    print req
     if not req:
         return (False, {"error": "Not a JSON"})
     try:
         if req.pop('type') != "sequence":
             return (False, {"error": "Wrong message type"})
         if req['name'] == "":
-            return (False, {"error": "Function name needed"})
-        if not type(req['sequence']) == list:
-            return (False, {"error": "Sequence must be a list of lists"})
+            return (False, {"error": "Sequence name needed"})
+        if (type(req['in/out']['in']) != list or
+           type(req['in/out']['out']) != list) :
+            return (False, {"error": "the in/out field must contain the keys in \
+                             and out with values lists"})
+        req['process']
         req['description']
     except KeyError, e:
             return (False, {"error": "Field '" + str(e) + "' not present"})
@@ -116,7 +125,7 @@ def validateSequence(request):
 
 
 def cleanUpSeq(req):
-    fields = ("name", "description", "sequence")
+    fields = ("name", "description", "process", "in/out")
     for k in req.keys():
         if k not in fields:
             del req[k]

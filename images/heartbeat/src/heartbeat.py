@@ -22,8 +22,6 @@ def getRes(HOST):
         # Receive data from the server and shut down
         received = sock.recv(1024)
         recJson = json.loads(received)
-        cpu = recJson["cpu"]
-        memory = recJson["memory"]
 
     except socket.timeout:
         recJson = None

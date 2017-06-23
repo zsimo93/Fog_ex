@@ -8,19 +8,38 @@
     "ssh_password": "password"
 }
 
-{
-    "type":"function",
-    "name": "foo1",
-    "description" : "",
-    "language": "python",
-    "cloud": true,
-    "timeout": 500
-}
 
-{
-    "type": "sequence",
-    "name" : "sequence1",
-    "description" : "",
-    "sequence": [["foo1", "foo2"], ["foo3"]]
-}
+form-data
 
+type:action
+name:concat
+description:concatenate two strings
+language:python
+in/out:{"in": ["text", "text2"], "out": ["return"]}
+cloud:true
+timeout:1
+file:
+
+{  
+  "type": "sequence",
+  "name" : "sequence3",
+  "in/out": {"in": ["text"], "out": ["return"]},
+  "description" : "bla bla bla",
+  "process": [
+    {"id": "_parallel",
+     "actions": [
+        {"id":"1",
+         "name": "sequence2",
+         "map": {"param/text" : "text"} },
+        {"id":"2",
+         "name": "addStr2",
+         "map": {"param/text" : "text"} } 
+     ] 
+        
+    },
+    {"id": "3",
+     "name": "concat",
+     "map": {"1/return" : "text",
+             "2/return" : "text2"} }
+  ]  
+}

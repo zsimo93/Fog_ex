@@ -13,6 +13,7 @@
 - Algorithm to choose function deployment
 - Algorithm to choose function placement
 
+
 - Sequences management
     - pass intermediate result
 

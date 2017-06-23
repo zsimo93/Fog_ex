@@ -1,7 +1,8 @@
 #!thesis/DB
 
 from core.databaseMongo.actionsDB import removeNodeAV
-from bson.objectid import ObjectId
+from core.utils.fileutils import uniqueName
+import mainDB
 
 
 class NodeID():
@@ -15,31 +16,33 @@ def deleteNode(token):
     n = db.nodes
     nrs = db.nodesRes
 
-    old_val = n.delete_one({'_id': ObjectId(token)})
+    old_val = n.delete_one({'_id': token})
     
     mainDB.removeNodeReplicaSet(old_val)
 
-    nrs.delete_one({'_id': ObjectId(token)})
+    nrs.delete_one({'_id': token})
     removeNodeAV(token)
 
 
-"""
-value = {
-    'id': 'AAABBBCCCDE',
-    'name': 'raspi2',
-    'ip': '172.17.0.6',
-    'role': 'NODE',
-    'architecture': 'ARM',
-}
-"""
 def insertNode(value):
+    """
+    value = {
+        'id': 'AAABBBCCCDE',
+        'name': 'raspi2',
+        'ip': '172.17.0.6',
+        'role': 'NODE',
+        'architecture': 'ARM',
+    }
+    """
     db = mainDB.db
     n = db.nodes
     nrs = db.nodesRes
 
-    value = mainDB.insertNodeReplicaSet(value)
+    # value = mainDB.insertNodeReplicaSet(value)
 
-    id = n.insert_one(value).inserted_id
+    id = uniqueName()
+    value['_id'] = id
+    n.insert_one(value)
 
     info = {
         '_id': id,
@@ -47,7 +50,7 @@ def insertNode(value):
         'memory': ''}
     nrs.insert_one(info)
 
-    return str(id)
+    return id
 
 
 def getNodesIP():
@@ -65,14 +68,14 @@ def getNode(token):
     db = mainDB.db
     n = db.nodes
 
-    return n.find_one({'_id': ObjectId(token)})
+    return n.find_one({'_id': token})
 
 
 def getRes(token):
     db = mainDB.db
     nrs = db.nodesRes
 
-    return nrs.find_one({'_id': ObjectId(token)})
+    return nrs.find_one({'_id': token})
 
 
 def getFullNode(token):
@@ -95,7 +98,7 @@ def getNodes():
     nodes = []
 
     for k in keys:
-        r = getFullNode(k[5:])
+        r = getFullNode(k)
         nodes.append(r)
 
     return nodes
@@ -110,11 +113,10 @@ def updateResources(token, value):
     """
     db = mainDB.db
     nrs = db.nodesRes
-    id = ObjectId(token)
     ins = value
 
-    ins["_id"] = id
-    nrs.find_one_and_replace({'_id': id}, ins)
+    ins["_id"] = token
+    nrs.find_one_and_replace({'_id': token}, ins)
 
 
 def updateNode(token, col, value):
@@ -122,11 +124,11 @@ def updateNode(token, col, value):
     n = db.nodes
 
     try:
-        tmp = n.find_one({'_id': ObjectId(token)})
+        tmp = n.find_one({'_id': token})
         tmp.pop(col)
         tmp[col] = value
 
-        n.find_one_and_replace({'_id': ObjectId(token)}, tmp)
+        n.find_one_and_replace({'_id': token}, tmp)
         return tmp
 
     except Exception:
