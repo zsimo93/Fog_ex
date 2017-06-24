@@ -1,20 +1,24 @@
 #!thesis/api
-from flask import Flask, request, make_response, jsonify
+from flask import make_response, jsonify
 from core.databaseMongo import actionsDB as db
-from core.gridFS import fileUtils as fs
+from core.databaseMongo.nodesDB import getNodesIP, getNodes
+from core.gridFS import files as fs
+from core.utils.httpUtils import post
 from validator import validateActionRequest as validate
-from executionmanager import ActionExecutionHandler
+from requests import ConnectionError
+
+def computeAvailability(name, request):
+    nList = [n["_id"] for n in getNodes()]
+
+    db.updateAvailability(name, nList)
+
 
 def newAction(request):
     valid, resp = validate(request)
 
-    if 'file' not in request.files:
-        return make_response("No field 'file' in form", 400)
-
     file = request.files['file']
     
     if not valid:
-        print(resp)
         return make_response(jsonify(resp), 400)
 
     name = resp.pop("name")
@@ -27,6 +31,7 @@ def newAction(request):
     db.insertAction(name, resp)
 
     # TODO compute where to deploy action and update availability
+    computeAvailability(name, resp)
 
     return make_response(name, 201)
 
@@ -53,13 +58,17 @@ def deleteAction(request, token):
     if db.availableActionName(token):   # action name not present
         return make_response(jsonify({'error': "No action with name " + token}),
                              406)
-
     db.deleteAction(token)
     fs.removeFile(token)
+    for ip in getNodesIP():
+        try:
+            post(str(ip), 8080, "/internal/delete/" + str(token), {})
+        except ConnectionError:
+            pass    
     return make_response("OK", 200)
 
 """
-{ 
+{
   "param": {"text": "hello world"}
   "cpu": 2,
   "memory": "250m",

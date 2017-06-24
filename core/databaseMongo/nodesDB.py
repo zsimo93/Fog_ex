@@ -18,7 +18,7 @@ def deleteNode(token):
 
     old_val = n.delete_one({'_id': token})
     
-    mainDB.removeNodeReplicaSet(old_val)
+    # mainDB.removeNodeReplicaSet(old_val)
 
     nrs.delete_one({'_id': token})
     removeNodeAV(token)
@@ -27,7 +27,6 @@ def deleteNode(token):
 def insertNode(value):
     """
     value = {
-        'id': 'AAABBBCCCDE',
         'name': 'raspi2',
         'ip': '172.17.0.6',
         'role': 'NODE',
@@ -80,11 +79,9 @@ def getRes(token):
 
 def getFullNode(token):
     node = getNode(token)
-    del node['_id']
     res = getRes(token)
     node['cpu'] = res['cpu']
     node['memory'] = res['memory']
-    node['id'] = token
 
     return node
 
@@ -103,7 +100,6 @@ def getNodes():
 
     return nodes
 
-    
 
 def updateResources(token, value):
     """

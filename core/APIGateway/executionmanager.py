@@ -1,3 +1,5 @@
+ ##NOT USED
+
 from core.utils.httpUtils import post
 from core.utils.fileutils import uniqueName
 from core.databaseMongo import actionsDB, nodesDB, sequencesDB
@@ -6,7 +8,7 @@ from flask import make_response, jsonify
 import json
 
 class ActionRequest:
-    def __init__(self, name, cpu, memory):
+    def __init__(self, name, cpu, memory, id):
         self.name = name
         self.cpu = cpu
         self.memory = memory
@@ -14,6 +16,12 @@ class ActionRequest:
         fromDB = actionsDB.getAction(name)
         self.timeout = fromDB['timeout']
         self.language = fromDB['language']
+
+class SeqActionRequest(ActionRequest):
+    def __init__(self, name, cpu, memory, seqID, actID):
+        super(SeqActionRequest, self).init(name, cpu, memory)
+        self.seqID = seqID
+        self.actID = actID
 
 
 class RequestHandler:
@@ -30,13 +38,15 @@ class RequestHandler:
         # return True if the current request action name is an action
         return not actionsDB.availableActionName(self.name)
 
-
     def start(self):
         if self.isAction():
             man = ActionExecutionHandler(self.default, self.name, self.param)
-            return man.run()
         else:
-            man = ProcExecutionHandler()
+            man = ProcExecutionHandler(self.param, self.default, self.configs,
+                                       self.name)
+
+        return man.run()
+
 
 class ActionExecutionHandler:
     def __init__(self, config, name, param):
@@ -109,22 +119,17 @@ class ActionExecutionHandler:
             
 
 class ProcExecutionHandler(ActionExecutionHandler):
-    def __init__(self, param, request, name):
+    def __init__(self, param, default, configs, name, inSeqID=None):
         self.name = name
         self.param = param
         self.seqId = uniqueName()
-        self.setupSequence(request)
+        self.inSeqID = inSeqID
+        self.setupSequence(default, configs)
 
 
-    def setupSequence(self, request):
+    def setupSequence(self, default, configs):
         # retrieve all the actions configurations and constraints
         sequence = sequencesDB.getSequence(self.name)['sequence']
-        
-        default = request['default']
-        try :
-            configs = request['except']
-        except KeyError:
-            configs = None
         
         sequenceObj = []
         for sublist in sequence:
@@ -177,6 +182,7 @@ class ProcExecutionHandler(ActionExecutionHandler):
             res = self.startExecution(request, ip)
             
             self.param = json.loads(res)
+
 
         return (jsonify(self.param), 200)
         

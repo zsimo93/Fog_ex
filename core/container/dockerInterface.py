@@ -1,8 +1,9 @@
 import docker
 import commands
 
-client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+# client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 
+client = docker.from_env()
 def runContainer(name, cpu, memory, path_dir):
     volumes = {
         path_dir: {"bind": "/action", "mode": "rw"}

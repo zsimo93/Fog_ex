@@ -1,7 +1,7 @@
 #!thesis/DB
 
-from core.utils.fileutils import uniqueName
 import mainDB
+import re
 
 def deleteResult(id):
     db = mainDB.db
@@ -9,11 +9,15 @@ def deleteResult(id):
 
     n.delete_one({'_id': id})
 
+def deleteAllRes(seqID):
+    db = mainDB.db
+    n = db.results
 
-def insertResult(value):
+    n.delete_many({'_id': {'$regex': '^' + seqID} })
+
+def insertResult(id, value):
     db = mainDB.db
     r = db.results
-    id = uniqueName()
     value['_id'] = id
     r.insert_one(value)
 
@@ -25,3 +29,12 @@ def getResult(id):
     n = db.results
 
     return n.find_one({'_id': id})
+
+
+def getSubParam(seqID, actID, paramName):
+    db = mainDB.db
+    n = db.results
+
+    res = n.find_one({'_id': seqID + "|" + actID})
+
+    return res[paramName]

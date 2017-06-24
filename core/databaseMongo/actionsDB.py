@@ -39,12 +39,17 @@ def deleteAction(token):
     av.remove({"_id" : token})
 
 
-def updateAvailability(actName, nodeToken):
+def updateAvailability(actName, nodeTokens):
     db = mainDB.db
     av = db.actionsAV
 
+    tokens = nodeTokens
+    if type(nodeTokens) != list:
+        tokens = [nodeTokens]
+
     val = av.find_one({"_id" : actName})
-    val["nodes"].append(nodeToken)
+    for t in tokens:
+        val["nodes"].append(t)
 
     av.find_one_and_replace({"_id" : actName}, val)
 

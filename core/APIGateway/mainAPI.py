@@ -64,12 +64,12 @@ def invoke(token):
 
 # ######################## TODO ###############################
 @app.route('/internal/invoke', methods=['POST'])
-def function():
+def intInvoke():
     return internal.invoke(request)
 
-@app.route('/internal/result/<token>', methods=['GET'])
-def function2(token):
-    return internal.fetch(token)
+@app.route('/internal/delete/<token>', methods=['POST'])
+def delFiles(token):
+    return internal.delFiles(token)
 
 
 def run():

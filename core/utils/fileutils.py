@@ -56,5 +56,6 @@ def unzip(filename, extract_dir):
     
 
 
-def deleteActionFiles(path):
+def deleteActionFiles(actName):
+    path = tmp_dir + "/" + actName
     shutil.rmtree(path)

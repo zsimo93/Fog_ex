@@ -1,7 +1,14 @@
 #!thesis/api
-from flask import Flask, request, make_response, jsonify
-from core.databaseMongo import nodesDB as db
+from flask import Flask, make_response, jsonify
+from core.databaseMongo import nodesDB as db, actionsDB
 from validator import validateNodeRequest as validate, cleanUpNode as clean
+
+def computeAvailability(resp, nodeId):
+    alist = [n["_id"] for n in actionsDB.getActions()]
+
+    for actionId in alist:
+        actionsDB.updateAvailability(actionId, nodeId)
+
 
 def newNode(request):
     
@@ -20,7 +27,9 @@ def newNode(request):
     # TODO compute actions to add and update availability
 
     id = db.insertNode(resp)
-
+    
+    computeAvailability(resp, id)
+    
     return make_response(id, 200)
 
 

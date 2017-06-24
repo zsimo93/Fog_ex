@@ -2,7 +2,6 @@
 from flask import Flask, request, make_response, jsonify
 from validator import validateSequence as validate, cleanUpSeq as clean
 from core.databaseMongo import sequencesDB as db
-from executionmanager import SeqExecutionManager
 
 def newSequence(request):
     valid, resp = validate(request)
@@ -31,17 +30,6 @@ def deleteSequence(request, token):
 
     db.deleteSequence(token)
     return make_response("OK", 200)
-
-
-def invokeSequence(request, token):
-    
-    if db.availableSeqName(token):
-        return make_response(jsonify({'error': "No sequence with name" + token}), 406)
-
-    man = SeqExecutionManager(request.json, token)
-    ret = man.run()
-
-    return make_response(ret)
 
 
 def getSequences(request):

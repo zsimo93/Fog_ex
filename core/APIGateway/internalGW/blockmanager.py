@@ -1,7 +1,7 @@
-from ActionManager import ActionManager
+"""from ActionManager import ActionManager
 from threading import Thread
 from core.databaseMongo import resultDB
-import json
+import json"""
 """
 param = {"text": "hello world"},
 block =
@@ -23,7 +23,8 @@ block =
     ]
 }
 """
-class BlockManager():
+
+"""class BlockManager():
     def __init__(self, block, param):
         actList = block
         self.param = param
@@ -45,10 +46,14 @@ class BlockManager():
         for (manager, thread) in self.aManagers:
             manager.param = self.param
             thread.join()
-            self.param = json.loads(manager.run())
+            resp, error = manager.run()
+            if error:
+                return (error, 500)
+            self.param = json.loads(resp)
 
         id = self.finalize()
         print id
         print self.param
 
         return json.dumps(self.param)
+"""

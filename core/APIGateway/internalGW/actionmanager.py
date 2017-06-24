@@ -1,9 +1,10 @@
-from core.gridFS import fileUtils
+from core.gridFS import files
 from core.container.dockerInterface import runContainer
+from core.databaseMongo import resultDB
 from core.utils.httpUtils import post
-from core.utils.fileUtils import deleteActionFiles
 from requests import ConnectionError
 from threading import Thread
+import json
 
 
 """request = {
@@ -16,30 +17,33 @@ from threading import Thread
 
 
 class ActionManager():
-    def __init__(self, request, param={}):
+    def __init__(self, request, seqID, myID, param={}):
         self.action = request['name']
         self.cpu = request['cpu']
         self.memory = request['memory']
         self.param = param
         self.timeout = request['timeout']
         self.language = request['language']
-
+        self.seqID = seqID
+        self.myID = myID
 
     def stopContainer(self):
-        print self.cont.id
-        self.cont.stop()
-        self.cont.remove()
-        print "done"  # log it instead
-        deleteActionFiles(self.path)
+        while(True):
+            try:
+                self.cont.stop()
+            except Exception:
+                continue
+            else:
+                self.cont.remove()
+                break
         return
 
 
     def startCont(self):
-        self.path = fileUtils.loadFile(self.action)
+        self.path = files.loadFile(self.action)
         self.cont , self.ip = runContainer("python-image",
                                            self.cpu, self.memory,
                                            self.path)
-
     def startThreadContainer(self):
         return Thread(target=self.startCont)
 
@@ -51,8 +55,9 @@ class ActionManager():
                     continue
                 else:
                     break
-        self.response = r
 
+        self.response = r.text
+        self.code = r.status_code
 
     def error(self, exception):
         # add logging info
@@ -62,15 +67,30 @@ class ActionManager():
     def run(self):
         try:
             self.makeRequest()
+            self.error = False
 
+            if self.code >= 400:
+                self.error = True
         except Exception, e:
+            self.error = True
             self.error(e)
+
         finally:
             Thread(target=self.stopContainer).start()
 
-        return self.response
+        return self.response, self.error
 
+    def finalizeResult(self):
+        if self.seqID:
+            resultDB.insertResult(self.seqID + "|" + self.myID, 
+                                  json.loads(self.response))
+            return ("OK", 200)
+        else:
+            return self.response, 200
 
     def initAndRun(self):
         self.startCont()
-        return self.run()
+        self.run()
+        if self.error:
+            return (self.response, 500)
+        return self.finalizeResult()

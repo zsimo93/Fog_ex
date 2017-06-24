@@ -10,19 +10,11 @@
 
     choose new Backup and start components...
 
-- Algorithm to choose function deployment
+- Algorithm to choose function deployment - dumb to all
 - Algorithm to choose function placement
 
-
-- Sequences management
-    - pass intermediate result
-
-
-- delete files of actions PROBLEM IF MULTIPLE CALLED
-                                GIVE diff NAMES
-
 - core.API.validator    # TODO add other constraints
-- core.API.actions  
-                    # TODO placement, invocation...
 
 - core.API.nodes    #TODO run setup
+
+- disable api, not internal, if node not a master

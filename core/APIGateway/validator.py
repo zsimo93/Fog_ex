@@ -5,8 +5,6 @@ def validateActionRequest(request):
     req = request.form.copy().to_dict()
     supportedLanguages = ("python", "java")
 
-    print req
-    
     if not req:
         return (False, {"error": "Not a multipart-form"})
     try:
@@ -47,8 +45,6 @@ def validateActionRequest(request):
         'timeout': int(req['timeout']),
         'in/out': req['in/out']
     }
-
-    print ret
 
     return (True, ret)
 
@@ -104,7 +100,6 @@ def cleanUpNode(req):
 
 def validateSequence(request):
     req = request.json
-    print req
     if not req:
         return (False, {"error": "Not a JSON"})
     try:
@@ -130,3 +125,29 @@ def cleanUpSeq(req):
         if k not in fields:
             del req[k]
     return req
+
+def validateInvoke(request):
+    req = request.json
+    const = ("memory", "cpu")
+    if not req:
+        return (False, {"error": "Not a JSON"})
+    try:
+        if type(req['param']) != dict:
+            return (False, {"error": "'param' must contain a formatted json"})
+        for c in const:
+            if c not in req["default"]:
+                return (False, {"error": "'default' must contain the parameters :" + str(const)})
+
+    except KeyError, e:
+            return (False, {"error": "Field '" + str(e) + "' not present"})
+
+    try:
+        for e in req["except"]:
+            for c in const:
+                if c not in req["except"][e]:
+                    return (False, {"error": "Every item in 'except' must contain the parameters :" + str(const)})
+    except KeyError, e:
+        req["except"] = {}
+        pass
+    
+    return (True, req)
