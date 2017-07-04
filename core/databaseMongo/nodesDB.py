@@ -1,9 +1,9 @@
 #!thesis/DB
 
-from core.databaseMongo.actionsDB import removeNodeAV
 from core.utils.fileutils import uniqueName
 import mainDB
 
+db = mainDB.db
 
 class NodeID():
     def __init__(self, id, ip):
@@ -12,7 +12,6 @@ class NodeID():
 
 
 def deleteNode(token):
-    db = mainDB.db
     n = db.nodes
     nrs = db.nodesRes
 
@@ -21,7 +20,7 @@ def deleteNode(token):
     # mainDB.removeNodeReplicaSet(old_val)
 
     nrs.delete_one({'_id': token})
-    removeNodeAV(token)
+    # removeNodeAV(token)
 
 
 def insertNode(value):
@@ -33,7 +32,6 @@ def insertNode(value):
         'architecture': 'ARM',
     }
     """
-    db = mainDB.db
     n = db.nodes
     nrs = db.nodesRes
 
@@ -53,7 +51,6 @@ def insertNode(value):
 
 
 def getNodesIP():
-    db = mainDB.db
     n = db.nodes
 
     ips = []
@@ -64,33 +61,40 @@ def getNodesIP():
 
 
 def getNode(token):
-    db = mainDB.db
     n = db.nodes
-
     return n.find_one({'_id': token})
 
 
 def getRes(token):
-    db = mainDB.db
     nrs = db.nodesRes
-
     return nrs.find_one({'_id': token})
 
+def allRes():
+    nrs = db.nodesRes
+    return nrs.find()
 
 def getFullNode(token):
     node = getNode(token)
     res = getRes(token)
     node['cpu'] = res['cpu']
     node['memory'] = res['memory']
-
     return node
 
 
-def getNodes():
-    db = mainDB.db
+def getNodesID():
     n = db.nodes
 
-    keys = map(lambda x: str(x["_id"]), n.find())
+    results = n.find()
+    if results:
+        keys = [str(x["_id"]) for x in results]
+    else:
+        keys = []
+
+    return keys
+
+
+def getNodes():
+    keys = getNodesID()
 
     nodes = []
 
@@ -107,7 +111,6 @@ def updateResources(token, value):
     value = {'cpu': 13.7,
          'memory': 14507.30}
     """
-    db = mainDB.db
     nrs = db.nodesRes
     ins = value
 
@@ -116,7 +119,6 @@ def updateResources(token, value):
 
 
 def updateNode(token, col, value):
-    db = mainDB.db
     n = db.nodes
 
     try:

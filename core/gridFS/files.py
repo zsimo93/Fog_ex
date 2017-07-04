@@ -7,7 +7,7 @@ fs = gridfs.GridFS(MongoClient(host='localhost', port=27017).fs)
 print "importing FS client"
 
 def saveFile(file, actionName):
-    fs.put(file, _id=actionName, content_type=file.content_type,
+    fs.put(file, _id=str(actionName), content_type=file.content_type,
            filename=file.filename)
 
 
@@ -18,7 +18,7 @@ def loadFile(actionName):
         os.stat(path)
     except Exception:
         os.mkdir(path)
-        f = fs.find_one(actionName)
+        f = fs.find_one(str(actionName))
 
         name = f.filename
         f.seek(0)

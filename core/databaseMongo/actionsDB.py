@@ -4,14 +4,18 @@ import mainDB
 def insertAction(name, value):
     db = mainDB.db
     a = db.actions
-    av = db.actionsAV
+    # av = db.actionsAV
+    dep = db.dependencies
 
     value["_id"] = name
     a.insert_one(value)
-    
+    """
     avObj = {"_id": name, "nodes": []}
     av.insert_one(avObj)
-
+    """
+    depRecord = {"_id": name, "dep": []}
+    dep.insert_one(depRecord)
+    
     return name
 
 
@@ -31,14 +35,23 @@ def availableActionName(name):
     
 
 def deleteAction(token):
+    from sequencesDB import deleteSequence
+
     db = mainDB.db
     a = db.actions
-    av = db.actionsAV
+    dep = db.dependencies
 
-    a.remove({"_id" : token})
-    av.remove({"_id" : token})
+    ret = a.find_one_and_delete({"_id" : token})
+    
+    deplist = dep.find_one_and_delete({"_id" : token})
+    for dep in deplist["dep"]:
+        if not availableActionName(dep):
+            deleteAction(dep)
+        else:
+            deleteSequence(dep)
 
-
+    return ret
+"""
 def updateAvailability(actName, nodeTokens):
     db = mainDB.db
     av = db.actionsAV
@@ -76,7 +89,7 @@ def removeNodeAV(nodeToken):
             av.find_one_and_replace({"_id": id}, a)
         except ValueError:
             pass
-
+"""
 
 def getActions():
     db = mainDB.db

@@ -1,4 +1,4 @@
-import mainDB 
+import mainDB, sequencesDB, actionsDB, nodesDB, resultDB, tokenDB, dependenciesDB
 
 __all__ = ["nodesDB", "actionsDB",
-           "sequencesDB"]
+           "sequencesDB", "resultDB", "tokenDB", "dependenciesDB"]

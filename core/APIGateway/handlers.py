@@ -57,36 +57,67 @@ class ActionRequest:
         fromDB = actionsDB.getAction(name)
         self.timeout = fromDB['timeout']
         self.language = fromDB['language']
+        self.cloud = fromDB['cloud']
+
+
+class RegInvoker:
+    def __init__(self, ip):
+        self.ip = ip
+
+    def startExecution(self, request):
+        ret = post(self.ip, "8080", "/internal/invoke", request, 10)
+        return (ret.text, ret.status_code)
+
+
+class AWSInvoker(ExecutionHandler):
+    def __init__(self, param):
+        self.param = param
+
+    def finalizeResult(self):
+        id = self.superSeqID + "|" + self.myID
+        rdb.insertResult(id, json.loads(self.response))
+        return ("OK", 200)
+
+    def startExecution(self, request):
+        from core.awsLambda.awsconnector import AwsActionInvoker
+        self.map = request['map']
+        self.superSeqID = request['seqID']
+        self.myID = "" if not request['myID'] else request['myID']
+        
+        param = self.prepareInput()
+        conn = AwsActionInvoker(request['action']['name'], param)
+        response = conn.invoke()
+
+        if "errorType" in response:
+            return (response, 500)
+
+        return self.finalizeResult()
 
 
 class ActionExecutionHandler(ExecutionHandler):
     def __init__(self, param, default, configs, name, superSeqID,
                  supermyID, map):
+        seqID = superSeqID
+        if not superSeqID:
+            seqID = uniqueName()
+            rdb.insertResult(seqID + "|param", param)
+
         super(ActionExecutionHandler, self).__init__(param, default, configs,
-                                                     superSeqID, supermyID, map)
+                                                     seqID, supermyID, map)
         if configs and name in configs:
                     conf = configs[name]
         else:
             conf = default
+
         self.action = ActionRequest(name, conf['cpu'], conf['memory'])
-        
-        if map:
-            newParam = self.prepareInput()
-            self.param = newParam
 
     def sortedAv(self, actionName):
         # sort the available nodes per cpu usage
-        avList = actionsDB.getAvailability(actionName)
-        avResList = []
+        # avList = actionsDB.getAvailability(actionName)
+        avList = nodesDB.allRes()
 
-        for node in avList:
-            res = nodesDB.getRes(node)
-            del res["_id"]
-            res["name"] = node
+        return sorted(avList, key=lambda node: node['cpu'])
 
-            avResList.append(res)
-
-        return sorted(avResList, key=lambda node: node['cpu'])
 
     def chooseNode(self):
         """
@@ -102,13 +133,10 @@ class ActionExecutionHandler(ExecutionHandler):
             req_mem = long(mem[:-1] + "000000000")
 
         selected = None
-
-        # CLOUD ????
         sortedAvList = self.sortedAv(self.action.name)
 
         if not sortedAvList:
-            return "localhost", "127.0.0.1"
-
+            return ("localhost", RegInvoker("127.0.0.1"))
 
         for node in sortedAvList:
             if req_mem < node['memory']:
@@ -116,37 +144,52 @@ class ActionExecutionHandler(ExecutionHandler):
                 selected = node
                 break
         if not selected:
-            selected = sortedAvList[0]
-        return selected, nodesDB.getNode(selected['name'])['ip']
+            if self.action.cloud:
+                return ("_cloud", AWSInvoker(self.param))
+            else:
+                selected = sortedAvList[0]
+        return (selected, RegInvoker(nodesDB.getNode(selected['_id'])['ip']))
 
-    def startExecution(self, request, ip):
-        ret = post(ip, "8080", "/internal/invoke", request, 10)
-        return ret
+    def finalizeResult(self):
+        resp = self.ret
+
+        if not self.supermyID:
+            # single action case. Return the result and delete from fs
+            id = self.superSeqID + "|"
+            result = rdb.getResult(id)
+            del result['_id']
+            resp = (json.dumps(result), 200)
+            rdb.deleteAllRes(self.superSeqID)
+
+        return resp
 
     def start(self):
         i = 0
         while(i < 2):
             try:
-                node, ip = self.chooseNode()
+                name, invoker = self.chooseNode()
 
                 request = {
                     "type": "action",
-                    "param": self.param,
+                    "map": self.map,
                     "seqID": self.superSeqID,
                     "myID": self.supermyID,
                     "action": self.action.__dict__
                 }
-                resp = self.startExecution(request, ip)
-                if resp.status_code >= 400:
-                    return resp.text, 500
-                self.ret = (resp.text, 200)
-                return self.ret
+                text, status_code = invoker.startExecution(request)
+                if status_code >= 400:
+                    self.ret = ({"error": text}, 500)
+                    return self.ret
+                self.ret = (text, 200)
+                return self.finalizeResult()
             except ConnectionError:
-                nodesDB.deleteNode(node)
+                nodesDB.deleteNode(name)
+#            except Exception, e:
+#                return ({"error": str(e)}, 500)
             else:
                 break
 
-        self.ret = ("2 nodes failed.", 500)
+        self.ret = ({"error": "2 nodes failed."}, 500)
         return self.ret
 
 
@@ -162,6 +205,8 @@ class ProcExecutionHandler(ExecutionHandler):
         if map:
             newParam = self.prepareInput()
             self.param = newParam
+
+        rdb.insertResult(self.myID + "|param", param)
         
     def cleanRes(self):
         rdb.deleteAllRes(self.myID)
@@ -188,17 +233,17 @@ class ProcExecutionHandler(ExecutionHandler):
     def start(self):
         for a in self.process:
             if a["id"] == "_parallel":
-                handler = ParallelExecutionHandler(self.param, self.default, 
+                handler = ParallelExecutionHandler(self.param, self.default,
                                                    self.configs, self.myID,
                                                    a["actions"])
             else:
                 handler = giveMeHandler(self.param, self.default, self.configs,
                                         a["name"], self.myID, a["id"], a["map"])
             
-            ret, status_code = handler.start()
+            r, status_code = handler.start()
             if status_code >= 400:
                 self.cleanRes()
-                self.ret = (ret, 500)
+                self.ret = (r, 500)
                 return self.ret
             
         self.ret = self.finalizeResult()

@@ -151,3 +151,20 @@ def validateInvoke(request):
         pass
     
     return (True, req)
+
+def validateAWS(request):
+    req = request.json
+
+    pattern = re.compile("arn:(aws|aws-us-gov):iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+")
+
+    if not req:
+        return (False, {"error": "Not a JSON"})
+    try:
+        req["accessKeyID"]
+        req["secretAccessID"]
+        if not pattern.match(req["ARN"]):
+            return (False, {"error": "ARN incorrect"})
+    except KeyError, e:
+            return (False, {"error": "Field '" + str(e) + "' not present"})
+
+    return (True, req)

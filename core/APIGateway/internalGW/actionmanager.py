@@ -4,7 +4,7 @@ from core.databaseMongo import resultDB
 from core.utils.httpUtils import post
 from requests import ConnectionError
 from threading import Thread
-import json
+import json, traceback
 
 
 """request = {
@@ -15,17 +15,30 @@ import json
 }
 """
 
-
 class ActionManager():
-    def __init__(self, request, seqID, myID, param={}):
+    def __init__(self, request, seqID, myID, map):
         self.action = request['name']
         self.cpu = request['cpu']
         self.memory = request['memory']
-        self.param = param
+        self.map = map
         self.timeout = request['timeout']
         self.language = request['language']
         self.seqID = seqID
-        self.myID = myID
+        self.myID = "" if not myID else myID
+        self.param = self.prepareInput()
+
+    def prepareInput(self):
+        inParam = {}
+        if not self.map:
+            inParam = resultDB.getResult(self.seqID + "|param")
+        else:
+            for newKey in self.map:
+                source = self.map[newKey]
+                list = source.split("/")
+                refId = list[0]
+                param = list[1]
+                inParam[newKey] = resultDB.getSubParam(self.seqID, refId, param)
+        return inParam
 
     def stopContainer(self):
         while(True):
@@ -38,12 +51,12 @@ class ActionManager():
                 break
         return
 
-
     def startCont(self):
         self.path = files.loadFile(self.action)
         self.cont , self.ip = runContainer("python-image",
                                            self.cpu, self.memory,
                                            self.path)
+
     def startThreadContainer(self):
         return Thread(target=self.startCont)
 
@@ -59,11 +72,6 @@ class ActionManager():
         self.response = r.text
         self.code = r.status_code
 
-    def error(self, exception):
-        # add logging info
-        self.response = str(exception)
-
-
     def run(self):
         try:
             self.makeRequest()
@@ -71,9 +79,10 @@ class ActionManager():
 
             if self.code >= 400:
                 self.error = True
-        except Exception, e:
+        except Exception:
+            tb = traceback.format_exc()
             self.error = True
-            self.error(e)
+            self.response = tb
 
         finally:
             Thread(target=self.stopContainer).start()
@@ -81,12 +90,10 @@ class ActionManager():
         return self.response, self.error
 
     def finalizeResult(self):
-        if self.seqID:
-            resultDB.insertResult(self.seqID + "|" + self.myID, 
-                                  json.loads(self.response))
-            return ("OK", 200)
-        else:
-            return self.response, 200
+        id = self.seqID + "|" + self.myID
+        print id
+        resultDB.insertResult(id, json.loads(self.response))
+        return ("OK", 200)
 
     def initAndRun(self):
         self.startCont()

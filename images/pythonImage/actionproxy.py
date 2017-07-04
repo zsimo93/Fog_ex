@@ -3,7 +3,6 @@ import sys
 from os.path import isfile, join
 import os
 import codecs
-import json
 
 workdir = "/action"
 proxy = Flask(__name__)
@@ -16,7 +15,6 @@ def run():
     args = request.json
     print args
 
-
     fn = compile(code, filename=filename, mode='exec')
 
     namespace = {}
@@ -27,13 +25,12 @@ def run():
         exec('fun = %s(param)' % "main", namespace)
         result = namespace['fun']
     except Exception, e:
-                    print str(e)
-                    return make_response(jsonify({'error': str(e)}), 502)
+                    return make_response(str(e), 502)
 
     if result and isinstance(result, dict):
         return make_response(jsonify(result), 200)
     else:
-        return make_response(jsonify({'error': 'The action did not return a dictionary.'}), 502)
+        return make_response('The action did not return a dictionary.', 502)
 
 
 if __name__ == '__main__':
@@ -50,14 +47,14 @@ if __name__ == '__main__':
         else:
             sys.stderr.write('Invalid virtualenv. Zip file does not include /virtualenv/bin/' + os.path.basename(activate_this_file) + '\n')
 
-    files = [f for f in os.listdir(workdir) if isfile(join(workdir, f)) and f.endswith(".py")]
+    files = [file for file in os.listdir(workdir) if isfile(join(workdir, file)) and file.endswith(".py")]
     if len(files) == 1:
         filename = join(workdir, files[0])
         with codecs.open(filename, 'r', 'utf-8') as m:
                 code = m.read()
     else:
         for f in files:
-            if f == "__main__.py":
+            if f == "_main_.py":
                 filename = join(workdir, f)
                 with codecs.open(filename, 'r', 'utf-8') as m:
                     code = m.read()

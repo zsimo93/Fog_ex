@@ -29,4 +29,9 @@ def invoke(token, request):
     
     hand = giveMeHandler(r["param"], r["default"], r["except"], token)
     payload, code = hand.start()
-    return make_response(jsonify(json.loads(payload)), code)
+    try:
+        return make_response(jsonify(json.loads(payload)), code)
+    except Exception:
+        return make_response(jsonify(payload), code)
+
+        

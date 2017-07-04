@@ -1,18 +1,22 @@
-from actionsDB import availableActionName as notPresent
 import mainDB
 
+db = mainDB.db
+
+
 def insertSequence(name, value):
-    db = mainDB.db
     s = db.sequences
+    dep = db.dependencies
 
     value["_id"] = name
     s.insert_one(value)
+
+    depRecord = {"_id": name, "dep": []}
+    dep.insert_one(depRecord)
     
     return name
 
 
 def availableSeqName(name):
-    db = mainDB.db
     s = db.sequences
 
     n = s.find({"_id" : name}).count()
@@ -21,21 +25,30 @@ def availableSeqName(name):
 
 
 def getSequence(name):
-    db = mainDB.db
     s = db.sequences
 
     return s.find_one({"_id" : name})
 
 
 def deleteSequence(token):
-    db = mainDB.db
+    from actionsDB import deleteAction
+    import dependenciesDB as depdb
+
     s = db.sequences
+    dep = db.dependencies
     
-    s.remove({"_id" : token})
+    s.delete_one({"_id" : token})
+    depdb.removeDependencies(token)
+
+    deplist = dep.find_one_and_delete({"_id" : token})
+    for dep in deplist["dep"]:
+        if not availableSeqName(dep):
+            deleteSequence(dep)
+        else:
+            deleteAction(dep)
 
 
 def getSequences():
-    db = mainDB.db
     s = db.sequences
 
     ret = []
@@ -51,7 +64,6 @@ def checkFields(actName, chklist, inOut):
     inOut is a "in" or "out" used to choose between the input or
         output parameters of the action.
     """
-    db = mainDB.db
     a = db.actions
     s = db.sequences
    
@@ -70,7 +82,6 @@ def checkFields(actName, chklist, inOut):
     return True, None
 
 def checkInputParam(token, param):
-    db = mainDB.db
     a = db.actions
     s = db.sequences
    
@@ -86,15 +97,16 @@ def checkInputParam(token, param):
 
 def checkSequence(process, in_out):
     # return the first incorrect name, none if all actions are ok
-
+    from actionsDB import availableActionName as notPresent
+    
     def checkAction(action, process, in_parallel):
         map = action["map"]
         name = action["name"]
         if notPresent(name) and availableSeqName(name):   # check if function is available
             return False, "Action '" + name + "' not found!"
 
-        outP = map.keys()
-        inP = map.values()
+        outP = map.values()
+        inP = map.keys()
         
         # check that input fields matches the ones specified
         ok, wrongfield = checkFields(name, inP, "in")

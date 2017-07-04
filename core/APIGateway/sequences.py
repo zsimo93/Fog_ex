@@ -1,7 +1,10 @@
 #!thesis/api
-from flask import Flask, request, make_response, jsonify
+from flask import make_response, jsonify
 from validator import validateSequence as validate, cleanUpSeq as clean
-from core.databaseMongo import sequencesDB as db
+from core.databaseMongo import (sequencesDB as db,
+                                actionsDB as adb,
+                                tokenDB as tdb,
+                                dependenciesDB as depdb)
 
 def newSequence(request):
     valid, resp = validate(request)
@@ -10,27 +13,50 @@ def newSequence(request):
 
     name = resp.pop("name")
     
-    if not db.availableSeqName(name):
+    if not db.availableSeqName(name) or not adb.availableActionName(name):
         return make_response(jsonify({'error': name + " already in use"}), 406)
 
     # check availability of functions in the list and matching of in/out param
-    l = resp['process']
-    ok, errorMsg = db.checkSequence(l, resp["in/out"])
+    proc = resp['process']
+    ok, errorMsg = db.checkSequence(proc, resp["in/out"])
     if not ok:
         return make_response(jsonify({"error" : errorMsg}), 400)
+    
     resp = clean(resp)  # remove unwanted fields before storing in DB
-    db.insertSequence(name, resp)
+    db.insertSequence(name, resp)  # save seq in db
+    depdb.computeDep(name, proc)  # save all the dependencies usefull for delete
     return make_response(name, 201)
 
 
-def deleteSequence(request, token):
+def deleteSequence(request, actionname):
     
-    if db.availableSeqName(token):
-        return make_response(jsonify({'error': "No sequence with name" + token}), 406)
+    def actualdelete():
+        db.deleteSequence(actionname)
+        tdb.deleteToken(actionname)
+        return make_response("OK", 200)
+    
+    if db.availableSeqName(actionname):
+        return make_response(jsonify({'error': "No sequence with name" + actionname}), 406)
 
-    db.deleteSequence(token)
-    return make_response("OK", 200)
+    deplist = depdb.getDependencies(actionname)
+    if not deplist:
+        return actualdelete()
+        
+    try:
+        token = request.json['token']
+        print token
+        if tdb.checkToken(actionname, token):
+            return actualdelete()
 
+    except Exception, e:
+        print e
+        
+    newtoken = tdb.newToken(actionname)
+    
+    resp = {"message": "By deleting this action also the actions in the list will be deleted. Resend the request with the token to confirm." ,
+            "dependencies": deplist,
+            "token": newtoken}
+    return make_response(jsonify(resp), 200)
 
 def getSequences(request):
     seq = db.getSequences()
