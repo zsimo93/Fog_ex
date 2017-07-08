@@ -3,7 +3,7 @@ import re, json
 
 def validateActionRequest(request):
     req = request.form.copy().to_dict()
-    supportedLanguages = ("python", "java")
+    supportedLanguages = ("python")
 
     if not req:
         return (False, {"error": "Not a multipart-form"})
@@ -36,6 +36,7 @@ def validateActionRequest(request):
     if request.files['file'].filename == '':
         return (False, {"error": "no file selected"})
 
+    
 
     ret = {
         'name': req['name'],
@@ -43,7 +44,7 @@ def validateActionRequest(request):
         'language': req['language'],
         'cloud': req['cloud'] == 'true',
         'timeout': int(req['timeout']),
-        'in/out': req['in/out']
+        'in/out': req['in/out'],
     }
 
     return (True, ret)
@@ -60,7 +61,7 @@ def validateNodeRequest(request):
     req = request.json
         
     pattern = re.compile('((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}')
-    supportedArch = ("arm", "x86")
+    supportedArch = ("arm")
     
 
     if not req:
@@ -128,27 +129,29 @@ def cleanUpSeq(req):
 
 def validateInvoke(request):
     req = request.json
-    const = ("memory", "cpu")
+    actionClasses = {"small": 128,
+                     "medium": 256,
+                     "large": 512}
     if not req:
         return (False, {"error": "Not a JSON"})
     try:
         if type(req['param']) != dict:
             return (False, {"error": "'param' must contain a formatted json"})
-        for c in const:
-            if c not in req["default"]:
-                return (False, {"error": "'default' must contain the parameters :" + str(const)})
-
+        defClass = req['default']['actionClass']
+        if (defClass not in actionClasses):
+            return (False, {"error": "actionClass must be 'small', 'medium' or 'large'"})
     except KeyError, e:
             return (False, {"error": "Field '" + str(e) + "' not present"})
+    req['default']['memory'] = actionClasses[defClass]
 
     try:
         for e in req["except"]:
-            for c in const:
-                if c not in req["except"][e]:
-                    return (False, {"error": "Every item in 'except' must contain the parameters :" + str(const)})
+            eClass = req["except"][e]['actionClass']
+            if (eClass not in actionClasses):
+                return (False, {"error": "actionClass must be 'small', 'medium' or 'large'"})
+            req["except"][e]['memory'] = actionClasses[eClass]
     except KeyError, e:
         req["except"] = {}
-        pass
     
     return (True, req)
 

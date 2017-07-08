@@ -49,16 +49,14 @@ class ExecutionHandler(object):
 
 
 class ActionRequest:
-    def __init__(self, name, cpu, memory):
+    def __init__(self, name, memory):
         self.name = name
-        self.cpu = cpu
         self.memory = memory
 
         fromDB = actionsDB.getAction(name)
         self.timeout = fromDB['timeout']
         self.language = fromDB['language']
         self.cloud = fromDB['cloud']
-
 
 class RegInvoker:
     def __init__(self, ip):
@@ -105,11 +103,11 @@ class ActionExecutionHandler(ExecutionHandler):
         super(ActionExecutionHandler, self).__init__(param, default, configs,
                                                      seqID, supermyID, map)
         if configs and name in configs:
-                    conf = configs[name]
+            conf = configs[name]
         else:
             conf = default
 
-        self.action = ActionRequest(name, conf['cpu'], conf['memory'])
+        self.action = ActionRequest(name, conf['memory'])
 
     def sortedAv(self, actionName):
         # sort the available nodes per cpu usage
@@ -123,15 +121,15 @@ class ActionExecutionHandler(ExecutionHandler):
         """
         Select the node with more free cpu and enought memory
         """
-        mem = self.action.memory
-
+        req_mem = long(self.action.memory) * 1000000
+        """
         if mem.endswith("m"):
             req_mem = long(mem[:-1] + "000000")
         elif mem.endswith("k"):
             req_mem = long(mem[:-1] + "000")
         elif mem.endswith("g"):
             req_mem = long(mem[:-1] + "000000000")
-
+        """
         selected = None
         sortedAvList = self.sortedAv(self.action.name)
 
@@ -160,7 +158,6 @@ class ActionExecutionHandler(ExecutionHandler):
             del result['_id']
             resp = (json.dumps(result), 200)
             rdb.deleteAllRes(self.superSeqID)
-
         return resp
 
     def start(self):
@@ -179,13 +176,16 @@ class ActionExecutionHandler(ExecutionHandler):
                 text, status_code = invoker.startExecution(request)
                 if status_code >= 400:
                     self.ret = ({"error": text}, 500)
+                    rdb.deleteAllRes(self.superSeqID)
                     return self.ret
                 self.ret = (text, 200)
                 return self.finalizeResult()
             except ConnectionError:
                 nodesDB.deleteNode(name)
-#            except Exception, e:
-#                return ({"error": str(e)}, 500)
+                rdb.deleteAllRes(self.superSeqID)
+            except Exception, e:
+                rdb.deleteAllRes(self.superSeqID)
+                return ({"error": str(e)}, 500)
             else:
                 break
 
@@ -238,7 +238,8 @@ class ProcExecutionHandler(ExecutionHandler):
                                                    a["actions"])
             else:
                 handler = giveMeHandler(self.param, self.default, self.configs,
-                                        a["name"], self.myID, a["id"], a["map"])
+                                        a["name"], self.myID,
+                                        a["id"], a["map"])
             
             r, status_code = handler.start()
             if status_code >= 400:

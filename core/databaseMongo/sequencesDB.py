@@ -154,15 +154,22 @@ def checkSequence(process, in_out):
         return True, None
 
     
+    ids = []
     for action in process:
         if action["id"] == "_parallel":
             in_parallel = True
             listAct = action['actions']
             for a in listAct:
+                if a['id'] in ids:
+                    return False, "Repeated id " + str(a['id'])
+                ids.append(a['id'])
                 ok, errMsg = checkAction(a, process, in_parallel)
                 if not ok:
                     return ok, errMsg
         else:
+            if action['id'] in ids:
+                return False, "Repeated id " + str(action['id'])
+            ids.append(a['id'])
             in_parallel = False
             ok, errMsg = checkAction(action, process, in_parallel)
         if not ok:

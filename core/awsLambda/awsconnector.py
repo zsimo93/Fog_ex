@@ -26,32 +26,36 @@ class AwsActionCreator(object):
         return pc.createPackage()
 
     def create(self):
-        response = self.client.create_function(
-            FunctionName=self.name,
-            Runtime=self.language,
-            Role=awsCredential.getCred()["ARN"],
-            Handler='__handler__.my_handler',
-            Code={
-                'ZipFile': self.package,
-            },
-            Description=self.description,
-            # Timeout=self.timeout,
-            # MemorySize=123,
-            Publish=False
-        )
-        return response
+        actionClasses = {"small": 128,
+                         "medium": 256,
+                         "large": 512}
 
-
+        for c in actionClasses:
+            self.client.create_function(
+                FunctionName=self.name + "_" + c,
+                Runtime=self.language,
+                Role=awsCredential.getCred()["ARN"],
+                Handler='__handler__.my_handler',
+                Code={
+                    'ZipFile': self.package,
+                },
+                Description=self.description,
+                Timeout=self.timeout,
+                MemorySize=actionClasses[c],
+                Publish=True
+            )
+        
 class AwsActionInvoker(object):
-    def __init__(self, name, param):
+    def __init__(self, name, param, actClass):
         self.client = getClient()
         self.name = name
         self.param = json.dumps(param)
+        self.actClass = actClass
 
     def invoke(self):
         response = self.client.invoke(
-            FunctionName=self.name,
-            Payload=self.param
+            FunctionName=self.name + "_" + self.actClass,
+            Payload=self.param,
         )
         return response
 
@@ -62,6 +66,8 @@ class AwsActionDeletor(object):
         self.name = name
 
     def delete(self):
-        self.client.delete_function(
-            FunctionName=self.name
-        )
+        versions = ("small", "medium", "large")
+        for v in versions:
+            self.client.delete_function(
+                FunctionName=self.name + "_" + v
+            )

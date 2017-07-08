@@ -33,5 +33,3 @@ def invoke(token, request):
         return make_response(jsonify(json.loads(payload)), code)
     except Exception:
         return make_response(jsonify(payload), code)
-
-        
