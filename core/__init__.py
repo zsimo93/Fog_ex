@@ -1,1 +1,1 @@
-# import APIGateway, container, databaseMongo, utils, gridFS, awsLambda
+import APIGateway, container, databaseMongo, utils, gridFS, awsLambda

@@ -7,6 +7,7 @@ RUN wget -qO- https://get.docker.com | sh
 RUN pip install \
             docker \
             pymongo \
+            boto3
             
 
 EXPOSE 8080
