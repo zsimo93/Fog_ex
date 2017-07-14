@@ -1,4 +1,4 @@
-from ActionManager import ActionManager
+from actionmanager import ActionManager
 from core.databaseMongo import resultDB
 import json
 """
