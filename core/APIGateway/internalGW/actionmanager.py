@@ -16,29 +16,15 @@ import json, traceback
 """
 
 class ActionManager():
-    def __init__(self, request, seqID, myID, map):
+    def __init__(self, request, param):
         self.action = request['name']
-        self.cpu = request['cpu']
         self.memory = request['memory']
         self.map = map
         self.timeout = request['timeout']
         self.language = request['language']
-        self.seqID = seqID
-        self.myID = "" if not myID else myID
-        self.param = self.prepareInput()
-
-    def prepareInput(self):
-        inParam = {}
-        if not self.map:
-            inParam = resultDB.getResult(self.seqID + "|param")
-        else:
-            for newKey in self.map:
-                source = self.map[newKey]
-                list = source.split("/")
-                refId = list[0]
-                param = list[1]
-                inParam[newKey] = resultDB.getSubParam(self.seqID, refId, param)
-        return inParam
+        self.seqID = request["seqID"]
+        self.myID = request["myID"]
+        self.param = param
 
     def stopContainer(self):
         while(True):
@@ -54,7 +40,7 @@ class ActionManager():
     def startCont(self):
         self.path = files.loadFile(self.action)
         self.cont , self.ip = runContainer("python-image",
-                                           self.cpu, self.memory,
+                                           self.memory,
                                            self.path)
 
     def startThreadContainer(self):
@@ -90,10 +76,12 @@ class ActionManager():
         return self.response, self.error
 
     def finalizeResult(self):
-        id = self.seqID + "|" + self.myID
-        print id
-        resultDB.insertResult(id, json.loads(self.response))
-        return ("OK", 200)
+        if self.myID:
+            id = self.seqID + "|" + self.myID
+            resultDB.insertResult(id, json.loads(self.response))
+            return ("OK", 200)
+        else:
+            return (json.loads(self.response), 200)
 
     def initAndRun(self):
         self.startCont()

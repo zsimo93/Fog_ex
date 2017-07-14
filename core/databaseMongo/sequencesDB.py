@@ -53,6 +53,10 @@ def getSequences():
 
     ret = []
     for k in s.find():
+        try:
+            del k["fullSeq"]
+        except Exception:
+            pass
         ret.append(k)
 
     return ret
@@ -95,11 +99,11 @@ def checkInputParam(token, param):
 
     return True, None
 
-def checkSequence(process, in_out):
+def checkSequence(sequence, in_out):
     # return the first incorrect name, none if all actions are ok
     from actionsDB import availableActionName as notPresent
     
-    def checkAction(action, process, in_parallel):
+    def checkAction(action, sequence):
         map = action["map"]
         name = action["name"]
         if notPresent(name) and availableSeqName(name):   # check if function is available
@@ -122,7 +126,7 @@ def checkSequence(process, in_out):
                 if param not in in_out["in"]:
                     return False, "'" + k + " not in input sequence specification"
             else:
-                for act in process:  # check if used an input of an action after this
+                for act in sequence:  # check if used an input of an action after this
                     if refId == act['id']:
                         refActName = act["name"]
                         ok, wrongfield = checkFields(refActName, param, "out")
@@ -130,59 +134,28 @@ def checkSequence(process, in_out):
                             return ok, "Field '" + wrongfield + "' not in the output list of action '" + refActName + "'"
                         check = True
                         break
-                    elif act['id'] == "_parallel":    # case refId in a parallel block
-                        listAct = act['actions']
-                        for a in listAct:
-                            if refId == a['id']:
-                                if in_parallel:
-                                    return False, ("In a parallel block you cannot reference the other actions in the block: '" +
-                                                   action["id"] + "' -> '" + refId) + "'"
-                                refActName = a["name"]
-                                ok, wrongfield = checkFields(refActName, param, "out")
-                                if not ok:
-                                    return ok, "Field '" + wrongfield + "' not in the output list of action '" + refActName + "'"
-                                check = True
-                                break
-                            elif a['id'] == action["id"]:    # case my id is encountered before refID
-                                return False, "Action id '" + k + "' referenced before available"
-                        if check:
-                            break
                     elif act['id'] == action["id"]:    # case my id is encountered before refID
                         return False, "Action id '" + k + "' referenced before available"
-                if not check:   # case the refID is not found in the process
-                    return False, "The id '" + refId + "' to present in this process"
+                if not check:   # case the refID is not found in the sequence
+                    return False, "The id '" + refId + "' to present in this sequence"
         return True, None
 
     
     ids = []
-    for action in process:
-        if action["id"] == "_parallel":
-            in_parallel = True
-            listAct = action['actions']
-            for a in listAct:
-                if a['id'] in ids:
-                    return False, "Repeated id " + str(a['id'])
-                ids.append(a['id'])
-                ok, errMsg = checkAction(a, process, in_parallel)
-                if not ok:
-                    return ok, errMsg
-        else:
-            if action['id'] in ids:
-                return False, "Repeated id " + str(action['id'])
-            ids.append(a['id'])
-            in_parallel = False
-            ok, errMsg = checkAction(action, process, in_parallel)
+    for action in sequence:
+        if action['id'] in ids:
+            return False, "Repeated id " + str(action['id'])
+        ids.append(action['id'])
+        ok, errMsg = checkAction(action, sequence)
         if not ok:
             return ok, errMsg
 
     # check last action output match spec
-    last = process[-1]
-    if last["id"] == "_parallel":
-        return False, "The process cannot end with a parallel block"
-
+    last = sequence[-1]
+    
     ok, wrongfield = checkFields(last["name"], in_out["out"], "out")
     if not ok:
         return ok, ("Output params of the last action '" + last["name"] +
-                    "' don't match the output process specification")
+                    "' don't match the output sequence specification")
 
     return True, None

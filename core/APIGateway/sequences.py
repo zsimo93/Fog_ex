@@ -6,6 +6,9 @@ from core.databaseMongo import (sequencesDB as db,
                                 tokenDB as tdb,
                                 dependenciesDB as depdb)
 
+from flatsequence import unrollAndDAG
+from seqanalizer import SequenceAnalizer
+
 def newSequence(request):
     valid, resp = validate(request)
     if not valid:
@@ -17,12 +20,15 @@ def newSequence(request):
         return make_response(jsonify({'error': name + " already in use"}), 406)
 
     # check availability of functions in the list and matching of in/out param
-    proc = resp['process']
+    proc = resp['sequence']
     ok, errorMsg = db.checkSequence(proc, resp["in/out"])
     if not ok:
         return make_response(jsonify({"error" : errorMsg}), 400)
     
     resp = clean(resp)  # remove unwanted fields before storing in DB
+    resp["fullSeq"] = unrollAndDAG(proc)
+    resp["execSeq"] = SequenceAnalizer(resp["fullSeq"]).__json__()
+    resp["resultActionID"] = resp["fullSeq"][-1]["id"]
     db.insertSequence(name, resp)  # save seq in db
     depdb.computeDep(name, proc)  # save all the dependencies usefull for delete
     return make_response(name, 201)
@@ -61,3 +67,8 @@ def deleteSequence(request, actionname):
 def getSequences(request):
     seq = db.getSequences()
     return make_response(jsonify({"sequences": seq}), 200)
+
+def flatSeq(token):
+    seq = db.getSequence(token)
+    
+    return make_response(jsonify(seq["execSeq"]), 200)

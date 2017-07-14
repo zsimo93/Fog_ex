@@ -1,7 +1,6 @@
 #!thesis/DB
 
 import mainDB
-import re
 
 def deleteResult(id):
     db = mainDB.db
@@ -9,11 +8,11 @@ def deleteResult(id):
 
     n.delete_one({'_id': id})
 
-def deleteAllRes(seqID):
+def deleteAllRes(sessionID):
     db = mainDB.db
     n = db.results
 
-    n.delete_many({'_id': {'$regex': '^' + seqID} })
+    n.delete_many({'_id': {'$regex': '^' + sessionID} })
 
 def insertResult(id, value):
     db = mainDB.db
@@ -31,10 +30,10 @@ def getResult(id):
     return n.find_one({'_id': id})
 
 
-def getSubParam(seqID, actID, paramName):
+def getSubParam(sessionID, actID, paramName):
     db = mainDB.db
     n = db.results
 
-    res = n.find_one({'_id': seqID + "|" + actID})
+    res = n.find_one({'_id': sessionID + "|" + actID})
 
     return res[paramName]

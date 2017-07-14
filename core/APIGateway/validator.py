@@ -112,7 +112,7 @@ def validateSequence(request):
            type(req['in/out']['out']) != list) :
             return (False, {"error": "the in/out field must contain the keys in \
                              and out with values lists"})
-        req['process']
+        req['sequence']
         req['description']
     except KeyError, e:
             return (False, {"error": "Field '" + str(e) + "' not present"})
@@ -121,7 +121,7 @@ def validateSequence(request):
 
 
 def cleanUpSeq(req):
-    fields = ("name", "description", "process", "in/out")
+    fields = ("name", "description", "sequence", "in/out")
     for k in req.keys():
         if k not in fields:
             del req[k]

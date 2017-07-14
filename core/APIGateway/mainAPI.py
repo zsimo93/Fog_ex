@@ -71,6 +71,10 @@ def deleteSeq(token):
         return abort(404)
     return sequences.deleteSequence(request, token)
 
+@app.route('/api/<token>', methods=["GET"])
+def flatSeq(token):
+    return sequences.flatSeq(token)
+
 """@app.route('/api/sequences/<token>/invoke', methods=['POST'])
 def invokeSeq(token):
     return sequences.invokeSequence(request, token)

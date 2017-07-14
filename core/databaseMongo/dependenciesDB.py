@@ -7,8 +7,8 @@ def addDependency(actionName, newdep):
     val = dep.find_one_and_update({"_id": actionName},
                                   {"$addToSet": {"dep": newdep}})
 
-def computeDep(seqName, process):
-    for action in process:
+def computeDep(seqName, sequence):
+    for action in sequence:
         if action["id"] == "_parallel":
             listAct = action['actions']
             for a in listAct:

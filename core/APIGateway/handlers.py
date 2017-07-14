@@ -13,8 +13,8 @@ def giveMeHandler(param, default, configs, name, superSeqID=None,
         return ActionExecutionHandler(param, default, configs, name,
                                       superSeqID, myID, map)
     else:
-        return ProcExecutionHandler(param, default, configs, name,
-                                    superSeqID, myID, map)
+        return SeqExecutionHandler(param, default, configs, name,
+                                   superSeqID, myID, map)
 
 
 class ExecutionHandler(object):
@@ -32,16 +32,15 @@ class ExecutionHandler(object):
 
     def prepareInput(self):
         inParam = {}
-        sources = self.map.keys()
-        for s in sources:
+        for newkey in self.map:
+            s = self.map[newkey]
             list = s.split("/")
             refId = list[0]
             param = list[1]
-            newKey = self.map[s]
             if refId == "param":
-                inParam[newKey] = self.param[param]
+                inParam[newkey] = self.param[param]
             else:
-                inParam[newKey] = rdb.getSubParam(self.superSeqID, refId, param)
+                inParam[newkey] = rdb.getSubParam(self.superSeqID, refId, param)
         return inParam
 
     def start(self):
@@ -49,7 +48,7 @@ class ExecutionHandler(object):
 
 
 class ActionRequest:
-    def __init__(self, name, memory):
+    def __init__(self, name, memory, myID, seqID, map):
         self.name = name
         self.memory = memory
 
@@ -57,6 +56,9 @@ class ActionRequest:
         self.timeout = fromDB['timeout']
         self.language = fromDB['language']
         self.cloud = fromDB['cloud']
+        self.myID = myID
+        self.seqID = seqID
+        self.map = map
 
 class RegInvoker:
     def __init__(self, ip):
@@ -72,15 +74,18 @@ class AWSInvoker(ExecutionHandler):
         self.param = param
 
     def finalizeResult(self):
-        id = self.superSeqID + "|" + self.myID
-        rdb.insertResult(id, json.loads(self.response))
-        return ("OK", 200)
+        if self.superSeqID:
+            id = self.superSeqID + "|" + self.myID
+            rdb.insertResult(id, json.loads(self.response))
+            return ("OK", 200)
+        else:
+            return json.loads(self.response), 200
 
     def startExecution(self, request):
         from core.awsLambda.awsconnector import AwsActionInvoker
         self.map = request['map']
         self.superSeqID = request['seqID']
-        self.myID = "" if not request['myID'] else request['myID']
+        self.myID = request['myID']
         
         param = self.prepareInput()
         conn = AwsActionInvoker(request['action']['name'], param)
@@ -95,19 +100,16 @@ class AWSInvoker(ExecutionHandler):
 class ActionExecutionHandler(ExecutionHandler):
     def __init__(self, param, default, configs, name, superSeqID,
                  supermyID, map):
-        seqID = superSeqID
-        if not superSeqID:
-            seqID = uniqueName()
-            rdb.insertResult(seqID + "|param", param)
 
         super(ActionExecutionHandler, self).__init__(param, default, configs,
-                                                     seqID, supermyID, map)
+                                                     superSeqID, supermyID, map)
         if configs and name in configs:
             conf = configs[name]
         else:
             conf = default
 
-        self.action = ActionRequest(name, conf['memory'])
+        self.action = ActionRequest(name, conf['memory'],
+                                    supermyID, superSeqID, map)
 
     def sortedAv(self, actionName):
         # sort the available nodes per cpu usage
@@ -148,18 +150,6 @@ class ActionExecutionHandler(ExecutionHandler):
                 selected = sortedAvList[0]
         return (selected, RegInvoker(nodesDB.getNode(selected['_id'])['ip']))
 
-    def finalizeResult(self):
-        resp = self.ret
-
-        if not self.supermyID:
-            # single action case. Return the result and delete from fs
-            id = self.superSeqID + "|"
-            result = rdb.getResult(id)
-            del result['_id']
-            resp = (json.dumps(result), 200)
-            rdb.deleteAllRes(self.superSeqID)
-        return resp
-
     def start(self):
         i = 0
         while(i < 2):
@@ -168,9 +158,7 @@ class ActionExecutionHandler(ExecutionHandler):
 
                 request = {
                     "type": "action",
-                    "map": self.map,
-                    "seqID": self.superSeqID,
-                    "myID": self.supermyID,
+                    "param": self.param if not self.action.map else {},
                     "action": self.action.__dict__
                 }
                 text, status_code = invoker.startExecution(request)
@@ -179,7 +167,7 @@ class ActionExecutionHandler(ExecutionHandler):
                     rdb.deleteAllRes(self.superSeqID)
                     return self.ret
                 self.ret = (text, 200)
-                return self.finalizeResult()
+                return self.ret
             except ConnectionError:
                 nodesDB.deleteNode(name)
                 rdb.deleteAllRes(self.superSeqID)
@@ -193,20 +181,20 @@ class ActionExecutionHandler(ExecutionHandler):
         return self.ret
 
 
-class ProcExecutionHandler(ExecutionHandler):
+class SeqExecutionHandler(ExecutionHandler):
     def __init__(self, param, default, configs, name, superSeqID,
                  supermyID, map):
-        super(ProcExecutionHandler, self).__init__(param, default, configs,
-                                                   superSeqID, supermyID, map)
+        super(SeqExecutionHandler, self).__init__(param, default, configs,
+                                                  superSeqID, supermyID, map)
         self.name = name
         self.myID = uniqueName()
-        self.process = getSequence(name)["process"]
+        self.sequence = getSequence(name)["sequence"]
 
         if map:
             newParam = self.prepareInput()
             self.param = newParam
 
-        rdb.insertResult(self.myID + "|param", param)
+        rdb.insertResult(self.myID + "|param", self.param   )
         
     def cleanRes(self):
         rdb.deleteAllRes(self.myID)
@@ -217,7 +205,7 @@ class ProcExecutionHandler(ExecutionHandler):
         If a subsequence, save again the result with the new ID and return None.
         Return the result otherwise.
         """
-        idRes = self.myID + "|" + self.process[-1]["id"]
+        idRes = self.myID + "|" + self.sequence[-1]["id"]
         res = rdb.getResult(idRes)
         del res["_id"]
         
@@ -231,16 +219,16 @@ class ProcExecutionHandler(ExecutionHandler):
         return (json.dumps(res), 200)
 
     def start(self):
-        for a in self.process:
-            if a["id"] == "_parallel":
+        for a in self.sequence:
+            """ if a["id"] == "_parallel":
                 handler = ParallelExecutionHandler(self.param, self.default,
                                                    self.configs, self.myID,
                                                    a["actions"])
-            else:
-                handler = giveMeHandler(self.param, self.default, self.configs,
-                                        a["name"], self.myID,
-                                        a["id"], a["map"])
-            
+            else:"""
+            handler = giveMeHandler(self.param, self.default, self.configs,
+                                    a["name"], self.myID,
+                                    a["id"], a["map"])
+        
             r, status_code = handler.start()
             if status_code >= 400:
                 self.cleanRes()
@@ -251,7 +239,7 @@ class ProcExecutionHandler(ExecutionHandler):
         return self.ret
 
 
-class ParallelExecutionHandler(ExecutionHandler):
+"""class ParallelExecutionHandler(ExecutionHandler):
     def __init__(self, param, default, configs, superSeqID, actions):
         super(ParallelExecutionHandler, self).__init__(param, default, configs,
                                                        superSeqID)
@@ -275,4 +263,4 @@ class ParallelExecutionHandler(ExecutionHandler):
             if h.ret[1] >= 400:
                 return (h.ret[0], 500)
                 
-        return ("OK", 200)
+        return ("OK", 200)"""
