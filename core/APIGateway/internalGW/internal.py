@@ -1,6 +1,7 @@
 from flask import make_response
 from actionmanager import ActionManager
 from blockmanager import BlockManager
+from core.container.dockerInterface import delImage
 from core.utils.fileutils import deleteActionFiles
 import traceback, os
 import threading
@@ -34,15 +35,23 @@ def invoke(request):
 
             r = ActionManager(action, inparam).initAndRun()
         else:
-            r = BlockManager(req['block'], sessionID).run()
+            block = req['block']
+            sessionID = req["sessionID"]
+            r = BlockManager(block, sessionID).run()
 
         return make_response(r)
     except Exception:
         tb = traceback.format_exc()
         return make_response(tb, 500)
 
-def delFiles(token):
+def delFiles(token, request):
     deleteActionFiles()
+    try:
+        contName = request.json["containerName"]
+        delImage(contName)
+    except Exception:
+        pass
+
     return make_response("OK", 200)
 
 def downloadImage(request):

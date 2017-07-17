@@ -3,7 +3,7 @@ import re, json
 
 def validateActionRequest(request):
     req = request.form.copy().to_dict()
-    supportedLanguages = ("python")
+    supportedLanguages = ("python", "docker")
 
     if not req:
         return (False, {"error": "Not a multipart-form"})
@@ -30,14 +30,6 @@ def validateActionRequest(request):
     except ValueError, e:
         return (False, {"error": "Timeout must be an integer, in [ms]"})
 
-    if 'file' not in request.files:
-        return (False, {"error": "No file field!!!"})
-
-    if request.files['file'].filename == '':
-        return (False, {"error": "no file selected"})
-
-    
-
     ret = {
         'name': req['name'],
         'description': req['description'],
@@ -46,8 +38,21 @@ def validateActionRequest(request):
         'timeout': int(req['timeout']),
         'in/out': req['in/out'],
     }
+    if req['language'] == "python":
+        if 'file' not in request.files:
+            return (False, {"error": "No file field!!!"})
 
-    return (True, ret)
+        if request.files['file'].filename == '':
+            return (False, {"error": "no file selected"})
+        
+    elif req['language'] == "docker":
+        try:
+            ret["containerName"] = req["containerName"]
+        except KeyError:
+            return (False, {"error": "Field '" + str(e) + "' not present. Specify a valid container name"})
+        
+
+        return (True, ret)
 
 """def cleanUpAct(req):
     fields = ("name", "description", "language", "cloud", "timeout")

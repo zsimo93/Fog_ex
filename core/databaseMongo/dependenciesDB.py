@@ -1,10 +1,10 @@
 import mainDB
 
 db = mainDB.db
+dep = db.dependencies
 
 def addDependency(actionName, newdep):
-    dep = db.dependencies
-    val = dep.find_one_and_update({"_id": actionName},
+    dep.find_one_and_update({"_id": actionName},
                                   {"$addToSet": {"dep": newdep}})
 
 def computeDep(seqName, sequence):
@@ -17,7 +17,6 @@ def computeDep(seqName, sequence):
             addDependency(action["name"], seqName)
 
 def getDependencies(actionName):
-    dep = db.dependencies
     raw = dep.find_one({"_id": actionName})
     fullDep = set()
     fullDep.update(raw["dep"])
@@ -28,7 +27,6 @@ def getDependencies(actionName):
     return list(fullDep)
         
 def removeDependencies(actionName):
-    dep = db.dependencies
 
     for raw in dep.find():
         dep.find_one_and_update({"_id": raw["_id"]},

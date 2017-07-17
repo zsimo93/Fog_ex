@@ -4,6 +4,8 @@ from core.utils.fileutils import uniqueName
 import mainDB
 
 db = mainDB.db
+n = db.nodes
+nrs = db.nodesRes
 
 class NodeID():
     def __init__(self, id, ip):
@@ -12,9 +14,6 @@ class NodeID():
 
 
 def deleteNode(token):
-    n = db.nodes
-    nrs = db.nodesRes
-
     old_val = n.delete_one({'_id': token})
     
     # mainDB.removeNodeReplicaSet(old_val)
@@ -32,8 +31,6 @@ def insertNode(value):
         'architecture': 'ARM',
     }
     """
-    n = db.nodes
-    nrs = db.nodesRes
 
     # value = mainDB.insertNodeReplicaSet(value)
 
@@ -51,7 +48,6 @@ def insertNode(value):
 
 
 def getNodesIP():
-    n = db.nodes
 
     ips = []
 
@@ -61,16 +57,13 @@ def getNodesIP():
 
 
 def getNode(token):
-    n = db.nodes
     return n.find_one({'_id': token})
 
 
 def getRes(token):
-    nrs = db.nodesRes
     return nrs.find_one({'_id': token})
 
 def allRes():
-    nrs = db.nodesRes
     return nrs.find()
 
 def getFullNode(token):
@@ -82,8 +75,6 @@ def getFullNode(token):
 
 
 def getNodesID():
-    n = db.nodes
-
     results = n.find()
     if results:
         keys = [str(x["_id"]) for x in results]
@@ -111,7 +102,6 @@ def updateResources(token, value):
     value = {'cpu': 13.7,
          'memory': 14507.30}
     """
-    nrs = db.nodesRes
     ins = value
 
     ins["_id"] = token
@@ -119,8 +109,6 @@ def updateResources(token, value):
 
 
 def updateNode(token, col, value):
-    n = db.nodes
-
     try:
         tmp = n.find_one({'_id': token})
         tmp.pop(col)

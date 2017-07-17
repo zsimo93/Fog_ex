@@ -1,11 +1,11 @@
 #!thesis/DB
 import mainDB
 
+db = mainDB.db
+a = db.actions
+dep = db.dependencies
+
 def insertAction(name, value):
-    db = mainDB.db
-    a = db.actions
-    # av = db.actionsAV
-    dep = db.dependencies
 
     value["_id"] = name
     a.insert_one(value)
@@ -20,15 +20,11 @@ def insertAction(name, value):
 
 
 def getAction(name):
-    db = mainDB.db
-    a = db.actions
 
     return a.find_one({"_id" : name})
 
 
 def availableActionName(name):
-    db = mainDB.db
-    a = db.actions
     n = a.find({"_id" : name}).count()
     
     return n == 0
@@ -36,10 +32,6 @@ def availableActionName(name):
 
 def deleteAction(token):
     from sequencesDB import deleteSequence
-
-    db = mainDB.db
-    a = db.actions
-    dep = db.dependencies
 
     ret = a.find_one_and_delete({"_id" : token})
     
@@ -51,6 +43,11 @@ def deleteAction(token):
             deleteSequence(dep)
 
     return ret
+
+def removeAWS():
+    
+
+
 """
 def updateAvailability(actName, nodeTokens):
     db = mainDB.db
@@ -92,9 +89,6 @@ def removeNodeAV(nodeToken):
 """
 
 def getActions():
-    db = mainDB.db
-    a = db.actions
-
     ret = []
     for k in a.find():
         data = {

@@ -1,13 +1,16 @@
 from core.utils.fileutils import uniqueName
 import mainDB
+from datetime import datetime
 
 db = mainDB.db
 t = db.tokens
+t.create_index("creationTime", expireAfterSeconds=300)
 
 def newToken(actionName):
     token = uniqueName(15)
 
-    t.insert_one({"_id": token, "action": actionName})
+    t.insert_one({"_id": token, "action": actionName,
+                  "creationTime": datetime.utcnow()})
     return token
 
 def checkToken(actionName, token):

@@ -1,7 +1,8 @@
 #!thesis/api
 
 from flask import Flask, request, make_response, abort
-import nodes, actions, sequences, invoker, internalGW.internal as internal, aws
+import nodes, actions, sequences, invoker, aws, userfile
+import internalGW.internal as internal
 import os
 
 def checkMaster():
@@ -48,10 +49,6 @@ def deleteAction(token):
         return abort(404)
     return actions.deleteAction(request, token)
 
-"""@app.route('/api/actions/<token>/invoke', methods=['POST'])
-def invokeAction(token):
-    return actions.invokeAction(request, token)
-"""
 #########################
 @app.route('/api/sequences', methods=['GET'])
 def getSequences():
@@ -75,10 +72,6 @@ def deleteSeq(token):
 def flatSeq(token):
     return sequences.flatSeq(token)
 
-"""@app.route('/api/sequences/<token>/invoke', methods=['POST'])
-def invokeSeq(token):
-    return sequences.invokeSequence(request, token)
-"""
 
 # #######################
 @app.route('/api/invoke/<token>', methods=['POST'])
@@ -108,13 +101,34 @@ def checkAWSConnection():
     return aws.check(request)
 
 # #######################
+
+@app.route('/api/file/upload', methods=['POST'])
+def uploadFile():
+    if not checkMaster():
+        return abort(404)
+    return userfile.upload(request)
+
+@app.route('/api/file/<token>', methods=["DELETE"])
+def deleteFile(token):
+    if not checkMaster():
+        return abort(404)
+    return userfile.delete(token)
+
+@app.route('/api/file/<token>', methods=["GET"])
+def downloadFile(token):
+    if not checkMaster():
+        return abort(404)
+    return userfile.download(token)
+
+
+# #######################
 @app.route('/internal/invoke', methods=['POST'])
 def intInvoke():
     return internal.invoke(request)
 
 @app.route('/internal/delete/<token>', methods=['POST'])
 def delFiles(token):
-    return internal.delFiles(token)
+    return internal.delFiles(token, request)
 
 @app.route('/internal/setup', methods=['POST'])
 def setupVar():

@@ -35,3 +35,6 @@ def getIP(id):
 
 def pull(contName):
     client.images.pull(contName)
+
+def delImage(contName):
+    client.images.remove(image=contName)

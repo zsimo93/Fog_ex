@@ -1,6 +1,5 @@
 import socket
 import json
-import sys
 from time import sleep
 from core.databaseMongo import nodesDB as db
 
@@ -45,6 +44,3 @@ def start():
     while(True):
         sleep(10)
         sendAll()
-
-if __name__ == '__main__':
-    start()

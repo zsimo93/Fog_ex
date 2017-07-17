@@ -41,7 +41,7 @@ def newAction(request):
                                   file)
             ac.create()
 
-    fs.saveFile(file, name)
+    fs.saveActionFile(file, name)
 
     db.insertAction(name, resp)
 
@@ -50,21 +50,25 @@ def newAction(request):
     return make_response(name, 201)
 
 
-def deleteAction(request, actionname):
-    
-    def actualdelete():
-        deleted = db.deleteAction(actionname)
-        tdb.deleteToken(actionname)
-        fs.removeFile(actionname)
-        if deleted["cloud"]:
-            AwsActionDeletor(actionname).delete()
+def actualdelete(actionname):
+    deleted = db.deleteAction(actionname)
+    tdb.deleteToken(actionname)
+    fs.removeActionFile(actionname)
+    if deleted["cloud"]:
+        AwsActionDeletor(actionname).delete()
+    try:
+        payload = {"containerName": deleted["containerName"]}
+    except KeyError:
+        payload = {}
 
-        for ip in getNodesIP():
-            try:
-                post(str(ip), 8080, "/internal/delete/" + str(actionname), {})
-            except ConnectionError:
-                pass 
-        return make_response("OK", 200)
+    for ip in getNodesIP():
+        try:
+            post(str(ip), 8080, "/internal/delete/" + str(actionname), payload)
+        except ConnectionError:
+            pass
+    
+
+def deleteAction(request, actionname):
 
     if db.availableActionName(actionname):   # action name not present
         return make_response(jsonify({'error': "No action with name " + actionname}),
@@ -72,13 +76,15 @@ def deleteAction(request, actionname):
     
     deplist = depdb.getDependencies(actionname)
     if not deplist:
-        return actualdelete()
+        actualdelete(actionname)
+        return make_response("OK", 200)
     
     try:
         token = str(request.json['token'])
         print "my token: " + token
         if tdb.checkToken(actionname, token):
-            return actualdelete()
+            actualdelete(actionname)
+            return make_response("OK", 200)
     except Exception, e:
         print e
         

@@ -16,15 +16,20 @@ import json, traceback
 """
 
 class ActionManager():
-    def __init__(self, request, param):
+    def __init__(self, request, param=None, sessionID=None, map=None, next=[]):
         self.action = request['name']
         self.memory = request['memory']
-        self.map = map
         self.timeout = request['timeout']
         self.language = request['language']
-        self.seqID = request["seqID"]
         self.myID = request["myID"]
+        try:
+            self.containerName = request["containerName"]
+        except KeyError:
+            pass
+        self.sessionID = sessionID
+        self.map = map
         self.param = param
+        self.next = next
 
     def stopContainer(self):
         while(True):
@@ -38,8 +43,16 @@ class ActionManager():
         return
 
     def startCont(self):
-        self.path = files.loadFile(self.action)
-        self.cont , self.ip = runContainer("python-image",
+        containerName = ""
+        if self.language == "python":
+            containerName = "python-image"
+        elif self.language == "docker":
+            containerName = self.containerName
+        else:
+            containerName = "python"
+
+        self.path = files.loadActionFile(self.action)
+        self.cont , self.ip = runContainer(containerName,
                                            self.memory,
                                            self.path)
 
@@ -77,8 +90,8 @@ class ActionManager():
 
     def finalizeResult(self):
         if self.myID:
-            id = self.seqID + "|" + self.myID
-            resultDB.insertResult(id, json.loads(self.response))
+            resultDB.insertResult(self.sessionID, self.myID,
+                                  json.loads(self.response))
             return ("OK", 200)
         else:
             return (json.loads(self.response), 200)

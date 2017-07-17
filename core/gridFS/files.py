@@ -1,17 +1,24 @@
 import gridfs
 from pymongo import MongoClient
 from core.utils.fileutils import unzip
-import os
+import os, uuid
+from datetime import datetime
 
-fs = gridfs.GridFS(MongoClient(host='localhost', port=27017).fs)
+mongoclient = MongoClient(host='localhost', port=27017)
+mongodb = mongoclient.my_db
+fs = gridfs.GridFS(mongodb)
+
+userdata = mongodb.userdata
+
+userdata.files.create_index("uploadDate", expireAfterSeconds=300)
+fsUserData = gridfs.GridFS(mongodb, collection="userdata")
 print "importing FS client"
 
-def saveFile(file, actionName):
+def saveActionFile(file, actionName):
     fs.put(file, _id=str(actionName), content_type=file.content_type,
            filename=file.filename)
 
-
-def loadFile(actionName):
+def loadActionFile(actionName):
     
     path = "/tmp/" + actionName
     try:
@@ -37,8 +44,29 @@ def loadFile(actionName):
             
     return path
 
-def removeFile(actionName):
+def removeActionFile(actionName):
     fs.delete(actionName)
 
-def tempResult(data, actionName):
-    fs.put(data, action=actionName)
+def saveUserData(file):
+    id = str(uuid.uuid4())
+    fsUserData.put(file, _id=id, content_type=file.content_type,
+                   filename=file.filename, uploadDate=datetime.utcnow())
+
+    return id
+
+def deleteUserData(token):
+    fsUserData.delete(token)
+
+def removeChunks():
+    import time
+
+    while True:
+        chunksCollection = userdata.chunks
+        chunks = chunksCollection.find()
+        
+        for c in chunks:
+            chunkid = c["_id"]
+            fileid = c["files_id"]
+            if not userdata.find_one({"_id": fileid}):
+                userdata.chunks.find_one_and_delete({"_id": chunkid})
+        time.sleep(120)

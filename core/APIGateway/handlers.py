@@ -57,7 +57,6 @@ class ActionRequest:
         self.language = fromDB['language']
         self.cloud = fromDB['cloud']
         self.myID = myID
-        self.seqID = seqID
         self.map = map
 
 class RegInvoker:
@@ -75,8 +74,8 @@ class AWSInvoker(ExecutionHandler):
 
     def finalizeResult(self):
         if self.superSeqID:
-            id = self.superSeqID + "|" + self.myID
-            rdb.insertResult(id, json.loads(self.response))
+            rdb.insertResult(self.superSeqID, self.myID,
+                             json.loads(self.response))
             return ("OK", 200)
         else:
             return json.loads(self.response), 200
@@ -205,15 +204,13 @@ class SeqExecutionHandler(ExecutionHandler):
         If a subsequence, save again the result with the new ID and return None.
         Return the result otherwise.
         """
-        idRes = self.myID + "|" + self.sequence[-1]["id"]
-        res = rdb.getResult(idRes)
+        res = rdb.getResult(self.myID, self.sequence[-1]["id"])
         del res["_id"]
         
         self.cleanRes()
 
         if self.superSeqID:
-            newID = self.superSeqID + "|" + self.supermyID
-            rdb.insertResult(newID, res)
+            rdb.insertResult(self.superSeqID, self.supermyID, res)
             return (None, 200)
         
         return (json.dumps(res), 200)

@@ -20,9 +20,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 
         self.request.sendall(json.dumps(response))
 
-if __name__ == "__main__":
+def start():
     HOST, PORT = "localhost", 9999
-
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
 

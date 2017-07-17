@@ -1,5 +1,8 @@
 from core.APIGateway import run
 from core.databaseMongo import nodesDB as db1
+from core.gridFS.files import removeChunks
+import threading
+from core.heartbeat import heartbeatMain
 
 def setup():
     ids = []
@@ -23,6 +26,13 @@ def setup():
         db1.updateResources(ids[i], res)
 
 # setup()
+
+# thread for cleaning up chunks table for user data
+# removed after TTL
+threading.Thread(target=removeChunks).start()
+
+heartbeatMain.startHeartBeat()
+
 run()
 
 

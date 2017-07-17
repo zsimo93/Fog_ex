@@ -1,12 +1,10 @@
 import mainDB
 
 db = mainDB.db
-
+s = db.sequences
+dep = db.dependencies
 
 def insertSequence(name, value):
-    s = db.sequences
-    dep = db.dependencies
-
     value["_id"] = name
     s.insert_one(value)
 
@@ -17,40 +15,31 @@ def insertSequence(name, value):
 
 
 def availableSeqName(name):
-    s = db.sequences
-
     n = s.find({"_id" : name}).count()
     
     return n == 0
 
 
 def getSequence(name):
-    s = db.sequences
-
     return s.find_one({"_id" : name})
 
 
 def deleteSequence(token):
-    from actionsDB import deleteAction
+    from core.APIGateway.actions import actualdelete as delAction
     import dependenciesDB as depdb
 
-    s = db.sequences
-    dep = db.dependencies
-    
     s.delete_one({"_id" : token})
     depdb.removeDependencies(token)
 
     deplist = dep.find_one_and_delete({"_id" : token})
-    for dep in deplist["dep"]:
-        if not availableSeqName(dep):
-            deleteSequence(dep)
+    for d in deplist["dep"]:
+        if not availableSeqName(d):
+            deleteSequence(d)
         else:
-            deleteAction(dep)
+            delAction(d)
 
 
 def getSequences():
-    s = db.sequences
-
     ret = []
     for k in s.find():
         try:
@@ -69,7 +58,6 @@ def checkFields(actName, chklist, inOut):
         output parameters of the action.
     """
     a = db.actions
-    s = db.sequences
    
     item = a.find_one({"_id" : actName}) if a.find_one({"_id" : actName}) else s.find_one({"_id" : actName})
 
@@ -87,7 +75,6 @@ def checkFields(actName, chklist, inOut):
 
 def checkInputParam(token, param):
     a = db.actions
-    s = db.sequences
    
     item = a.find_one({"_id" : token}) if a.find_one({"_id" : token}) else s.find_one({"_id" : token})
 

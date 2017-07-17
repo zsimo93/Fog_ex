@@ -28,43 +28,59 @@ class BlockManager():
         actList = block
         self.localparams = {}
         self.aManagers = []
+        self.localiDs = []
         self.sessionID = sessionID
 
         for action in actList:
-            actionMan = ActionManager(action)
+            self.localiDs.append(action['id'])
+            actionMan = ActionManager(action, map=action['map'],
+                                      next=action['next'], sessionID=sessionID)
             thread = actionMan.startThreadContainer()
             self.aManagers.append((actionMan, thread))
             thread.start()
 
-    def prepareInput(self, map):
+        self.getData()
+
+
+    def getData(self):
+        for act in self.actList:
+            for s in act["map"].values():
+                vals = s.split("/")
+                if vals[0] not in self.localiDs:
+                    resultDB.getSubParam(self.sessionID, vals[0], vals[1])
+
+    def prepareSingleInput(self, map):
         inParam = {}
-        if not map:
-            inParam = resultDB.getResult(self.sessionID + "|param")
-        else:
-            for newKey in map:
-                source = map[newKey]
-                list = source.split("/")
-                refId = list[0]
-                param = list[1]
-                inParam[newKey] = resultDB.getSubParam(self.sessionID, refId, param)
+        for newKey in map:
+            source = map[newKey]
+            inParam[newKey] = self.localparams[source]
         return inParam
 
-    def finalize(self):
-        id = resultDB.insertResult(self.param)
-        return id
+    def finalizeIntermediate(self, manager, result):
+        
+        def allLocal(next):
+            if not next:
+                # case of last action of a sequence. No next but need to save in DB
+                return False
+            for n in next:
+                if n not in self.localiDs:
+                    return False
+            return True
+
+        for k in result:
+            self.localparams[manager.myID + "/" + k] = result[k]
+        if not allLocal(manager.next):
+            resultDB.insertResult(self.sessionID, manager.myID, result)
+
 
 
     def run(self):
         for (manager, thread) in self.aManagers:
-            manager.param = self.param
+            manager.param = self.prepareSingleInput(manager.map)
             thread.join()
             resp, error = manager.run()
             if error:
-                return (error, 500)
-            self.param = json.loads(resp)
+                return (resp, 500)
+            self.finalizeIntermediate(manager, json.loads(resp))
 
-        id = self.finalize()
-        print id
-        print self.param
-
-        return json.dumps(self.param)
+        return ("OK", 200)
