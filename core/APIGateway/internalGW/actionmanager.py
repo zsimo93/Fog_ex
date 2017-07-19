@@ -21,7 +21,7 @@ class ActionManager():
         self.memory = request['memory']
         self.timeout = request['timeout']
         self.language = request['language']
-        self.myID = request["myID"]
+        self.myID = request["id"]
         try:
             self.containerName = request["containerName"]
         except KeyError:
@@ -34,12 +34,13 @@ class ActionManager():
     def stopContainer(self):
         while(True):
             try:
-                self.cont.stop()
+                self.cont.kill()
             except Exception:
                 continue
             else:
                 self.cont.remove()
                 break
+        print "done"
         return
 
     def startCont(self):
@@ -94,7 +95,7 @@ class ActionManager():
                                   json.loads(self.response))
             return ("OK", 200)
         else:
-            return (json.loads(self.response), 200)
+            return (self.response, 200)
 
     def initAndRun(self):
         self.startCont()

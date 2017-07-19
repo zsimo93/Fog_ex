@@ -1,10 +1,11 @@
 import socket
 import json
 from time import sleep
+from threading import Thread
 from core.databaseMongo import nodesDB as db
 
 
-def getRes(HOST):
+def getRes(id, IP):
     PORT = 9999
     data = "heartbeat"
 
@@ -14,8 +15,7 @@ def getRes(HOST):
     try:
         
         # Connect to server and send data
-        print("attempt connection to " + HOST)
-        sock = socket.create_connection((HOST, PORT), timeout=1)
+        sock = socket.create_connection((IP, PORT), timeout=1)
         sock.sendall(data + "\n")
 
         # Receive data from the server and shut down
@@ -27,20 +27,20 @@ def getRes(HOST):
     finally:
         sock.close()
 
-    return recJson
+    if recJson:
+        db.updateResources(id, recJson)
+    else:
+        db.deleteNode(id)
+    return
 
 
 def sendAll():
     nodes = db.getNodesIP()
 
     for n in nodes:
-        res = getRes(n.ip)
-        if(res):
-            db.updateResources(n.id, res)
-        else:
-            db.deleteNode(n.id)
+        Thread(target=getRes, args=(n.id, n.ip, )).start()
 
 def start():
     while(True):
-        sleep(10)
+        sleep(0.5)
         sendAll()

@@ -1,65 +1,61 @@
-from core.utils.fileutils import uniqueName
 from core.databaseMongo.sequencesDB import getSequence
 from core.databaseMongo import resultDB as rdb, actionsDB, nodesDB
-from threading import Thread
 from requests import ConnectionError
 from core.utils.httpUtils import post
+from threading import Thread
+import time
+from datetime import datetime
 import json
 
 
-def giveMeHandler(param, default, configs, name, superSeqID=None,
-                  myID=None, map={}):
+def giveMeHandler(param, default, configs, name, sessionID):
     if not actionsDB.availableActionName(name):
-        return ActionExecutionHandler(param, default, configs, name,
-                                      superSeqID, myID, map)
+        return ActionExecutionHandler(default, configs, name,
+                                      sessionID, param)
     else:
-        return SeqExecutionHandler(param, default, configs, name,
-                                   superSeqID, myID, map)
+        return SeqExecutionHandler(default, configs, name,
+                                   sessionID, param)
 
 
-class ExecutionHandler(object):
-    def __init__(self, param, default, configs, superSeqID,
-                 supermyID=None, map={}):
-        self.param = param
-        self.default = default
-        self.configs = configs
-        self.superSeqID = superSeqID
-        self.supermyID = supermyID
-        self.map = map
+def createAction(name, default, configs, myID, map, timeout,
+                 language, cloud, next, containerName):
+    action = {"name": name,
+              'id': myID,  # None if single action execution
+              "map": map}  # None if single action execution
+    
+    if configs and name in configs:
+        conf = configs[name]
+    else:
+        conf = default
+    action["memory"] = conf["memory"]
 
-    def startThread(self):
-        return Thread(target=self.start)
-
-    def prepareInput(self):
-        inParam = {}
-        for newkey in self.map:
-            s = self.map[newkey]
-            list = s.split("/")
-            refId = list[0]
-            param = list[1]
-            if refId == "param":
-                inParam[newkey] = self.param[param]
-            else:
-                inParam[newkey] = rdb.getSubParam(self.superSeqID, refId, param)
-        return inParam
-
-    def start(self):
-        pass
-
-
-class ActionRequest:
-    def __init__(self, name, memory, myID, seqID, map):
-        self.name = name
-        self.memory = memory
-
+    if not myID:
+        # single action execution. Retrieve information.
         fromDB = actionsDB.getAction(name)
-        self.timeout = fromDB['timeout']
-        self.language = fromDB['language']
-        self.cloud = fromDB['cloud']
-        self.myID = myID
-        self.map = map
+        action["timeout"] = fromDB['timeout']
+        action["language"] = fromDB['language']
+        action["cloud"] = fromDB['cloud']
+        try:
+            action["containerName"] = fromDB["containerName"]
+        except KeyError:
+            pass
+    else:
+        action["timeout"] = timeout
+        action["language"] = language
+        action["cloud"] = cloud
+        action["next"] = next
+        action["containerName"] = containerName
 
-class RegInvoker:
+    return action
+
+def calcBlockMemory(actList):
+    memory = 0
+    for a in actList:
+        memory += a["memory"]
+    return memory
+
+
+class NodeInvoker:
     def __init__(self, ip):
         self.ip = ip
 
@@ -67,62 +63,74 @@ class RegInvoker:
         ret = post(self.ip, "8080", "/internal/invoke", request, 10)
         return (ret.text, ret.status_code)
 
-
-class AWSInvoker(ExecutionHandler):
+class AWSInvoker:
     def __init__(self, param):
         self.param = param
 
     def finalizeResult(self):
-        if self.superSeqID:
-            rdb.insertResult(self.superSeqID, self.myID,
+        if self.myID:
+            rdb.insertResult(self.sessionID, self.myID,
                              json.loads(self.response))
             return ("OK", 200)
         else:
             return json.loads(self.response), 200
 
+    def prepareInput(self):
+        inParam = {}
+        if not self.map:
+            return self.param
+        for newkey in self.map:
+            s = self.map[newkey]
+            list = s.split("/")
+            refId = list[0]
+            param = list[1]
+            inParam[newkey] = rdb.getSubParam(self.sessionID, refId, param)
+        return inParam
+
+
     def startExecution(self, request):
         from core.awsLambda.awsconnector import AwsActionInvoker
-        self.map = request['map']
-        self.superSeqID = request['seqID']
-        self.myID = request['myID']
+        self.map = request["action"]['map']
+        self.sessionID = request['sessionID']
+        self.myID = request["action"]['id']
         
         param = self.prepareInput()
         conn = AwsActionInvoker(request['action']['name'], param)
-        response = conn.invoke()
+        self.response = conn.invoke()
 
-        if "errorType" in response:
-            return (response, 500)
+        if "errorType" in self.response:
+            return (self.response, 500)
 
         return self.finalizeResult()
 
 
-class ActionExecutionHandler(ExecutionHandler):
-    def __init__(self, param, default, configs, name, superSeqID,
-                 supermyID, map):
+class NoResourceException(Exception):
+    pass
 
-        super(ActionExecutionHandler, self).__init__(param, default, configs,
-                                                     superSeqID, supermyID, map)
-        if configs and name in configs:
-            conf = configs[name]
-        else:
-            conf = default
+class ActionExecutionHandler:
+    def __init__(self, default, configs, name, sessionID, param=None,
+                 myID=None, map=None, next=None, timeout=None,
+                 language=None, cloud=None, containerName=None):
 
-        self.action = ActionRequest(name, conf['memory'],
-                                    supermyID, superSeqID, map)
+        self.param = param
+        self.sessionID = sessionID
+        self.action = createAction(name, default, configs, myID, map, timeout,
+                                   language, cloud, next, containerName)
+        self.logList = []
 
-    def sortedAv(self, actionName):
+    def sortedCPU(self, avList):
         # sort the available nodes per cpu usage
-        # avList = actionsDB.getAvailability(actionName)
-        avList = nodesDB.allRes()
-
         return sorted(avList, key=lambda node: node['cpu'])
 
+    def sortedMem(self, avList):
+        # sort the available nodes per free memory
+        return sorted(avList, key=lambda node: node['memory'])
 
     def chooseNode(self):
         """
         Select the node with more free cpu and enought memory
         """
-        req_mem = long(self.action.memory) * 1000000
+        req_mem = long(self.action["memory"]) * 1000000
         """
         if mem.endswith("m"):
             req_mem = long(mem[:-1] + "000000")
@@ -131,23 +139,40 @@ class ActionExecutionHandler(ExecutionHandler):
         elif mem.endswith("g"):
             req_mem = long(mem[:-1] + "000000000")
         """
+        nodesRes = nodesDB.allRes()
+        if not nodesRes:
+            # TO BE REMOVED
+            return ("localhost", NodeInvoker("127.0.0.1"))
+
         selected = None
-        sortedAvList = self.sortedAv(self.action.name)
+        sortedCPU = self.sortedCPU(nodesRes)
+        # sortedMem = self.sortedMem(nodesRes)
 
-        if not sortedAvList:
-            return ("localhost", RegInvoker("127.0.0.1"))
+        attempt = 0
+        while attempt < 3:
+            # 3 attempts of finding a node with enought memory.
+            # if no node and action no AWS execution, wait and retry later.
 
-        for node in sortedAvList:
-            if req_mem < node['memory']:
-                # most free cpu and enought memory
-                selected = node
-                break
-        if not selected:
-            if self.action.cloud:
-                return ("_cloud", AWSInvoker(self.param))
-            else:
-                selected = sortedAvList[0]
-        return (selected, RegInvoker(nodesDB.getNode(selected['_id'])['ip']))
+            # for node in sortedMem:   will take the node with less free memory
+            #                           that fit the requested memory
+            for node in sortedCPU:
+                if req_mem < node['memory']:
+                    # most free cpu and enought memory
+                    selected = node
+                    return (selected["_id"], NodeInvoker(nodesDB.getNode(selected['_id'])['ip']))
+
+            if not selected:
+                if self.action["cloud"]:
+                    return ("_cloud", AWSInvoker(self.param))
+                else:
+                    time.sleep(0.5)
+                    attempt += 1
+                    continue
+
+        raise NoResourceException("Not enought memory resources in the " +
+                                  "system to execute " + self.action["name"] +
+                                  " using " + str(self.action["memory"]) + "MB")
+            
 
     def start(self):
         i = 0
@@ -157,21 +182,22 @@ class ActionExecutionHandler(ExecutionHandler):
 
                 request = {
                     "type": "action",
-                    "param": self.param if not self.action.map else {},
-                    "action": self.action.__dict__
+                    "sessionID" : self.sessionID,
+                    "param": self.param if not self.action["map"] else {},
+                    "action": self.action
                 }
                 text, status_code = invoker.startExecution(request)
                 if status_code >= 400:
                     self.ret = ({"error": text}, 500)
-                    rdb.deleteAllRes(self.superSeqID)
+                    self.log("ERROR in remote execution")
                     return self.ret
                 self.ret = (text, 200)
+                self.log("EXECUTED in node " + name)
                 return self.ret
             except ConnectionError:
                 nodesDB.deleteNode(name)
-                rdb.deleteAllRes(self.superSeqID)
             except Exception, e:
-                rdb.deleteAllRes(self.superSeqID)
+                self.log("Exception in local")
                 return ({"error": str(e)}, 500)
             else:
                 break
@@ -179,85 +205,241 @@ class ActionExecutionHandler(ExecutionHandler):
         self.ret = ({"error": "2 nodes failed."}, 500)
         return self.ret
 
+    def log(self, message):
+        ts = datetime.now().isoformat()
+        actID = self.action["id"] if self.action["id"] else ""
+        id = "ACTION " + actID + " " + self.action['name']
+        logStr = ts + " - " + id + ": " + message
+        self.logList.append(logStr)
 
-class SeqExecutionHandler(ExecutionHandler):
-    def __init__(self, param, default, configs, name, superSeqID,
-                 supermyID, map):
-        super(SeqExecutionHandler, self).__init__(param, default, configs,
-                                                  superSeqID, supermyID, map)
+class AsActionExecutionHandler(ActionExecutionHandler):
+    def __init__(self, param, sessionID, action):
+        self.param = param
+        self.sessionID = sessionID
+        self.action = action
+        self.logList = []
+
+class SeqExecutionHandler:
+    def __init__(self, default, configs, name, sessionID, param):
+        self.param = param
+        self.sessionID = sessionID
         self.name = name
-        self.myID = uniqueName()
-        self.sequence = getSequence(name)["sequence"]
+        self.default = default
+        self.configs = configs
 
-        if map:
-            newParam = self.prepareInput()
-            self.param = newParam
+        s = getSequence(name)
+        self.sequence = s["execSeq"]
+        self.lastID = s["resultActionID"]
+        rdb.insertResult(self.sessionID, "param", self.param)
+        self.logList = []
 
-        rdb.insertResult(self.myID + "|param", self.param   )
         
     def cleanRes(self):
-        rdb.deleteAllRes(self.myID)
+        rdb.deleteAllRes(self.sessionID)
 
     def finalizeResult(self):
         """
         take last result of the sequence and delete all the sequence intermediate results.
-        If a subsequence, save again the result with the new ID and return None.
-        Return the result otherwise.
+        Return the result.
         """
-        res = rdb.getResult(self.myID, self.sequence[-1]["id"])
+        res = rdb.getResult(self.sessionID, self.lastID)
         del res["_id"]
         
         self.cleanRes()
 
-        if self.superSeqID:
-            rdb.insertResult(self.superSeqID, self.supermyID, res)
-            return (None, 200)
-        
         return (json.dumps(res), 200)
 
     def start(self):
+        self.log("Running")
         for a in self.sequence:
-            """ if a["id"] == "_parallel":
-                handler = ParallelExecutionHandler(self.param, self.default,
-                                                   self.configs, self.myID,
-                                                   a["actions"])
-            else:"""
-            handler = giveMeHandler(self.param, self.default, self.configs,
-                                    a["name"], self.myID,
-                                    a["id"], a["map"])
-        
-            r, status_code = handler.start()
-            if status_code >= 400:
+            if a["type"] == "parallel":
+                handler = ParallelExecutionHandler(self.default, self.configs,
+                                                   self.sessionID, a["list"])
+            elif a["type"] == "block":
+                handler = BlockExecutionHandler(self.default, self.configs,
+                                                self.sessionID, a["list"])
+            else:
+                handler = ActionExecutionHandler(self.param, self.default,
+                                                 self.configs, a["name"],
+                                                 self.sessionID, a["id"],
+                                                 a["map"], a["next"],
+                                                 a["timeout"], a["language"],
+                                                 a["cloud"], a["containerName"])
+
+            try:
+                r, status_code = handler.start()
+                self.logList += handler.logList
+                if status_code >= 400:
+                    self.cleanRes()
+                    self.ret = (r, 500)
+                    return self.ret
+                
+            except Exception as e:
                 self.cleanRes()
-                self.ret = (r, 500)
-                return self.ret
+                self.log("Local Exception")
+                return {"error": str(e)}, 500
+        self.log("END")
+        return self.finalizeResult()
+
+    def log(self, message):
+        ts = datetime.now().isoformat()
+        id = "SEQUENCE " + self.name
+        logStr = ts + " - " + id + ": " + message
+        self.logList.append(logStr)
             
-        self.ret = self.finalizeResult()
-        return self.ret
+class ParallelExecutionHandler:
+    def __init__(self, default, configs, sessionID, list):
+        self.default = default
+        self.configs = configs
+        self.sessionID = sessionID
+        
+        self.logList = []
 
+        self.actList = []
+        for a in list:
+            if a["type"] == "action":
 
-"""class ParallelExecutionHandler(ExecutionHandler):
-    def __init__(self, param, default, configs, superSeqID, actions):
-        super(ParallelExecutionHandler, self).__init__(param, default, configs,
-                                                       superSeqID)
-        self.actions = actions
+                ar = createAction(a["name"], self.default, self.configs,
+                                  a["id"], a["map"], a["timeout"],
+                                  a["language"], a["cloud"], a["next"],
+                                  a["containerName"])
+            else:
+                block = {}
+                blockList = []
+                for b in a["list"]:
+                    ar = createAction(b["name"], self.default, self.configs,
+                                      b["id"], b["map"], b["timeout"],
+                                      b["language"], b["cloud"], b["next"],
+                                      b["containerName"])
+                    blockList.append(ar)
+                # ar = BlockExecutionHandler(self.default, self.configs,
+                #                           self.sessionID, a["list"])
+                block["memory"] = calcBlockMemory(blockList)
+                block["block"] = blockList
+            self.actList.append(block)
 
     def start(self):
-        handlers = []
-        exTh = []
-        for a in self.actions:
-            hand = giveMeHandler(self.param, self.default, self.configs, a["name"],
-                                 self.superSeqID, a["id"], a["map"])
-            handlers.append(hand)
-            thread = hand.startThread()
-            thread.start()
-            exTh.append(thread)
+        # BIN PACKING
+        pass
 
-        for th in exTh:
-            th.join()
+    def log(self, message):
+        ts = datetime.now().isoformat()
+        id = "PARALLEL"
+        logStr = ts + " - " + id + ": " + message
+        self.logList.append(logStr)
 
-        for h in handlers:
-            if h.ret[1] >= 400:
-                return (h.ret[0], 500)
-                
-        return ("OK", 200)"""
+class BlockExecutionHandler(ActionExecutionHandler):
+    def __init__(self, default, configs, sessionID, list):
+        self.default = default
+        self.configs = configs
+        self.sessionID = sessionID
+        self.ids = []
+        self.logList = []
+        
+        self.blockList = []
+        for a in list:
+            ar = createAction(a["name"], self.default, self.configs,
+                              a["id"], a["map"], a["timeout"],
+                              a["language"], a["cloud"], a["next"],
+                              a["containerName"])
+            self.ids.append(a["id"])
+            self.blockList.append(ar)
+
+        self.memory = 0
+        for ar in self.blockList:
+            self.memory += ar["memory"]
+
+    def chooseNode(self, actList):
+        memory = calcBlockMemory(actList) * 1000000
+        nodesRes = nodesDB.allRes()
+        # nodeList = self.sortedMem(nodesRes)  take less memory that fits
+        nodeList = self.sortedCPU(nodesRes)
+        for node in nodeList:
+            if memory < node['memory']:
+                # most free cpu and enought memory
+                return node["_id"], NodeInvoker(nodesDB.getNode(node['_id'])['ip'])
+
+        return None, None
+
+    def start(self):
+        self.log("Executing block with actions: " + str(self.ids))
+        
+        while self.blockList:
+            invoker = None
+            
+            if len(self.blockList) == 1:
+                # one action left in the block. Execute as single action
+                h = AsActionExecutionHandler(None, self.sessionID,
+                                             self.blockList[0])
+                text, code = h.start()
+                self.log += h.logList
+                self.blockList = []
+                return text, code
+
+            else:
+                name, invoker = self.chooseNode(self.blockList)
+                if invoker:
+                    # can execute the full block in a node. Do it!
+                    payload = {
+                        "type": "block",
+                        "sessionID" : self.sessionID,
+                        "block": self.blockList
+                    }
+                    text, code = invoker.startExecution(payload)
+                    if code >= 400:
+                        self.log("ERROR " + text)
+                        return {"error": text}, 500
+
+                    self.log("EXECUTE " + str(self.ids) + " on node " + name)
+                    self.blockList = []
+                    return "OK", 200
+
+                else:
+                    # cannot execute the full block. Try removing actions from
+                    # end of block one at a time.
+                    i = 0
+                    while not invoker:
+                        i -= 1
+                        if len(self.blockList[:i]) == 1:
+                            # if just one action, execute as single action.
+                            h = AsActionExecutionHandler(None, self.sessionID,
+                                                         self.blockList[0])
+                            text, code = h.start()
+                            self.log += h.logList
+                            if code >= 400:
+                                return {"error": text}, 500
+
+                            self.ids = self.ids[i:]
+                            self.blockList = self.blockList[i:]
+                            singleCase = True
+                            break
+                        else:
+                            name, invoker = self.chooseNode(self.blockList[:i])
+                            singleCase = False
+                    
+                    if not singleCase:
+                        # execute the sub-block selected and reiterate with
+                        # remaining actions in block
+
+                        payload = {
+                            "type": "block",
+                            "sessionID" : self.sessionID,
+                            "block": self.blockList[:i]
+                        }
+                        text, code = invoker.startExecution(payload)
+                        if code >= 400:
+                            self.log("ERROR " + text)
+                            return {"error": text}, 500
+                        
+                        self.log("EXECUTE " + str(self.ids[:i]) + " on node " + name)
+                        self.blockList = self.blockList[i:]
+                        self.ids = self.ids[i:]
+        
+        self.log("END")
+        return "OK", 200
+
+    def log(self, message):
+        ts = datetime.now().isoformat()
+        id = "BLOCK"
+        logStr = ts + " - " + id + ": " + message
+        self.logList.append(logStr)

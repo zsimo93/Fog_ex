@@ -11,4 +11,3 @@
 
 - core.API.nodes    #TODO run setup
 
-- memory constraints on creation. needed for aws lambda.

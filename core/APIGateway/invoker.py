@@ -2,6 +2,7 @@ from core.databaseMongo import actionsDB as adb, sequencesDB as sdb
 from flask import make_response, jsonify
 from handlers import giveMeHandler
 from validator import validateInvoke
+from core.utils.fileutils import uniqueName
 import json
 
 def checkAvailableAndParam(token, param):
@@ -27,9 +28,21 @@ def invoke(token, request):
     if not ok:
         return make_response(jsonify({'error': errmsg}), 406)
     
-    hand = giveMeHandler(r["param"], r["default"], r["except"], token)
+    sessionID = uniqueName()
+    hand = giveMeHandler(r["param"], r["default"], r["except"],
+                         token, sessionID)
     payload, code = hand.start()
+    print payload
     try:
-        return make_response(jsonify(json.loads(payload)), code)
+        result = json.loads(payload)
     except Exception:
-        return make_response(jsonify(payload), code)
+        result = payload
+
+    try:
+        if resp["log"]:
+            result["log"] = hand.logList
+    except KeyError:
+        pass
+    print result
+
+    return make_response(jsonify(result), code)

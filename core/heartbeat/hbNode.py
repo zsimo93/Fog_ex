@@ -7,8 +7,6 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).strip()
-        print "{} wrote:".format(self.client_address[0])
-        print self.data
 
         cpu = psutil.cpu_percent(interval=0.1)
         memory = psutil.virtual_memory().available

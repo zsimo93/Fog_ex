@@ -1,5 +1,5 @@
 from core.databaseMongo import actionsDB
-from core.utils.fileutils import uniqueName
+from copy import deepcopy
 
 class Block(object):
     def __init__(self, blockList):
@@ -17,10 +17,6 @@ class Block(object):
             nextNodes |= set(node.next)
 
         return list(nextNodes)
-
-    def setMemory(self, configs, default):
-        for node in self.nodeList:
-            node.setMemory(configs, default)
 
     def setId(self):
         return "BLOCK_" + self.nodeList[0].id
@@ -76,6 +72,10 @@ class Act:
         self.timeout = fromDB['timeout']
         self.language = fromDB['language']
         self.cloud = fromDB['cloud']
+        try:
+            self.containerName = fromDB["containerName"]
+        except KeyError:
+            self.containerName = None
 
     def __json__(self):
         ret = {
@@ -87,8 +87,8 @@ class Act:
             "timeout": self.timeout,
             "language": self.language,
             "cloud": self.cloud,
+            "containerName": self.containerName
         }
-
         return ret
 
 class SequenceAnalizer:
@@ -96,8 +96,8 @@ class SequenceAnalizer:
         self.sequence = fullSequence
 
         self.doneIds = []
-        self.finalProc = self.completeInfo()
-        print self.finalProc
+        self.fullProc = self.completeInfo()
+        self.finalProc = deepcopy(self.fullProc)
         self.finalProc = self.createBlocks()
         self.finalProc = self.createParallels()
 
@@ -124,7 +124,7 @@ class SequenceAnalizer:
         return l
 
     def getNodeFromId(self, id):
-        for node in self.finalProc:
+        for node in self.fullProc:
             if node.id == id:
                 return node
         return None
@@ -158,7 +158,6 @@ class SequenceAnalizer:
         for node in self.finalProc:
             if node.id not in self.doneIds:
                 node = self.computeBlockNode(node)
-                print node
                 newProcess.append(node)
         return newProcess
 
@@ -181,7 +180,7 @@ class SequenceAnalizer:
             if l == 1:
                 return False
             for ind1 in range(0, l):
-                for ind2 in range(ind1, l):
+                for ind2 in range(ind1 + 1, l):
                     node1 = self.getNodeFromId(nodes[ind1])
                     node2 = self.getNodeFromId(nodes[ind2])
                     if set(node1.prev) == set(node2.prev):
@@ -193,8 +192,6 @@ class SequenceAnalizer:
             nset1 = set(prev1)
             nset2 = set(prev2)
             nset2.remove(id1)
-            print nset1
-            print prev2
             return nset2.issubset(nset1)
 
         block = [node]
@@ -205,8 +202,8 @@ class SequenceAnalizer:
             pass
         else:
             for nid in nextNodes:
+                print nid
                 nnode = self.getNodeFromId(nid)
-                print nnode
                 if isNext(prevNodes, id, nnode.prev):
                     block += self.getFollowingsInBlock(nnode)
         return block

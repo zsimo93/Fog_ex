@@ -4,8 +4,11 @@ from datetime import datetime
 
 db = mainDB.db
 t = db.tokens
-t.create_index("creationTime", expireAfterSeconds=300)
-
+try:
+    t.create_index("creationTime", expireAfterSeconds=300)
+except Exception:
+    pass
+    
 def newToken(actionName):
     token = uniqueName(15)
 

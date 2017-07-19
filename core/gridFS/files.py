@@ -10,7 +10,11 @@ fs = gridfs.GridFS(mongodb)
 
 userdata = mongodb.userdata
 
-userdata.files.create_index("uploadDate", expireAfterSeconds=300)
+try:
+    userdata.files.create_index("uploadDate", expireAfterSeconds=300)
+except Exception:
+    pass
+
 fsUserData = gridfs.GridFS(mongodb, collection="userdata")
 print "importing FS client"
 

@@ -7,12 +7,6 @@ db = mainDB.db
 n = db.nodes
 nrs = db.nodesRes
 
-class NodeID():
-    def __init__(self, id, ip):
-        self.id = id
-        self.ip = ip
-
-
 def deleteNode(token):
     old_val = n.delete_one({'_id': token})
     
@@ -48,13 +42,15 @@ def insertNode(value):
 
 
 def getNodesIP():
+    class NodeID():
+        def __init__(self, id, ip):
+            self.id = id
+            self.ip = ip
 
     ips = []
-
     for k in n.find():
         ips.append(NodeID(k['_id'], k['ip']))
     return ips
-
 
 def getNode(token):
     return n.find_one({'_id': token})

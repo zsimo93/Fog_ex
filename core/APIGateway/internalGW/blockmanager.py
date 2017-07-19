@@ -25,13 +25,13 @@ block =
 
 class BlockManager():
     def __init__(self, block, sessionID):
-        actList = block
+        self.actList = block
         self.localparams = {}
         self.aManagers = []
         self.localiDs = []
         self.sessionID = sessionID
 
-        for action in actList:
+        for action in self.actList:
             self.localiDs.append(action['id'])
             actionMan = ActionManager(action, map=action['map'],
                                       next=action['next'], sessionID=sessionID)
@@ -47,7 +47,8 @@ class BlockManager():
             for s in act["map"].values():
                 vals = s.split("/")
                 if vals[0] not in self.localiDs:
-                    resultDB.getSubParam(self.sessionID, vals[0], vals[1])
+                    v = resultDB.getSubParam(self.sessionID, vals[0], vals[1])
+                    self.localparams[vals[0] + "/" + vals[1]] = v
 
     def prepareSingleInput(self, map):
         inParam = {}

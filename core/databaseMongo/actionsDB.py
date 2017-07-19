@@ -44,8 +44,17 @@ def deleteAction(token):
 
     return ret
 
-def removeAWS():
-    
+def getActions():
+    ret = []
+    for k in a.find():
+        data = {
+            "name": k["_id"],
+            "description": k["description"],
+            "in/out": k["in/out"]
+        }
+        ret.append(data)
+
+    return ret
 
 
 """
@@ -87,15 +96,3 @@ def removeNodeAV(nodeToken):
         except ValueError:
             pass
 """
-
-def getActions():
-    ret = []
-    for k in a.find():
-        data = {
-            "name": k["_id"],
-            "description": k["description"],
-            "in/out": k["in/out"]
-        }
-        ret.append(data)
-
-    return ret

@@ -6,4 +6,7 @@ echo "Pulling nginx web server"
 #docker pull tiangolo/uwsgi-nginx-flask:flask-upload
 #mount socket to use docker in docker.
 #also install docker in container.
-#docker run -v /var/run/docker.sock:/var/run/docker.sock -d apiGateway
+docker run \
+        -e TH_ROLE='NODE' \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -d funkit/apiGateway
