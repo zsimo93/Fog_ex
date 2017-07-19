@@ -372,7 +372,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                 h = AsActionExecutionHandler(None, self.sessionID,
                                              self.blockList[0])
                 text, code = h.start()
-                self.log += h.logList
+                self.logList += h.logList
                 self.blockList = []
                 return text, code
 
@@ -405,7 +405,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             h = AsActionExecutionHandler(None, self.sessionID,
                                                          self.blockList[0])
                             text, code = h.start()
-                            self.log += h.logList
+                            self.logList += h.logList
                             if code >= 400:
                                 return {"error": text}, 500
 

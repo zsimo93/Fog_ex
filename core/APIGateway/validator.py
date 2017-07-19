@@ -52,7 +52,7 @@ def validateActionRequest(request):
             return (False, {"error": "Field '" + str(e) + "' not present. Specify a valid container name"})
         
 
-        return (True, ret)
+    return (True, ret)
 
 """def cleanUpAct(req):
     fields = ("name", "description", "language", "cloud", "timeout")
