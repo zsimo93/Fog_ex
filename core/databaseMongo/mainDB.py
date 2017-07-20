@@ -14,8 +14,9 @@ def initDatabaseReplicaSet(config):
                   {'_id': 2, 'host': '172.17.0.4:27017', 'priority' : 0}]}
     """
     try:
-        c.admin.command("replSetInitiate", config)
+        c.admin.command("replSetInitiate")  #, config)
     except Exception as e:
+        print "PROBLEM HERE"
         raise e
 
 
@@ -85,7 +86,7 @@ def removeNodeReplicaSet(value):
 
 def freeID(l):
     if len(l) == 255:
-        raise NoMoreNodes
+        raise NoMoreNodes("Reached the maxium number of nodes")
 
     last = l[-1]["_id"]
     if last < 255:
@@ -99,3 +100,6 @@ def freeID(l):
         else:
             id += 1
     return id
+
+class NoMoreNodes(Exception):
+    pass

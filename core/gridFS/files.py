@@ -1,10 +1,9 @@
 import gridfs
-from pymongo import MongoClient
 from core.utils.fileutils import unzip
+from core.databaseMongo.mainDB import c as mongoclient
 import os, uuid
 from datetime import datetime
 
-mongoclient = MongoClient(host='localhost', port=27017)
 mongodb = mongoclient.my_db
 fs = gridfs.GridFS(mongodb)
 

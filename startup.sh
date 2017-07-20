@@ -6,4 +6,6 @@ export TH_ROLE
 
 docker run --name mongoDB --network host -d jixer/rpi-mongo --replSet foo
 
-python main.py
+echo "Enter local IP if MASTER [ENTER]:"
+read ip
+python main.py $ip

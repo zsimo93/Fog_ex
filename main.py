@@ -1,40 +1,66 @@
-from core.APIGateway import run
-from core.databaseMongo import nodesDB as db1, mainDB
-from core.gridFS.files import removeChunks
-import threading, os
-from core.heartbeat import heartbeatMain
+import sys
 
-def setup():
+def checkMaster():
+    import os
     role = os.environ.get("TH_ROLE", "MASTER")
-    if role != "MASTER":
-        return
+    return role == "MASTER"
+
+def setup(ip):
+    from pymongo import MongoClient
+   
+    config = {'_id': 'foo',
+              'members': [
+                  {'_id': 0, 'host': ip + ':27017'}]}
+    c = MongoClient(host=ip, port=27017)
+    c.admin.command("replSetInitiate", config)
     
+def createNodeMaster(ip):
+    from core.databaseMongo import nodesDB as db1, mainDB
+    from core.utils.fileutils import uniqueName
+
     node = {
         'name': 'raspi1',
-        'ip': '192.168.1.50',
+        'ip': ip,
         'role': 'MASTER',
         'architecture': 'ARM',
     }
-    id = db1.insertNode(node)
 
-    config = {'_id': 'foo', 'version': 1,
-              'members': [
-                  {'_id': 0, 'host': '192.168.1.50:27017', 'priority' : 1}]}
-    mainDB.initDatabaseReplicaSet(config)
+    db = mainDB.db
+    n = db.nodes
+    nrs = db.nodesRes
+    id = uniqueName()
+    node['_id'] = id
+    n.insert_one(node)
+
+    info = {
+        '_id': id,
+        'cpu': '',
+        'memory': ''}
+    nrs.insert_one(info)
 
     res = {"cpu": 12,
            "memory": long(300000000)}
     db1.updateResources(id, res)
 
+def execute():
+    from core.APIGateway import run
+    from core.heartbeat import heartbeatMain
+    from core.gridFS.files import removeChunks
+            
+    # thread for cleaning up chunks table for user data
+    # removed after TTL
+    # threading.Thread(target=removeChunks).start()
+    heartbeatMain.startHeartBeat()
+    run(False)
 
-setup()
 
-# thread for cleaning up chunks table for user data
-# removed after TTL
-# threading.Thread(target=removeChunks).start()
+if checkMaster():
+    if len(sys.argv) == 1:
+        sys.exit("run the script with the IP of the localnode")
+    print sys.argv[1]
+    setup(sys.argv[1])
+    createNodeMaster(sys.argv[1])
 
-heartbeatMain.startHeartBeat()
-
-run()
+execute()
 
 

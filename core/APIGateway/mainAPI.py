@@ -134,8 +134,8 @@ def delFiles(token):
 def setupVar():
     return internal.setup(request)
 
-def run():
-    app.run(host='0.0.0.0', port=8080, threaded=True, debug=True)
+def run(debug):
+    app.run(host='0.0.0.0', port=8080, threaded=True, debug=debug)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, threaded=True)
