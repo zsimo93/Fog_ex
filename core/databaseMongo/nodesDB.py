@@ -10,23 +10,14 @@ nrs = db.nodesRes
 def deleteNode(token):
     old_val = n.delete_one({'_id': token})
     
-    # mainDB.removeNodeReplicaSet(old_val)
+    mainDB.removeNodeReplicaSet(old_val)
 
     nrs.delete_one({'_id': token})
-    # removeNodeAV(token)
 
 
 def insertNode(value):
-    """
-    value = {
-        'name': 'raspi2',
-        'ip': '172.17.0.6',
-        'role': 'NODE',
-        'architecture': 'ARM',
-    }
-    """
-
-    # value = mainDB.insertNodeReplicaSet(value)
+    
+    value = mainDB.insertNodeReplicaSet(value)
 
     id = uniqueName()
     value['_id'] = id

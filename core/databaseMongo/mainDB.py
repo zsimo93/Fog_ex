@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
 # , replicaset="foo"
-c = MongoClient(host='localhost', port=27017)
+c = MongoClient(host='localhost', port=27017, replicaset="foo")
 db = c.my_db
 print "connectiong to db"
 

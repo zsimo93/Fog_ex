@@ -8,7 +8,7 @@ class PackageCreator(object):
         self.path = self.abspath + uniqueName() + "/"
         self.file = file
         self.filename = file.filename
-        self.zipPath = self.path + "handler.zip"
+        self.zipPath = self.path + "__handler__.zip"
 
     def delFiles(self):
         delFolder(self.path[5:-1])
@@ -26,7 +26,7 @@ class PackageCreator(object):
         else:
             name = self.filename.split(".")[0]
         
-        header = "from " + name + " import main\n"
+        header = "from " + name + " import main\n\n"
         funct = "def my_handler(event, context):\n    return main(event)\n"
 
         program = header + funct
@@ -34,10 +34,14 @@ class PackageCreator(object):
         if in_zip:
             self.writeZip()
             zf = zipfile.ZipFile(self.zipPath, mode='a')
+            zf.external_attr = 644 << 16L
+            zf.external_attr |= 444 << 16L
             zf.writestr("__handler__.py", program)
             
         else:
             zf = zipfile.ZipFile(self.zipPath, mode='w')
+            zf.external_attr = 644 << 16L
+            zf.external_attr |= 444 << 16L
             zf.writestr("__handler__.py", program)
             zf.writestr(self.filename, self.file.stream.read())
 
@@ -47,7 +51,7 @@ class PackageCreator(object):
         retBytes = retFile.read()
         retFile.close()
 
-        self.delFiles()
+        # self.delFiles()
         
         return retBytes
 

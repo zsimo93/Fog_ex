@@ -55,15 +55,19 @@ def actualdelete(actionname):
     tdb.deleteToken(actionname)
     fs.removeActionFile(actionname)
     if deleted["cloud"]:
-        AwsActionDeletor(actionname).delete()
+        try:
+            AwsActionDeletor(actionname).delete()
+        except Exception:
+            pass
     try:
         payload = {"containerName": deleted["containerName"]}
     except KeyError:
         payload = {}
 
-    for ip in getNodesIP():
+    for n in getNodesIP():
         try:
-            post(str(ip), 8080, "/internal/delete/" + str(actionname), payload)
+            print "sending.. " + n.ip
+            post(str(n.ip), 8080, "/internal/delete/" + str(actionname), payload)
         except ConnectionError:
             pass
     

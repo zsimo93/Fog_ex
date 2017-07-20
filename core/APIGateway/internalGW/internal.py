@@ -33,7 +33,7 @@ def invoke(request):
             if not req["param"]:
                 inparam = prepareInput(action['map'], sessionID)
 
-            r = ActionManager(action, inparam).initAndRun()
+            r = ActionManager(action, inparam, sessionID).initAndRun()
         else:
             block = req['block']
             sessionID = req["sessionID"]
@@ -45,7 +45,7 @@ def invoke(request):
         return make_response(tb, 500)
 
 def delFiles(token, request):
-    deleteActionFiles()
+    deleteActionFiles(token)
     try:
         contName = request.json["containerName"]
         delImage(contName)

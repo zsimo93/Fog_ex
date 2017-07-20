@@ -46,6 +46,9 @@ def createAction(name, default, configs, myID, map, timeout,
         action["next"] = next
         action["containerName"] = containerName
 
+    if action["cloud"]:
+        action["actionClass"] = conf["actionClass"]
+
     return action
 
 def calcBlockMemory(actList):
@@ -95,10 +98,12 @@ class AWSInvoker:
         self.myID = request["action"]['id']
         
         param = self.prepareInput()
-        conn = AwsActionInvoker(request['action']['name'], param)
-        self.response = conn.invoke()
-
-        if "errorType" in self.response:
+        conn = AwsActionInvoker(request['action']['name'], param,
+                                request['action']["actionClass"])
+        r = conn.invoke()
+        self.response = r["Payload"].read()
+        print self.response
+        if "FunctionError" in r:
             return (self.response, 500)
 
         return self.finalizeResult()
@@ -196,9 +201,9 @@ class ActionExecutionHandler:
                 return self.ret
             except ConnectionError:
                 nodesDB.deleteNode(name)
-            except Exception, e:
-                self.log("Exception in local")
-                return ({"error": str(e)}, 500)
+                """except Exception, e:
+                                                    self.log("Exception in local")
+                                                    return ({"error": str(e)}, 500)"""
             else:
                 break
 

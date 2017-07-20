@@ -1,8 +1,9 @@
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, request, make_response
 import sys
 from os.path import isfile, join
 import os
 import codecs
+import json
 
 workdir = "/action"
 proxy = Flask(__name__)
@@ -25,10 +26,10 @@ def run():
         exec('fun = %s(param)' % "main", namespace)
         result = namespace['fun']
     except Exception, e:
-                    return make_response(str(e), 502)
+        return make_response(str(e), 502)
 
     if result and isinstance(result, dict):
-        return make_response(jsonify(result), 200)
+        return make_response(json.dumps(result), 200)
     else:
         return make_response('The action did not return a dictionary.', 502)
 

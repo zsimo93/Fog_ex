@@ -32,7 +32,7 @@ def availableActionName(name):
 
 def deleteAction(token):
     from sequencesDB import deleteSequence
-
+    dep = db.dependencies
     ret = a.find_one_and_delete({"_id" : token})
     
     deplist = dep.find_one_and_delete({"_id" : token})

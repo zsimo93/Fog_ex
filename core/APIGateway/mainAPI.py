@@ -1,6 +1,6 @@
 #!thesis/api
 
-from flask import Flask, request, make_response, abort
+from flask import Flask, request, abort
 import nodes, actions, sequences, invoker, aws, userfile
 import internalGW.internal as internal
 import os
