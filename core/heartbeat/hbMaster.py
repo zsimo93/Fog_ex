@@ -49,14 +49,15 @@ def getRes(id, IP):
     return
 
 
-def sendAll():
-    nodes = db.getNodesIP()
-
-    for n in nodes:
-        Thread(target=getRes, args=(n.id, n.ip, )).start()
-
 def start():
     print "Start to fetch data from nodes"
     while(True):
         sleep(0.5)
-        sendAll()
+        try:
+            nodes = db.getNodesIP()
+        except Exception:
+            sleep(0.2)
+            continue
+
+        for n in nodes:
+            Thread(target=getRes, args=(n.id, n.ip, )).start()

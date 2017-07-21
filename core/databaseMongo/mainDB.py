@@ -1,7 +1,13 @@
 from pymongo import MongoClient
-
+import os
 # , replicaset="foo"
-c = MongoClient(host='localhost', port=27017, replicaset="foo")
+if os.environ.get("TH_ROLE") == "MASTER":
+    pref = "primaryPreferred"
+else:
+    pref = "secondaryPreferred"
+
+c = MongoClient(host='localhost', port=27017, replicaset="foo",
+                readPreference=pref)
 db = c.my_db
 print "connectiong to db"
 

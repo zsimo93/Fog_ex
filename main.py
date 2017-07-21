@@ -1,7 +1,6 @@
 import sys, os
 
 def checkMaster():
-    import os
     role = os.environ.get("TH_ROLE")
     return role == "MASTER"
 

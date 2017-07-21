@@ -64,12 +64,17 @@ def removeChunks():
     import time
 
     while True:
-        chunksCollection = userdata.chunks
-        chunks = chunksCollection.find()
-        
-        for c in chunks:
-            chunkid = c["_id"]
-            fileid = c["files_id"]
-            if not userdata.find_one({"_id": fileid}):
-                userdata.chunks.find_one_and_delete({"_id": chunkid})
+        try:
+            chunksCollection = userdata.chunks
+            chunks = chunksCollection.find()
+            
+            for c in chunks:
+                chunkid = c["_id"]
+                fileid = c["files_id"]
+                if not userdata.find_one({"_id": fileid}):
+                    userdata.chunks.find_one_and_delete({"_id": chunkid})
+        except Exception:
+            time.sleep(5)
+            continue
+
         time.sleep(120)
