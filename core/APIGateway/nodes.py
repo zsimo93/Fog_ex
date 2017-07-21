@@ -40,9 +40,9 @@ def deleteNode(request, token):
         return make_response(jsonify({'error': "No node with id " + token}),
                              406)
 
-    db.deleteNode(token)
+    msg = db.deleteNode(token)
     
-    return make_response("OK", 200)
+    return make_response(msg, 200)
 
 
 def getNodes(request):

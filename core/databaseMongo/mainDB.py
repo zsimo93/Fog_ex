@@ -16,7 +16,6 @@ def initDatabaseReplicaSet(config):
     try:
         c.admin.command("replSetInitiate")  #, config)
     except Exception as e:
-        print "PROBLEM HERE"
         raise e
 
 

@@ -10,7 +10,7 @@ def getRes(id, IP):
     PORT = 9999
     data = "heartbeat"
 
-    mip = os.environ.get("TH_MASTERIP", "localhost")
+    mip = os.environ.get("TH_MASTERIP")
     if IP == mip:
         cpu = psutil.cpu_percent(interval=0.1)
         memory = psutil.virtual_memory().available
@@ -56,6 +56,7 @@ def sendAll():
         Thread(target=getRes, args=(n.id, n.ip, )).start()
 
 def start():
+    print "Start to fetch data from nodes"
     while(True):
         sleep(0.5)
         sendAll()

@@ -6,7 +6,7 @@ import internalGW.internal as internal
 import os
 
 def checkMaster():
-    role = os.environ.get("TH_ROLE", "MASTER")
+    role = os.environ.get("TH_ROLE")
     return role == "MASTER"
 
 app = Flask(__name__)

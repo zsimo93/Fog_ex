@@ -2,7 +2,7 @@ import sys, os
 
 def checkMaster():
     import os
-    role = os.environ.get("TH_ROLE", "MASTER")
+    role = os.environ.get("TH_ROLE")
     return role == "MASTER"
 
 def setup(ip):
@@ -10,7 +10,8 @@ def setup(ip):
    
     config = {'_id': 'foo',
               'members': [
-                  {'_id': 0, 'host': ip + ':27017'}]}
+                  {'_id': 0, 'host': ip + ':27017',
+                   "votes": 1, "priority": 1}]}
     c = MongoClient(host=ip, port=27017)
     c.admin.command("replSetInitiate", config)
     
@@ -23,6 +24,7 @@ def createNodeMaster(ip):
         'ip': ip,
         'role': 'MASTER',
         'architecture': 'ARM',
+        'replica_id': 0
     }
 
     db = mainDB.db
@@ -46,10 +48,11 @@ def execute():
     from core.APIGateway import run
     from core.heartbeat import heartbeatMain
     from core.gridFS.files import removeChunks
+    import threading
             
     # thread for cleaning up chunks table for user data
     # removed after TTL
-    # threading.Thread(target=removeChunks).start()
+    threading.Thread(target=removeChunks).start()
     heartbeatMain.startHeartBeat()
     run(False)
 

@@ -7,12 +7,14 @@ n = db.nodes
 nrs = db.nodesRes
 
 def deleteNode(token):
-    old_val = n.delete_one({'_id': token})
-    
+    old_val = n.find_one({'_id': token})
+    if old_val["role"] == "MASTER":
+        return "Cannot remove master node"
+
+    n.delete_one({'_id': token})
     mainDB.removeNodeReplicaSet(old_val)
-
     nrs.delete_one({'_id': token})
-
+    return "DONE"
 
 def insertNode(value):
     value = mainDB.insertNodeReplicaSet(value)
