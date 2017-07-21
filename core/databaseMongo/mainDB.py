@@ -65,6 +65,7 @@ def removeNodeReplicaSet(value):
         newV["priority"] = 1
         newV["votes"] = 1
         new_members.append(newV)
+    config['members'] = new_members
 
     c.admin.command("replSetReconfig", config, force=True)
 

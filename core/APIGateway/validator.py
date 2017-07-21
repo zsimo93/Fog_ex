@@ -97,7 +97,7 @@ def validateNodeRequest(request):
 
 
 def cleanUpNode(req):
-    fields = ("name", "ip", "architecture")
+    fields = ("name", "ip", "architecture", "role")
     for k in req.keys():
         if k not in fields:
             del req[k]
