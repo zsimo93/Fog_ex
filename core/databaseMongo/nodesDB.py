@@ -1,6 +1,5 @@
 #!thesis/DB
 
-from core.utils.fileutils import uniqueName
 import mainDB
 
 db = mainDB.db
@@ -16,20 +15,18 @@ def deleteNode(token):
 
 
 def insertNode(value):
-    
     value = mainDB.insertNodeReplicaSet(value)
-
-    id = uniqueName()
-    value['_id'] = id
+    name = value["name"]
+    value['_id'] = name
     n.insert_one(value)
 
     info = {
-        '_id': id,
-        'cpu': '',
-        'memory': ''}
+        '_id': name,
+        'cpu': -1,
+        'memory': -1}
     nrs.insert_one(info)
 
-    return id
+    return name
 
 
 def getNodesIP():

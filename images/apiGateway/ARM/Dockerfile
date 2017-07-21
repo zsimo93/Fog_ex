@@ -7,8 +7,8 @@ RUN wget -qO- https://get.docker.com | sh
 RUN pip install \
             docker \
             pymongo \
-            boto3 \
-            psutils
+            boto3
+run sudo apt-get install python-psutil
             
 
 EXPOSE 8080, 9999

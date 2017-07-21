@@ -13,7 +13,6 @@ def getRes(id, IP):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
-        
         # Connect to server and send data
         sock = socket.create_connection((IP, PORT), timeout=1)
         sock.sendall(data + "\n")
@@ -22,8 +21,11 @@ def getRes(id, IP):
         received = sock.recv(1024)
         recJson = json.loads(received)
 
-    except socket.timeout:
+    except Exception:
         recJson = None
+        memory = db.getRes(id)["memory"]
+        if memory < 0:
+            return
     finally:
         sock.close()
 

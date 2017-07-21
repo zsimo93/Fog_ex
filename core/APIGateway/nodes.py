@@ -1,6 +1,6 @@
 #!thesis/api
-from flask import Flask, make_response, jsonify
-from core.databaseMongo import nodesDB as db, actionsDB
+from flask import make_response, jsonify
+from core.databaseMongo import nodesDB as db
 from validator import validateNodeRequest as validate, cleanUpNode as clean
 """
 def computeAvailability(resp, nodeId):
@@ -15,6 +15,9 @@ def newNode(request):
     valid, resp = validate(request)
     if not valid:
         return make_response(jsonify(resp), 400)
+    if db.getNode(resp["name"]):
+        error = {"error": "Name '" + resp["name"] + "' already in use"}
+        return make_response(jsonify(error), 400)
     """
     if resp.pop('setup'):
         user = resp.pop("ssh_user")
