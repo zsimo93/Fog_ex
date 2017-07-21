@@ -23,5 +23,9 @@ def delete(token):
 def download(token):
 
     file = files.loadUserData(token)
-
-    return make_response(file.read(), 200)
+    data = file.read()
+    filename = file.filename
+    mimetype = file.content_type
+    return send_file(data, mimetype=mimetype,
+                     attachment_filename=filename,
+                     as_attachment=True)
