@@ -1,5 +1,5 @@
-from flask import flash, make_response, send_file
-
+from flask import make_response, send_file
+from io import BytesIO
 from core.gridFS import files
 
 def upload(request):
@@ -23,7 +23,7 @@ def delete(token):
 def download(token):
 
     file = files.loadUserData(token)
-    data = file.read()
+    data = BytesIO(file.read())
     filename = file.filename
     mimetype = file.content_type
     return send_file(data, mimetype=mimetype,

@@ -19,7 +19,10 @@ def getRes(id, IP):
             'cpu': cpu,
             'memory': memory
         }
-        db.updateResources(id, data)
+        try:
+            db.updateResources(id, data)
+        except Exception:
+            pass
         return
 
     # Create a socket (SOCK_STREAM means a TCP socket)
@@ -41,11 +44,13 @@ def getRes(id, IP):
             return
     finally:
         sock.close()
-
-    if recJson:
-        db.updateResources(id, recJson)
-    else:
-        db.deleteNode(id)
+    try:
+        if recJson:
+            db.updateResources(id, recJson)
+        else:
+            db.deleteNode(id)
+    except Exception:
+        pass
     return
 
 
