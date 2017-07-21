@@ -10,7 +10,7 @@ fs = gridfs.GridFS(mongodb)
 userdata = mongodb.userdata
 
 try:
-    userdata.files.create_index("uploadDate", expireAfterSeconds=300)
+    userdata.files.create_index("uploadDate", expireAfterSeconds=1000)
 except Exception:
     pass
 
@@ -59,6 +59,13 @@ def saveUserData(file):
 
 def deleteUserData(token):
     fsUserData.delete(token)
+
+def loadUserData(token):
+    f = fsUserData.find_one(str(token))
+    if f:
+        return f
+    else:
+        return None
 
 def removeChunks():
     import time

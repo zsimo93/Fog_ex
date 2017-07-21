@@ -1,4 +1,5 @@
-from flask import flash, make_response
+from flask import flash, make_response, send_file
+
 from core.gridFS import files
 
 def upload(request):
@@ -18,3 +19,9 @@ def delete(token):
     files.deleteUserData(token)
 
     return make_response("OK", 200)
+
+def download(token):
+
+    file = files.loadUserData(token)
+
+    return make_response(file.read(), 200)
