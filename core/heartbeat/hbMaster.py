@@ -1,13 +1,26 @@
 import socket
 import json
+import os
 from time import sleep
 from threading import Thread
 from core.databaseMongo import nodesDB as db
-
+import psutil
 
 def getRes(id, IP):
     PORT = 9999
     data = "heartbeat"
+
+    mip = os.environ.get("TH_MASTERIP", "localhost")
+    if IP == mip:
+        cpu = psutil.cpu_percent(interval=0.1)
+        memory = psutil.virtual_memory().available
+
+        data = {
+            'cpu': cpu,
+            'memory': memory
+        }
+        db.updateResources(id, data)
+        return
 
     # Create a socket (SOCK_STREAM means a TCP socket)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

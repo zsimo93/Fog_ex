@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 def checkMaster():
     import os
@@ -57,9 +57,10 @@ def execute():
 if checkMaster():
     if len(sys.argv) == 1:
         sys.exit("run the script with the IP of the localnode")
-    print sys.argv[1]
-    setup(sys.argv[1])
-    createNodeMaster(sys.argv[1])
+    ip = sys.argv[1]
+    os.environ["TH_MASTERIP"] = ip
+    setup(ip)
+    createNodeMaster(ip)
 
 execute()
 
