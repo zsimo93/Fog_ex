@@ -40,7 +40,7 @@ def createNodeMaster(ip):
 
     res = {"cpu": 12,
            "memory": long(300000000)}
-    db1.updateResources(id, res)
+    db1.updateResources('raspi1', res)
 
 def execute():
     from core.APIGateway import run
