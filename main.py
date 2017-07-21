@@ -20,6 +20,7 @@ def createNodeMaster(ip):
     from core.utils.fileutils import uniqueName
 
     node = {
+        '_id': 'raspi1',
         'name': 'raspi1',
         'ip': ip,
         'role': 'MASTER',
@@ -47,12 +48,7 @@ def createNodeMaster(ip):
 def execute():
     from core.APIGateway import run
     from core.heartbeat import heartbeatMain
-    from core.gridFS.files import removeChunks
-    import threading
-            
-    # thread for cleaning up chunks table for user data
-    # removed after TTL
-    threading.Thread(target=removeChunks).start()
+    
     heartbeatMain.startHeartBeat()
     run(False)
 
@@ -64,6 +60,12 @@ if checkMaster():
     os.environ["TH_MASTERIP"] = ip
     setup(ip)
     createNodeMaster(ip)
+    from core.gridFS.files import removeChunks
+    import threading
+            
+    # thread for cleaning up chunks table for user data
+    # removed after TTL
+    threading.Thread(target=removeChunks).start()
 
 execute()
 
