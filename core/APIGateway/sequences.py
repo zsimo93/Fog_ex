@@ -50,12 +50,11 @@ def deleteSequence(request, actionname):
         
     try:
         token = request.json['token']
-        print token
         if tdb.checkToken(actionname, token):
             return actualdelete()
 
     except Exception, e:
-        print e
+        pass
         
     newtoken = tdb.newToken(actionname)
     

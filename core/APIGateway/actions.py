@@ -85,12 +85,11 @@ def deleteAction(request, actionname):
     
     try:
         token = str(request.json['token'])
-        print "my token: " + token
         if tdb.checkToken(actionname, token):
             actualdelete(actionname)
             return make_response("OK", 200)
-    except Exception, e:
-        print e
+    except Exception:
+        pass
         
     newtoken = tdb.newToken(actionname)
     resp = {"message": "By deleting this action also the actions in the list will be deleted. Resend the request with the token to confirm." ,

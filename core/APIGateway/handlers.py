@@ -102,7 +102,6 @@ class AWSInvoker:
                                 request['action']["actionClass"])
         r = conn.invoke()
         self.response = r["Payload"].read()
-        print self.response
         if "FunctionError" in r:
             return (self.response, 500)
 

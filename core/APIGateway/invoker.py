@@ -32,7 +32,6 @@ def invoke(token, request):
     hand = giveMeHandler(r["param"], r["default"], r["except"],
                          token, sessionID)
     payload, code = hand.start()
-    print payload
     try:
         result = json.loads(payload)
     except Exception:
@@ -43,6 +42,5 @@ def invoke(token, request):
             result["log"] = hand.logList
     except KeyError:
         pass
-    print result
 
     return make_response(jsonify(result), code)

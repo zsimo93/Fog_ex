@@ -21,7 +21,6 @@ def checkToken(actionName, token):
     if not ret:
         return False
     for keys in ret:
-        print keys["_id"]
         if keys["_id"] == token:
             return True
     return False

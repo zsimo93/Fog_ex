@@ -58,4 +58,7 @@ def unzip(filename, extract_dir):
 
 def deleteActionFiles(actName):
     path = tmp_dir + "/" + actName
-    shutil.rmtree(path)
+    try:
+        shutil.rmtree(path)
+    except OSError:
+        pass

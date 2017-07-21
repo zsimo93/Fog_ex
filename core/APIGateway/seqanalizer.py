@@ -202,7 +202,6 @@ class SequenceAnalizer:
             pass
         else:
             for nid in nextNodes:
-                print nid
                 nnode = self.getNodeFromId(nid)
                 if isNext(prevNodes, id, nnode.prev):
                     block += self.getFollowingsInBlock(nnode)
