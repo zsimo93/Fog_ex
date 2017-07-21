@@ -17,7 +17,6 @@ def setup(ip):
     
 def createNodeMaster(ip):
     from core.databaseMongo import nodesDB as db1, mainDB
-    from core.utils.fileutils import uniqueName
 
     node = {
         '_id': 'raspi1',
@@ -31,12 +30,10 @@ def createNodeMaster(ip):
     db = mainDB.db
     n = db.nodes
     nrs = db.nodesRes
-    id = uniqueName()
-    node['_id'] = id
     n.insert_one(node)
 
     info = {
-        '_id': id,
+        '_id': 'raspi1',
         'cpu': '',
         'memory': ''}
     nrs.insert_one(info)

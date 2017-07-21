@@ -19,10 +19,10 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         self.request.sendall(json.dumps(response))
 
 def start():
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "0.0.0.0", 9999
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
-
+    print "START NODE HB SERVER"
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
     server.serve_forever()
