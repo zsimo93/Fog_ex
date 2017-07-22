@@ -17,12 +17,11 @@ def runContainer(name, memory, path_dir):
         a = client.containers.run(name,
                                   volumes=volumes,
                                   detach=True)
-
     id = str(a.id)
 
     ip = getIP(id)
 
-    return a, ip
+    return a.name, ip
 
 
 
@@ -33,8 +32,20 @@ def getIP(id):
     
     return ret
 
-def pull(contName):
+def killContainer(conId):
+    c = client.containers.get(conId)
+    c.kill()
+    c.remove()
+
+def updateContainerMem(contId, memLimit):
+    container = client.containers.get(contId)
+    container.update(mem_limit=str(memLimit) + "m")
+
+def pullImage(contName):
     client.images.pull(contName)
 
 def delImage(contName):
     client.images.remove(image=contName)
+
+def getContList():
+    return client.containers.list()

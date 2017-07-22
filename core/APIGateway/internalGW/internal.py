@@ -5,7 +5,8 @@ from core.container.dockerInterface import delImage
 from core.utils.fileutils import deleteActionFiles
 import traceback, os
 import threading
-from core.container.dockerInterface import pull
+from core.container.dockerInterface import pullImage
+from core.databaseMongo import localDB
 
 def invoke(request):
     
@@ -45,6 +46,7 @@ def invoke(request):
         return make_response(tb, 500)
 
 def delFiles(token, request):
+    localDB.deleteActionContainers(token)
     deleteActionFiles(token)
     try:
         contName = request.json["containerName"]
@@ -56,7 +58,7 @@ def delFiles(token, request):
 
 def downloadImage(request):
     contname = request.json["contName"]
-    threading.Thread(target=pull, args=(contname,))
+    threading.Thread(target=pullImage, args=(contname,))
     return make_response("OK", 200)
 
 def setup(request):

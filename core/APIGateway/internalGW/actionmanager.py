@@ -1,6 +1,6 @@
 from core.gridFS import files
-from core.container.dockerInterface import runContainer
-from core.databaseMongo import resultDB
+from core.container.dockerInterface import runContainer, updateContainerMem
+from core.databaseMongo import resultDB, localDB
 from core.utils.httpUtils import post
 from requests import ConnectionError
 from threading import Thread
@@ -31,31 +31,27 @@ class ActionManager():
         self.param = param
         self.next = next
 
-    def stopContainer(self):
-        while(True):
-            try:
-                self.cont.kill()
-            except Exception:
-                continue
-            else:
-                self.cont.remove()
-                break
-        print "done"
-        return
-
     def startCont(self):
-        containerName = ""
-        if self.language == "python":
-            containerName = "python-image"
-        elif self.language == "docker":
-            containerName = self.containerName
-        else:
-            containerName = "python"
+        c = localDB.findContainer(self.action)
 
-        self.path = files.loadActionFile(self.action)
-        self.cont , self.ip = runContainer(containerName,
-                                           self.memory,
-                                           self.path)
+        if c:
+            self.cont = c[0]
+            self.ip = c[1]
+            updateContainerMem(self.cont, self.memory)
+
+        else:
+            containerName = ""
+            if self.language == "python":
+                containerName = "python-image"
+            elif self.language == "docker":
+                containerName = self.containerName
+            else:
+                containerName = "python"
+
+            self.path = files.loadActionFile(self.action)
+            self.cont , self.ip = runContainer(containerName,
+                                               self.memory,
+                                               self.path)
 
     def startThreadContainer(self):
         return Thread(target=self.startCont)
@@ -85,7 +81,8 @@ class ActionManager():
             self.response = tb
 
         finally:
-            Thread(target=self.stopContainer).start()
+            # Thread(target=self.stopContainer).start()
+            localDB.insertContainer(self.action, self.cont, self.ip)
 
         return self.response, self.error
 
