@@ -57,7 +57,7 @@ class ActionManager():
             self.cont , self.ip = runContainer(containerName,
                                                self.memory,
                                                self.path)
-            localDB.insertContainer(self.action, self.cont, self.ip)
+            localDB.insertInAll(self.cont, self.action)
 
     def startThreadContainer(self):
         return Thread(target=self.startCont)
