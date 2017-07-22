@@ -1,7 +1,9 @@
-from core.databaseMongo.mainDB import c as mongoclient
 from datetime import datetime
 from core.container.dockerInterface import killContainer, getContList
+from pymongo import MongoClient
 
+mongoclient = MongoClient(host='localhost', port=27017,
+                          readPreference='nearest')
 availableCont = mongoclient.local.avCont
 allCont = mongoclient.local.allCont
 allCont.create_index("createTime", expireAfterSeconds=10)

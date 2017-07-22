@@ -64,7 +64,6 @@ def downloadImage(request):
 def setup(request):
     req = request.json
 
-    os.environ['TH_ROLE'] = req['role']
     os.environ['TH_NAME'] = req['name']
 
     return make_response("OK", 200)
