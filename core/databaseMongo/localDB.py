@@ -59,15 +59,13 @@ def removeTimedOutCont():
     import time
     while (True):
         clist = getContList()
-        print clist
         for container in clist:
             cname = container.name
-            print cname
             if cname not in ("mongoDB", "coreGateway"):
                 # DON'T TERMINATE mongo and core containers
                 try:
                     if not allCont.find_one({"_id": cname}):
-                        print "DELETING" + cname
+                        print "DELETING " + cname
                         container.kill()
                         container.remove()
                         availableCont.delete_one({"_id": cname})

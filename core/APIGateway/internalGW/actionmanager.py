@@ -30,6 +30,11 @@ class ActionManager():
         self.map = map
         self.param = param
         self.next = next
+        self.cont = ""
+        self.ip = ""
+
+    def setContainerMem(self):
+        updateContainerMem(self.cont, self.memory)
 
     def startCont(self):
         c = localDB.findContainer(self.action)
@@ -37,7 +42,7 @@ class ActionManager():
         if c:
             self.cont = c[0]
             self.ip = c[1]
-            updateContainerMem(self.cont, self.memory)
+            self.setContainerMem()
 
         else:
             containerName = ""
@@ -80,10 +85,6 @@ class ActionManager():
             self.error = True
             self.response = tb
 
-        finally:
-            # Thread(target=self.stopContainer).start()
-            localDB.insertContainer(self.action, self.cont, self.ip)
-
         return self.response, self.error
 
     def finalizeResult(self):
@@ -97,6 +98,10 @@ class ActionManager():
     def initAndRun(self):
         self.startCont()
         self.run()
+        localDB.insertContainer(self.action, self.cont, self.ip)
         if self.error:
             return (self.response, 500)
         return self.finalizeResult()
+
+    def __repr__(self):
+        return self.action + " - " + self.cont + " _ " + self.ip
