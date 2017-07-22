@@ -1,4 +1,5 @@
 import sys, os
+import threading
 
 def checkMaster():
     role = os.environ.get("TH_ROLE")
@@ -44,7 +45,9 @@ def createNodeMaster(ip):
 def execute():
     from core.APIGateway import run
     from core.heartbeat import heartbeatMain
+    from core.databaseMongo.localDB import removeTimedOutCont
     
+    threading.Thread(target=removeTimedOutCont)
     heartbeatMain.startHeartBeat()
     run(False)
 
@@ -57,7 +60,7 @@ if checkMaster():
     setup(ip)
     createNodeMaster(ip)
     from core.gridFS.files import removeChunks
-    import threading
+    
             
     # thread for cleaning up chunks table for user data
     # removed after TTL
