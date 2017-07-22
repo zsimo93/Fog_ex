@@ -25,12 +25,13 @@ def findContainer(actionName):
     return None
 
 def insertInAll(contId, actionName):
-    inDB = {
-        "_id": contId,
-        "actionName": actionName,
-        "createTime": datetime.utcnow()
-    }
-    allCont.insert_one(inDB)
+    if not updateTimeout(contId):
+        inDB = {
+            "_id": contId,
+            "actionName": actionName,
+            "createTime": datetime.utcnow()
+        }
+        allCont.insert_one(inDB)
 
 def updateTimeout(contId):
     newCont = allCont.find_one({"_id": contId})
@@ -57,7 +58,9 @@ def deleteActionContainers(actName):
 def removeTimedOutCont():
     import time
     while (True):
-        for container in getContList():
+        clist = getContList()
+        print clist
+        for container in clist:
             cname = container.name
             print cname
             if cname not in ("mongoDB", "coreGateway"):
@@ -67,6 +70,7 @@ def removeTimedOutCont():
                         print "DELETING" + cname
                         container.kill()
                         container.remove()
+                        availableCont.delete_one({"_id": cname})
                 except Exception:
                     pass
         time.sleep(10)
