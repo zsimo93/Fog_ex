@@ -47,7 +47,7 @@ def execute():
     from core.heartbeat import heartbeatMain
     from core.databaseMongo.localDB import removeTimedOutCont
     
-    threading.Thread(target=removeTimedOutCont)
+    threading.Thread(target=removeTimedOutCont).start()
     heartbeatMain.startHeartBeat()
     run(False)
 

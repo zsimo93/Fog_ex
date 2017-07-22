@@ -4,7 +4,7 @@ from core.container.dockerInterface import killContainer, getContList
 
 availableCont = mongoclient.local.avCont
 allCont = mongoclient.local.allCont
-allCont.create_index("createTime", expireAfterSeconds=300)
+allCont.create_index("createTime", expireAfterSeconds=10)
 
 def insertContainer(actionName, contId, ip):
     inDB = {
