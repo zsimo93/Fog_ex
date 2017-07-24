@@ -177,7 +177,7 @@ class ActionExecutionHandler:
         while(i < 2):
             try:
 
-                name, invoker = self.chooseActionNode()
+                name, invoker = self.chooseActionNode(self.action)
 
                 request = {
                     "type": "action",
