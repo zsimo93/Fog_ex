@@ -135,31 +135,20 @@ class ActionExecutionHandler:
         Select the node with more free cpu and enought memory
         """
         req_mem = long(self.action["memory"]) * 1000000
-        """
-        if mem.endswith("m"):
-            req_mem = long(mem[:-1] + "000000")
-        elif mem.endswith("k"):
-            req_mem = long(mem[:-1] + "000")
-        elif mem.endswith("g"):
-            req_mem = long(mem[:-1] + "000000000")
-        """
         nodesRes = nodesDB.allRes()
-        if not nodesRes:
-            # TO BE REMOVED
-            return ("localhost", NodeInvoker("127.0.0.1"))
 
         selected = None
-        sortedCPU = self.sortedCPU(nodesRes)
-        # sortedMem = self.sortedMem(nodesRes)
+        sortedNodes = self.sortedCPU(nodesRes)
+        # sortedNodes = self.sortedMem(nodesRes)
+        #   will take the node with less free memory
+        #   that fit the requested memory
 
         attempt = 0
         while attempt < 3:
             # 3 attempts of finding a node with enought memory.
             # if no node and action no AWS execution, wait and retry later.
 
-            # for node in sortedMem:   will take the node with less free memory
-            #                           that fit the requested memory
-            for node in sortedCPU:
+            for node in sortedNodes:
                 if req_mem < node['memory']:
                     # most free cpu and enought memory
                     selected = node
@@ -176,7 +165,9 @@ class ActionExecutionHandler:
         raise NoResourceException("Not enought memory resources in the " +
                                   "system to execute " + self.action["name"] +
                                   " using " + str(self.action["memory"]) + "MB")
-            
+    
+    def startThreaded(self):
+        return Thread(target=self.start)
 
     def start(self):
         i = 0
@@ -200,9 +191,9 @@ class ActionExecutionHandler:
                 return self.ret
             except ConnectionError:
                 nodesDB.deleteNode(name)
-                """except Exception, e:
-                                                    self.log("Exception in local")
-                                                    return ({"error": str(e)}, 500)"""
+            except Exception, e:
+                self.log("Exception in local")
+                return ({"error": str(e)}, 500)
             else:
                 break
 
@@ -292,7 +283,7 @@ class SeqExecutionHandler:
         self.logList.append(logStr)
             
 class ParallelExecutionHandler:
-    def __init__(self, default, configs, sessionID, list):
+    def __init__(self, default, configs, sessionID, plist):
         self.default = default
         self.configs = configs
         self.sessionID = sessionID
@@ -300,14 +291,24 @@ class ParallelExecutionHandler:
         self.logList = []
 
         self.actList = []
-        for a in list:
+        for a in plist:
             if a["type"] == "action":
 
+                h = ActionExecutionHandler(self.default, self.configs,
+                                           a["name"], self.sessionID,
+                                           myID=a["id"], map=a["map"],
+                                           timeout=a["timeout"],
+                                           language=a["language"],
+                                           cloud=a["cloud"], next=a["next"],
+                                           containerName=a["containerName"])
+                """
                 ar = createAction(a["name"], self.default, self.configs,
                                   a["id"], a["map"], a["timeout"],
                                   a["language"], a["cloud"], a["next"],
                                   a["containerName"])
+                """
             else:
+                """
                 block = {}
                 blockList = []
                 for b in a["list"]:
@@ -316,15 +317,26 @@ class ParallelExecutionHandler:
                                       b["language"], b["cloud"], b["next"],
                                       b["containerName"])
                     blockList.append(ar)
-                # ar = BlockExecutionHandler(self.default, self.configs,
-                #                           self.sessionID, a["list"])
                 block["memory"] = calcBlockMemory(blockList)
                 block["block"] = blockList
-            self.actList.append(block)
+
+                """
+                h = BlockExecutionHandler(self.default, self.configs,
+                                          self.sessionID, a["list"])
+            self.actList.append(h)
 
     def start(self):
-        # BIN PACKING
-        pass
+        self.log("start execution")
+        threads = []
+        for h in self.actList:
+            t = h.startThreaded()
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+        self.log("end execution")
 
     def log(self, message):
         ts = datetime.now().isoformat()
@@ -356,9 +368,9 @@ class BlockExecutionHandler(ActionExecutionHandler):
     def chooseNode(self, actList):
         memory = calcBlockMemory(actList) * 1000000
         nodesRes = nodesDB.allRes()
-        # nodeList = self.sortedMem(nodesRes)  take less memory that fits
-        nodeList = self.sortedCPU(nodesRes)
-        for node in nodeList:
+        # sortedNodes = self.sortedMem(nodesRes)  take less memory that fits
+        sortedNodes = self.sortedCPU(nodesRes)
+        for node in sortedNodes:
             if memory < node['memory']:
                 # most free cpu and enought memory
                 return node["_id"], NodeInvoker(nodesDB.getNode(node['_id'])['ip'])

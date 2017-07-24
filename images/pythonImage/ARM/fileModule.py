@@ -3,6 +3,9 @@ from gridfs import GridFS
 from pymongo import MongoClient
 from datetime import datetime
 
+class NoFileException(Exception):
+    pass
+
 class FileManager:
 
     mongoclient = MongoClient(host='172.17.0.1', port=27017)
@@ -21,4 +24,4 @@ class FileManager:
         if f:
             return f.read()
         else:
-            return None
+            raise NoFileException("No file with id " + str(fileID))

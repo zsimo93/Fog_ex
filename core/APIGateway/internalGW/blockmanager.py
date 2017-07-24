@@ -1,27 +1,6 @@
 from actionmanager import ActionManager
 from core.databaseMongo import resultDB, localDB
 import json
-"""
-param = {"text": "hello world"},
-block =
-    [
-      {
-        "name": "addStr",
-        "cpu": 2,
-        "memory": "250m",
-        "language":
-        "timeout"
-      },
-      {
-        "name": "UpperDate",
-        "cpu": 2,
-        "memory": "250m"
-        "language":
-        "timeout"
-      }
-    ]
-}
-"""
 
 class BlockManager():
     def __init__(self, block, sessionID):

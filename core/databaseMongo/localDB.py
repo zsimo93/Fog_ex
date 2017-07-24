@@ -6,9 +6,10 @@ mongoclient = MongoClient(host='localhost', port=27017,
                           readPreference='nearest')
 availableCont = mongoclient.local.avCont
 allCont = mongoclient.local.allCont
-allCont.create_index("createTime", expireAfterSeconds=10)
+allCont.create_index("createTime", expireAfterSeconds=60)
 
 def insertContainer(actionName, contId, ip):
+    # insert container in availableDB.
     inDB = {
         "_id": contId,
         "actionName": actionName,
@@ -18,6 +19,7 @@ def insertContainer(actionName, contId, ip):
     insertInAll(contId, actionName)
 
 def findContainer(actionName):
+    # if container available, delete from available and update t-o in all.
     cont = availableCont.find_one_and_delete({"actionName": actionName})
     if cont:
         id = cont["_id"]
@@ -27,6 +29,7 @@ def findContainer(actionName):
     return None
 
 def insertInAll(contId, actionName):
+    # if container alreasy in ALL update t-o, otherwise insert.
     if not updateTimeout(contId):
         inDB = {
             "_id": contId,
@@ -36,6 +39,8 @@ def insertInAll(contId, actionName):
         allCont.insert_one(inDB)
 
 def updateTimeout(contId):
+    # if container in allDB update t-o and return true.
+    # return False otherwise
     newCont = allCont.find_one({"_id": contId})
     if newCont:
         newCont["createTime"] = datetime.utcnow()
@@ -44,6 +49,7 @@ def updateTimeout(contId):
     return False
 
 def deleteActionContainers(actName):
+    # delete all containers of a certain actionand kill them
     found = allCont.find_one({"actionName": actName})
     while found:
         id = found["_id"]
@@ -73,4 +79,4 @@ def removeTimedOutCont():
                         availableCont.delete_one({"_id": cname})
                 except Exception:
                     pass
-        time.sleep(10)
+        time.sleep(30)

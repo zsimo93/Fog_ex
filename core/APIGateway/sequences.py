@@ -6,8 +6,8 @@ from core.databaseMongo import (sequencesDB as db,
                                 tokenDB as tdb,
                                 dependenciesDB as depdb)
 
-from flatsequence import unrollAndDAG
-from seqanalizer import SequenceAnalizer
+from core.handlers.flatsequence import unrollAndDAG
+from core.handlers.seqanalizer import SequenceAnalizer
 
 def newSequence(request):
     valid, resp = validate(request)
@@ -53,7 +53,7 @@ def deleteSequence(request, actionname):
         if tdb.checkToken(actionname, token):
             return actualdelete()
 
-    except Exception, e:
+    except Exception:
         pass
         
     newtoken = tdb.newToken(actionname)

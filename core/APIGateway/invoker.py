@@ -1,6 +1,6 @@
 from core.databaseMongo import actionsDB as adb, sequencesDB as sdb
 from flask import make_response, jsonify
-from handlers import giveMeHandler
+from core.handlers.execHandler import giveMeHandler
 from validator import validateInvoke
 from core.utils.fileutils import uniqueName
 import json
