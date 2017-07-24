@@ -347,6 +347,7 @@ class ParallelExecutionHandler:
 
         for h in self.actList:
             mes, status_code = h.ret
+            self.logList += h.logList
             if status_code >= 400:
                 self.log("Error")
                 self.ret = mes, status_code
