@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 import json
 import traceback, sys
+from copy import deepcopy
 
 
 def giveMeHandler(param, default, configs, name, sessionID):
@@ -131,11 +132,11 @@ class ActionExecutionHandler:
         # sort the available nodes per free memory
         return sorted(avList, key=lambda node: node['memory'])
 
-    def chooseNode(self):
+    def chooseActionNode(self, action):
         """
         Select the node with more free cpu and enought memory
         """
-        req_mem = long(self.action["memory"]) * 1000000
+        req_mem = long(action["memory"]) * 1000000
         nodesRes = nodesDB.allRes()
 
         selected = None
@@ -153,10 +154,11 @@ class ActionExecutionHandler:
                 if req_mem < node['memory']:
                     # most free cpu and enought memory
                     selected = node
-                    return (selected["_id"], NodeInvoker(nodesDB.getNode(selected['_id'])['ip']))
+                    return (selected["_id"],
+                            NodeInvoker(nodesDB.getNode(selected['_id'])['ip']))
 
             if not selected:
-                if self.action["cloud"]:
+                if action["cloud"]:
                     return ("_cloud", AWSInvoker(self.param))
                 else:
                     time.sleep(0.5)
@@ -164,8 +166,8 @@ class ActionExecutionHandler:
                     continue
 
         raise NoResourceException("Not enought memory resources in the " +
-                                  "system to execute " + self.action["name"] +
-                                  " using " + str(self.action["memory"]) + "MB")
+                                  "system to execute " + action["name"] +
+                                  " using " + str(action["memory"]) + "MB")
     
     def startThreaded(self):
         return Thread(target=self.start)
@@ -174,7 +176,8 @@ class ActionExecutionHandler:
         i = 0
         while(i < 2):
             try:
-                name, invoker = self.chooseNode()
+
+                name, invoker = self.chooseActionNode()
 
                 request = {
                     "type": "action",
@@ -214,8 +217,8 @@ class ActionExecutionHandler:
         self.logList.append(logStr)
 
 class AsActionExecutionHandler(ActionExecutionHandler):
-    def __init__(self, param, sessionID, action):
-        self.param = param
+    def __init__(self, sessionID, action):
+        self.param = None
         self.sessionID = sessionID
         self.action = action
         self.logList = []
@@ -292,76 +295,6 @@ class SeqExecutionHandler:
         logStr = ts + " - " + id + ": " + message
         self.logList.append(logStr)
             
-class ParallelExecutionHandler:
-    def __init__(self, default, configs, sessionID, plist):
-        self.default = default
-        self.configs = configs
-        self.sessionID = sessionID
-        
-        self.logList = []
-
-        self.actList = []
-        for a in plist:
-            if a["type"] == "action":
-
-                h = ActionExecutionHandler(self.default, self.configs,
-                                           a["name"], self.sessionID,
-                                           myID=a["id"], map=a["map"],
-                                           timeout=a["timeout"],
-                                           language=a["language"],
-                                           cloud=a["cloud"], next=a["next"],
-                                           containerName=a["containerName"])
-                """
-                ar = createAction(a["name"], self.default, self.configs,
-                                  a["id"], a["map"], a["timeout"],
-                                  a["language"], a["cloud"], a["next"],
-                                  a["containerName"])
-                """
-            else:
-                """
-                block = {}
-                blockList = []
-                for b in a["list"]:
-                    ar = createAction(b["name"], self.default, self.configs,
-                                      b["id"], b["map"], b["timeout"],
-                                      b["language"], b["cloud"], b["next"],
-                                      b["containerName"])
-                    blockList.append(ar)
-                block["memory"] = calcBlockMemory(blockList)
-                block["block"] = blockList
-
-                """
-                h = BlockExecutionHandler(self.default, self.configs,
-                                          self.sessionID, a["list"])
-            self.actList.append(h)
-
-    def start(self):
-        self.log("start execution")
-        threads = []
-        for h in self.actList:
-            t = h.startThreaded()
-            t.start()
-            threads.append(t)
-
-        for t in threads:
-            t.join()
-
-        for h in self.actList:
-            mes, status_code = h.ret
-            self.logList += h.logList
-            if status_code >= 400:
-                self.log("Error")
-                self.ret = mes, status_code
-                return self.ret
-        self.log("end execution")
-        self.ret = "OK", 200
-        return self.ret
-
-    def log(self, message):
-        ts = datetime.now().isoformat()
-        id = "PARALLEL"
-        logStr = ts + " - " + id + ": " + message
-        self.logList.append(logStr)
 
 class BlockExecutionHandler(ActionExecutionHandler):
     def __init__(self, default, configs, sessionID, list):
@@ -384,7 +317,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
         for ar in self.blockList:
             self.memory += ar["memory"]
 
-    def chooseNode(self, actList):
+    def chooseBlockNode(self, actList):
         memory = calcBlockMemory(actList) * 1000000
         nodesRes = nodesDB.allRes()
         # sortedNodes = self.sortedMem(nodesRes)  take less memory that fits
@@ -404,7 +337,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
             
             if len(self.blockList) == 1:
                 # one action left in the block. Execute as single action
-                h = AsActionExecutionHandler(None, self.sessionID,
+                h = AsActionExecutionHandler(self.sessionID,
                                              self.blockList[0])
                 text, code = h.start()
                 self.logList += h.logList
@@ -413,7 +346,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                 return self.ret
 
             else:
-                name, invoker = self.chooseNode(self.blockList)
+                name, invoker = self.chooseBlockNode(self.blockList)
                 if invoker:
                     # can execute the full block in a node. Do it!
                     payload = {
@@ -440,7 +373,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         i -= 1
                         if len(self.blockList[:i]) == 1:
                             # if just one action, execute as single action.
-                            h = AsActionExecutionHandler(None, self.sessionID,
+                            h = AsActionExecutionHandler(self.sessionID,
                                                          self.blockList[0])
                             text, code = h.start()
                             self.logList += h.logList
@@ -482,5 +415,175 @@ class BlockExecutionHandler(ActionExecutionHandler):
     def log(self, message):
         ts = datetime.now().isoformat()
         id = "BLOCK"
+        logStr = ts + " - " + id + ": " + message
+        self.logList.append(logStr)
+
+
+class InvokerThread(Thread):
+    def __init__(self, invoker, action, sessionID):
+        Thread.__init__(self)
+        self.ret = (None, None)
+        self.invoker = invoker
+        self.action = action
+        self.sessionID = sessionID
+
+    def run(self):
+        try:
+            self.action["block"]
+            request = {
+                "type": "block",
+                "sessionID" : self.sessionID,
+                "param": None,
+                "block": self.action["block"]
+            }
+        except KeyError:
+            request = {
+                "type": "action",
+                "sessionID" : self.sessionID,
+                "param": None,
+                "block": self.action
+            }
+        try:
+            self.ret = self.invoker.startExecution(request)
+        except Exception as e:
+            print '-' * 60
+            traceback.print_exc(file=sys.stdout)
+            print '-' * 60
+            self.ret = ({"error": str(e)}, 500)
+
+class ParallelExecutionHandler(BlockExecutionHandler):
+    def __init__(self, default, configs, sessionID, plist):
+        self.default = default
+        self.configs = configs
+        self.sessionID = sessionID
+        
+        self.logList = []
+
+        self.actList = []
+        for a in plist:
+            if a["type"] == "action":
+                """
+                h = ActionExecutionHandler(self.default, self.configs,
+                                           a["name"], self.sessionID,
+                                           myID=a["id"], map=a["map"],
+                                           timeout=a["timeout"],
+                                           language=a["language"],
+                                           cloud=a["cloud"], next=a["next"],
+                                           containerName=a["containerName"])
+                """
+                h = createAction(a["name"], self.default, self.configs,
+                                 a["id"], a["map"], a["timeout"],
+                                 a["language"], a["cloud"], a["next"],
+                                 a["containerName"])
+
+            else:
+                h = {}
+                blockList = []
+                ids = []
+                for b in a["list"]:
+                    ar = createAction(b["name"], self.default, self.configs,
+                                      b["id"], b["map"], b["timeout"],
+                                      b["language"], b["cloud"], b["next"],
+                                      b["containerName"])
+                    blockList.append(ar)
+                    ids.append(b["id"])
+                h["memory"] = calcBlockMemory(blockList)
+                h["block"] = blockList
+                h["id"] = str(ids)
+
+                """
+                h = BlockExecutionHandler(self.default, self.configs,
+                                          self.sessionID, a["list"])
+                """
+            self.actList.append(h)
+
+    def start(self):
+        def fit(actions, nodes):
+            couples = []
+            actL = deepcopy(actions)[1:]
+
+            a = actions[0]
+            for n in nodes:
+                actMem = a["memory"] * 1000000
+                if actMem <= n["memory"]:
+                    nodeL = deepcopy(nodes)
+                    nodeL.remove(n)
+                    newNode = deepcopy(n)
+                    newNode["memory"] = n["memory"] - actMem
+                    nodeL.append(newNode)
+
+                    if len(actL) == 0:
+                        # No more actions to assign
+                        couples.append((a, n['_id'] , NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
+                        return couples
+
+                    ret = fit(actL, nodeL)
+                    if not ret:
+                        continue
+                    else:
+                        couples.append((a, n))
+                        couples += ret
+                        return couples
+
+            return None
+
+        self.log("start execution")
+        threads = []
+        nodesRes = nodesDB.allRes()
+        nodesL = self.sortedMem(nodesRes)
+
+        coupling = fit(self.actList, nodesL)
+        if coupling:
+            for c in coupling:
+                act, nodeName, inv = c
+                t = InvokerThread(inv, act, self.sessionID)
+                t.start()
+                self.log("Executing " + act["id"] + " in: " + nodeName)
+                threads.append(t)
+
+            for t in threads:
+                t.join()
+                text, code = t.ret
+
+            if code >= 400:
+                self.ret = ({"error": text}, 500)
+                self.log("ERROR in remote execution")
+                return self.ret
+
+        else:
+            self.ret = self.startDumb()
+            return self.ret
+
+        self.ret = "OK", 200
+        return self.ret
+
+    
+    # DUMB START, just parallel start
+    def startDumb(self):
+        self.log("start Dumb execution")
+        threads = []
+        for h in self.actList:
+            t = h.startThreaded()
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+        for h in self.actList:
+            mes, status_code = h.ret
+            self.logList += h.logList
+            if status_code >= 400:
+                self.log("Error")
+                self.ret = mes, status_code
+                return self.ret
+        self.log("end execution")
+        self.ret = "OK", 200
+        return self.ret
+    
+
+    def log(self, message):
+        ts = datetime.now().isoformat()
+        id = "PARALLEL"
         logStr = ts + " - " + id + ": " + message
         self.logList.append(logStr)
