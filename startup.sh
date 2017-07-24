@@ -1,3 +1,5 @@
+git pull
+
 echo "Enter role [ENTER]:"
 read role
 
