@@ -9,6 +9,8 @@ def insertNodeReplicaSet(value):
     config = c.admin.command("replSetGetConfig")['config']
     members = sorted(config['members'], key=lambda m : m['_id'])
     
+    config["version"] += 1
+
     priority = 0.5
     votes = 1
 
@@ -38,6 +40,8 @@ def removeNodeReplicaSet(value):
 
     config = c.admin.command("replSetGetConfig")['config']
     members = config['members']
+
+    config["version"] += 1
 
     id = value["replica_id"]
 
