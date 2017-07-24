@@ -2,7 +2,7 @@ from core.gridFS import files
 from core.container.dockerInterface import runContainer, updateContainerMem
 from core.databaseMongo import resultDB, localDB
 from core.utils.httpUtils import post
-from requests import ConnectionError
+from requests import ConnectionError, ConnectTimeout
 from threading import Thread
 import json, traceback
 
@@ -81,6 +81,9 @@ class ActionManager():
 
             if self.code >= 400:
                 self.error = True
+        except ConnectTimeout as e:
+            self.error = True
+            self.response = str(e)
         except Exception:
             tb = traceback.format_exc()
             self.error = True

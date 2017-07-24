@@ -1,18 +1,13 @@
-import requests
+import requests, time
 from threading import Thread
 
 def send():
     payload = {
         "param": {
-            "id": "b75b2009-d47a-413a-8c96-e8b760b033e9",
+            "id": "c9b23b3c-9421-49e6-87c0-35e8c6544fcd",
             "text": "RANDOM TEXT!!!"},
         "default": {
-            "actionClass": "large"
-        },
-        "except": {
-            "add2Str": {
-                "actionClass": "large"
-            }
+            "actionClass": "small"
         },
         "log": False
     }
@@ -22,5 +17,7 @@ def send():
     print r.json()
 
 
-for i in range(0,20):
+for i in range(0, 3):
     Thread(target=send).start()
+    Thread(target=send).start()
+    time.sleep(60)

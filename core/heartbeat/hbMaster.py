@@ -30,7 +30,7 @@ def getRes(id, IP):
 
     try:
         # Connect to server and send data
-        sock = socket.create_connection((IP, PORT), timeout=1)
+        sock = socket.create_connection((IP, PORT), timeout=5)
         sock.sendall(data + "\n")
 
         # Receive data from the server and shut down
