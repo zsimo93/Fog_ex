@@ -35,7 +35,7 @@ def getIP(id):
 def killContainer(conId):
     c = client.containers.get(conId)
     c.kill()
-    c.remove()
+    c.remove(v=True)
 
 def updateContainerMem(contId, memLimit):
     container = client.containers.get(contId)

@@ -29,7 +29,7 @@ def insertNodeReplicaSet(value):
 
     config['members'].append(member)
 
-    c.admin.command("replSetReconfig", config, force=True)
+    c.admin.command("replSetReconfig", config)
 
     return value
 

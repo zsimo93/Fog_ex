@@ -75,7 +75,7 @@ def removeTimedOutCont():
                     if not allCont.find_one({"_id": cname}):
                         print "DELETING " + cname
                         container.kill()
-                        container.remove()
+                        container.remove(v=True)
                         availableCont.delete_one({"_id": cname})
                 except Exception:
                     pass
