@@ -521,7 +521,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                     if not ret:
                         continue
                     else:
-                        couples.append((a, n))
+                        couples.append((a, n['_id'] , NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
                         couples += ret
                         return couples
 
