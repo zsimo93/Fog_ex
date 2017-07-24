@@ -259,12 +259,13 @@ class SeqExecutionHandler:
                 handler = BlockExecutionHandler(self.default, self.configs,
                                                 self.sessionID, a["list"])
             else:
-                handler = ActionExecutionHandler(self.param, self.default,
-                                                 self.configs, a["name"],
-                                                 self.sessionID, a["id"],
-                                                 a["map"], a["next"],
-                                                 a["timeout"], a["language"],
-                                                 a["cloud"], a["containerName"])
+                handler = ActionExecutionHandler(self.default, self.configs,
+                                                 a["name"], self.sessionID,
+                                                 myID=a["id"], map=a["map"],
+                                                 timeout=a["timeout"],
+                                                 language=a["language"],
+                                                 cloud=a["cloud"], next=a["next"],
+                                                 containerName=a["containerName"])
 
             try:
                 r, status_code = handler.start()
