@@ -191,9 +191,11 @@ class ActionExecutionHandler:
                 return self.ret
             except ConnectionError:
                 nodesDB.deleteNode(name)
-            except Exception, e:
-                self.log("Exception in local")
-                return ({"error": str(e)}, 500)
+                """
+                except Exception, e:
+                    self.log("Exception in local")
+                    return ({"error": str(e)}, 500)
+                """
             else:
                 break
 

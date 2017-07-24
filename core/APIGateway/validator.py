@@ -24,7 +24,6 @@ def validateActionRequest(request):
                              and out with values lists"})
         req['description']
         int(req['timeout'])
-        # TODO add other constraints
     except KeyError, e:
         return (False, {"error": "Field '" + str(e) + "' not present"})
     except ValueError, e:

@@ -6,9 +6,16 @@ export TH_ROLE
 
 docker run --name mongoDB --network host -d zsimo/rpi-mongo --replSet foo
 
-echo "Enter local IP if MASTER [ENTER]:"
-read ip
-python main.py $ip
+
+if [ "$TH_ROLE" = "MASTER" ]; then
+    echo "Enter local IP [ENTER]:"
+    read ip
+    python main.py $ip
+else
+    echo "Add the node to the system and when done press [ENTER]"
+    read enter
+    python main.py
+fi
 
 docker stop mongoDB
 docker rm mongoDB
