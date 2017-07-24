@@ -4,7 +4,7 @@ from threading import Thread
 def send():
     payload = {
         "param": {
-            "id": "bdb20650-54c0-4a48-b9b5-fc79bb57aee2",
+            "id": "b75b2009-d47a-413a-8c96-e8b760b033e9",
             "text": "RANDOM TEXT!!!"},
         "default": {
             "actionClass": "large"
@@ -14,12 +14,13 @@ def send():
                 "actionClass": "large"
             }
         },
-        "log": True
+        "log": False
     }
 
-    r = requests.post("http://192.168.1.50:8080/api/invoke/s", json=payload)
-    r.json["elapsed"] = r.elapsed
-    print r.json
+    r = requests.post("http://192.168.1.50:8080/api/invoke/s4", json=payload)
+    print r.elapsed
+    print r.json()
 
 
-Thread(target=send).start()
+for i in range(0,20):
+    Thread(target=send).start()
