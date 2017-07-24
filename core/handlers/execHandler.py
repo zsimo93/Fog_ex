@@ -6,6 +6,7 @@ from threading import Thread
 import time
 from datetime import datetime
 import json
+import traceback, sys
 
 
 def giveMeHandler(param, default, configs, name, sessionID):
@@ -191,11 +192,12 @@ class ActionExecutionHandler:
                 return self.ret
             except ConnectionError:
                 nodesDB.deleteNode(name)
-                """
-                except Exception, e:
-                    self.log("Exception in local")
-                    return ({"error": str(e)}, 500)
-                """
+            except Exception, e:
+                self.log("Exception in local")
+                print '-' * 60
+                traceback.print_exc(file=sys.stdout)
+                print '-' * 60
+                return ({"error": str(e)}, 500)
             else:
                 break
 
@@ -274,6 +276,9 @@ class SeqExecutionHandler:
             except Exception as e:
                 self.cleanRes()
                 self.log("Local Exception")
+                print '-' * 60
+                traceback.print_exc(file=sys.stdout)
+                print '-' * 60
                 return {"error": str(e)}, 500
         self.log("END")
         return self.finalizeResult()
