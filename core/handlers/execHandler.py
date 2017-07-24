@@ -189,6 +189,7 @@ class ActionExecutionHandler:
                     return self.ret
                 self.ret = (text, 200)
                 self.log("EXECUTED in node " + name)
+                self.ret = self.ret
                 return self.ret
             except ConnectionError:
                 nodesDB.deleteNode(name)
@@ -343,7 +344,15 @@ class ParallelExecutionHandler:
         for t in threads:
             t.join()
 
+        for h in self.actList:
+            mes, status_code = h.ret
+            if status_code >= 400:
+                self.log("Error")
+                self.ret = mes, status_code
+                return self.ret
         self.log("end execution")
+        self.ret = "OK", 200
+        return self.ret
 
     def log(self, message):
         ts = datetime.now().isoformat()
@@ -397,7 +406,8 @@ class BlockExecutionHandler(ActionExecutionHandler):
                 text, code = h.start()
                 self.logList += h.logList
                 self.blockList = []
-                return text, code
+                self.ret = text, code
+                return self.ret
 
             else:
                 name, invoker = self.chooseNode(self.blockList)
@@ -411,11 +421,13 @@ class BlockExecutionHandler(ActionExecutionHandler):
                     text, code = invoker.startExecution(payload)
                     if code >= 400:
                         self.log("ERROR " + text)
-                        return {"error": text}, 500
+                        self.ret = {"error": text}, 500
+                        return self.ret
 
                     self.log("EXECUTE " + str(self.ids) + " on node " + name)
                     self.blockList = []
-                    return "OK", 200
+                    self.ret = "OK", 200
+                    return self.ret
 
                 else:
                     # cannot execute the full block. Try removing actions from
@@ -430,7 +442,8 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             text, code = h.start()
                             self.logList += h.logList
                             if code >= 400:
-                                return {"error": text}, 500
+                                self.ret = {"error": text}, 500
+                                return self.ret
 
                             self.ids = self.ids[i:]
                             self.blockList = self.blockList[i:]
@@ -452,14 +465,16 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         text, code = invoker.startExecution(payload)
                         if code >= 400:
                             self.log("ERROR " + text)
-                            return {"error": text}, 500
+                            self.ret = {"error": text}, 500
+                            return self.ret
                         
                         self.log("EXECUTE " + str(self.ids[:i]) + " on node " + name)
                         self.blockList = self.blockList[i:]
                         self.ids = self.ids[i:]
         
         self.log("END")
-        return "OK", 200
+        self.ret = "OK", 200
+        return self.ret
 
     def log(self, message):
         ts = datetime.now().isoformat()
