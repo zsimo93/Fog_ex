@@ -31,14 +31,12 @@ def invoke(request):
             action = req['action']
             sessionID = req["sessionID"]
             inparam = req["param"]
-            if not req["param"]:
-                inparam = prepareInput(action['map'], sessionID)
-
             r = ActionManager(action, inparam, sessionID).initAndRun()
         else:
             block = req['block']
             sessionID = req["sessionID"]
-            r = BlockManager(block, sessionID).run()
+            inparam = req["param"]
+            r = BlockManager(block, inparam, sessionID).run()
 
         return make_response(r)
     except Exception:

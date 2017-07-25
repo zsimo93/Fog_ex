@@ -3,10 +3,11 @@ from core.databaseMongo import resultDB, localDB
 import json
 
 class BlockManager():
-    def __init__(self, block, sessionID):
+    def __init__(self, block, param, sessionID):
         self.actList = block
         self.localparams = {}
         self.aManagers = []
+        self.param = param
         self.localiDs = []
         self.managerActionMap = {}
         self.sessionID = sessionID
@@ -27,13 +28,17 @@ class BlockManager():
 
         self.getData()
 
+        self.result = {}
+
 
     def getData(self):
+        print self.param
         for act in self.actList:
+            print act["map"]
             for s in act["map"].values():
                 vals = s.split("/")
                 if vals[0] not in self.localiDs:
-                    v = resultDB.getSubParam(self.sessionID, vals[0], vals[1])
+                    v = self.param[vals[0]][vals[1]]
                     self.localparams[vals[0] + "/" + vals[1]] = v
 
     def prepareSingleInput(self, map):
@@ -57,7 +62,8 @@ class BlockManager():
         for k in result:
             self.localparams[manager.myID + "/" + k] = result[k]
         if not allLocal(manager.next):
-            resultDB.insertResult(self.sessionID, manager.myID, result)
+            self.result[manager.myID] = result
+            # resultDB.insertResult(self.sessionID, manager.myID, result)
 
 
 
@@ -87,4 +93,4 @@ class BlockManager():
                 return (resp, 500)
             self.finalizeIntermediate(manager, json.loads(resp))
 
-        return ("OK", 200)
+        return (json.dumps(self.result), 200)

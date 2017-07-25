@@ -1,6 +1,6 @@
 from core.gridFS import files
 from core.container.dockerInterface import runContainer, updateContainerMem
-from core.databaseMongo import resultDB, localDB
+from core.databaseMongo import localDB
 from core.utils.httpUtils import post
 from requests import ConnectionError, ConnectTimeout
 from threading import Thread
@@ -92,12 +92,7 @@ class ActionManager():
         return self.response, self.error
 
     def finalizeResult(self):
-        if self.myID:
-            resultDB.insertResult(self.sessionID, self.myID,
-                                  json.loads(self.response))
-            return ("OK", 200)
-        else:
-            return (self.response, 200)
+        return (self.response, 200)
 
     def initAndRun(self):
         self.startCont()

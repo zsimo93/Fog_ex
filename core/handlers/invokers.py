@@ -13,38 +13,20 @@ class NodeInvoker:
         return (ret.text, ret.status_code)
 
 class AWSInvoker:
-    def __init__(self, param):
-        self.param = param
+    def __init__(self):
+        pass
 
     def finalizeResult(self):
-        if self.myID:
-            rdb.insertResult(self.sessionID, self.myID,
-                             json.loads(self.response))
-            return ("OK", 200)
-        else:
-            return json.loads(self.response), 200
-
-    def prepareInput(self):
-        inParam = {}
-        if not self.map:
-            return self.param
-        for newkey in self.map:
-            s = self.map[newkey]
-            list = s.split("/")
-            refId = list[0]
-            param = list[1]
-            inParam[newkey] = rdb.getSubParam(self.sessionID, refId, param)
-        return inParam
-
+        return json.loads(self.response), 200
 
     def startExecution(self, request):
         from core.awsLambda.awsconnector import AwsActionInvoker
         self.map = request["action"]['map']
         self.sessionID = request['sessionID']
         self.myID = request["action"]['id']
+        self.param = request['param']
         
-        param = self.prepareInput()
-        conn = AwsActionInvoker(request['action']['name'], param,
+        conn = AwsActionInvoker(request['action']['name'], self.param,
                                 request['action']["actionClass"])
         r = conn.invoke()
         self.response = r["Payload"].read()
@@ -54,27 +36,29 @@ class AWSInvoker:
         return self.finalizeResult()
 
 class InvokerThread(Thread):
-    def __init__(self, invoker, action, sessionID):
+    def __init__(self, invoker, action, sessionID, param, actType):
         Thread.__init__(self)
         self.ret = (None, None)
         self.invoker = invoker
         self.action = action
         self.sessionID = sessionID
+        self.param = param
+        self.actType = actType
+        del self.action["type"]
 
     def run(self):
-        try:
-            self.action["block"]
+        if self.actType == "block":
             request = {
                 "type": "block",
                 "sessionID" : self.sessionID,
-                "param": None,
+                "param": self.param,
                 "block": self.action["block"]
             }
-        except KeyError:
+        else:
             request = {
                 "type": "action",
                 "sessionID" : self.sessionID,
-                "param": None,
+                "param": self.param,
                 "action": self.action
             }
         try:
