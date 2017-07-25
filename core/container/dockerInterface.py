@@ -56,5 +56,6 @@ def getUsedMem(contName):
             stats = client.containers.get(contName).stats(decode=True, stream=False)
             return stats["memory_stats"]["usage"]
         except:
+            print "stuck getMem"
             continue
    
