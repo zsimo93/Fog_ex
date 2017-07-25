@@ -2,6 +2,7 @@
 from flask import make_response, jsonify
 from core.databaseMongo import nodesDB as db
 from validator import validateNodeRequest as validate, cleanUpNode as clean
+from pymongo.errors import OperationFailure
 """
 def computeAvailability(resp, nodeId):
     alist = [n["_id"] for n in actionsDB.getActions()]
@@ -26,9 +27,10 @@ def newNode(request):
     # TODO RUN SETUP
 
     resp = clean(resp)  # remove unwanted fields before storing in DB
-    
-    id = db.insertNode(resp)
-    
+    try:
+        id = db.insertNode(resp)
+    except OperationFailure:
+        return make_response(jsonify({"error": "First run the mongoDB instance on the target node"}), 400)
     # computeAvailability(resp, id)
     
     return make_response(id, 200)
