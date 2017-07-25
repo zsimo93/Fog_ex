@@ -31,10 +31,8 @@ def getResult(sessionID, actionID):
 
 def getSubParam(sessionID, actID, paramName):
     res = None
-    sleepTime = 0
     while not res:
-        sleep(sleepTime)
-        sleepTime += 0.5
+        sleep(5)
         res = r.find_one({'_id': sessionID + "|" + actID})
         print "STUCK get SubParam"
     return res[paramName]
