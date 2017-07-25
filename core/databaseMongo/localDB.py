@@ -12,12 +12,12 @@ allCont.create_index("createTime", expireAfterSeconds=60)
 
 def insertContainer(actionName, contId, ip):
     # insert container in availableDB.
-    memused = getUsedMem(contId)
+    memused = insertInAll(contId, actionName)
     inDB = {
         "_id": contId,
         "actionName": actionName,
-        "ip": ip,
-        "memused": memused
+        "memused": memused,
+        "ip": ip
     }
     availableCont.insert_one(inDB)
     insertInAll(contId, actionName)
@@ -34,23 +34,28 @@ def findContainer(actionName):
 
 def insertInAll(contId, actionName):
     # if container alreasy in ALL update t-o, otherwise insert.
-    if not updateTimeout(contId):
+    # return base memory used by container
+    memused = updateTimeout(contId)
+    if not memused:
+        memused = getUsedMem(contId)
         inDB = {
             "_id": contId,
             "actionName": actionName,
+            "memused": memused,
             "createTime": datetime.utcnow()
         }
         allCont.insert_one(inDB)
+    return memused
 
 def updateTimeout(contId):
-    # if container in allDB update t-o and return true.
-    # return False otherwise
+    # if container in allDB update t-o and return base memory used by container
+    # return None otherwise
     newCont = allCont.find_one({"_id": contId})
     if newCont:
         newCont["createTime"] = datetime.utcnow()
         allCont.find_one_and_replace({"_id": contId}, newCont)
-        return True
-    return False
+        return newCont["memused"]
+    return None
 
 def deleteActionContainers(actName):
     # delete all containers of a certain actionand kill them
