@@ -67,5 +67,3 @@ if checkMaster():
     threading.Thread(target=removeChunks).start()
 
 execute()
-
-

@@ -1,5 +1,7 @@
 from datetime import datetime
-from core.container.dockerInterface import killContainer, getContList
+from core.container.dockerInterface import (killContainer,
+                                            getContList,
+                                            getUsedMem)
 from pymongo import MongoClient
 
 mongoclient = MongoClient(host='localhost', port=27017,
@@ -10,10 +12,12 @@ allCont.create_index("createTime", expireAfterSeconds=60)
 
 def insertContainer(actionName, contId, ip):
     # insert container in availableDB.
+    memused = getUsedMem(contId)
     inDB = {
         "_id": contId,
         "actionName": actionName,
         "ip": ip,
+        "memused": memused
     }
     availableCont.insert_one(inDB)
     insertInAll(contId, actionName)
@@ -80,3 +84,10 @@ def removeTimedOutCont():
                 except Exception:
                     pass
         time.sleep(30)
+
+def getAvUsedMem():
+    tot = 0
+    for cont in availableCont.find():
+        tot += cont["memused"]
+
+    return tot

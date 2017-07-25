@@ -49,3 +49,7 @@ def delImage(contName):
 
 def getContList():
     return client.containers.list()
+
+def getUsedMem(contName):
+    stats = client.containers.get(contName).stat(decode=True, stream=False)
+    return stats["memory_stats"]["usage"]

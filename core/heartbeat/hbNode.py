@@ -1,7 +1,7 @@
 import SocketServer
 import psutil
 import json
-
+from core.databaseMongo.localDB import getAvUsedMem
 class MyTCPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
@@ -13,7 +13,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 
         response = {
             'cpu': cpu,
-            'memory': memory
+            'memory': memory + getAvUsedMem()
         }
 
         self.request.sendall(json.dumps(response))

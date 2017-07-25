@@ -5,10 +5,10 @@ db = c.my_db
 print "connectiong to db"
 
 def insertNodeReplicaSet(value):
-    
+
     config = c.admin.command("replSetGetConfig")['config']
-    members = sorted(config['members'], key=lambda m : m['_id'])
-    
+    members = sorted(config['members'], key=lambda m: m['_id'])
+
     config["version"] += 1
 
     priority = 0.5
@@ -49,7 +49,7 @@ def removeNodeReplicaSet(value):
     non_vonting = []
     voting = 0
     to_remove = None
-    
+
     # remove old node from list and take all non voting members
     for f in members:
         if f["_id"] != id:

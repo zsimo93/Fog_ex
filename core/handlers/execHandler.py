@@ -1,7 +1,7 @@
 from core.databaseMongo.sequencesDB import getSequence
 from core.databaseMongo import resultDB as rdb, actionsDB, nodesDB
 from requests import ConnectionError
-from core.utils.httpUtils import post
+from invokers import NodeInvoker, AWSInvoker, InvokerThread
 from threading import Thread
 import time
 from datetime import datetime
@@ -58,56 +58,6 @@ def calcBlockMemory(actList):
     for a in actList:
         memory += a["memory"]
     return memory
-
-
-class NodeInvoker:
-    def __init__(self, ip):
-        self.ip = ip
-
-    def startExecution(self, request):
-        ret = post(self.ip, "8080", "/internal/invoke", request, 50)
-        return (ret.text, ret.status_code)
-
-class AWSInvoker:
-    def __init__(self, param):
-        self.param = param
-
-    def finalizeResult(self):
-        if self.myID:
-            rdb.insertResult(self.sessionID, self.myID,
-                             json.loads(self.response))
-            return ("OK", 200)
-        else:
-            return json.loads(self.response), 200
-
-    def prepareInput(self):
-        inParam = {}
-        if not self.map:
-            return self.param
-        for newkey in self.map:
-            s = self.map[newkey]
-            list = s.split("/")
-            refId = list[0]
-            param = list[1]
-            inParam[newkey] = rdb.getSubParam(self.sessionID, refId, param)
-        return inParam
-
-
-    def startExecution(self, request):
-        from core.awsLambda.awsconnector import AwsActionInvoker
-        self.map = request["action"]['map']
-        self.sessionID = request['sessionID']
-        self.myID = request["action"]['id']
-        
-        param = self.prepareInput()
-        conn = AwsActionInvoker(request['action']['name'], param,
-                                request['action']["actionClass"])
-        r = conn.invoke()
-        self.response = r["Payload"].read()
-        if "FunctionError" in r:
-            return (self.response, 500)
-
-        return self.finalizeResult()
 
 
 class NoResourceException(Exception):
@@ -419,38 +369,6 @@ class BlockExecutionHandler(ActionExecutionHandler):
         self.logList.append(logStr)
 
 
-class InvokerThread(Thread):
-    def __init__(self, invoker, action, sessionID):
-        Thread.__init__(self)
-        self.ret = (None, None)
-        self.invoker = invoker
-        self.action = action
-        self.sessionID = sessionID
-
-    def run(self):
-        try:
-            self.action["block"]
-            request = {
-                "type": "block",
-                "sessionID" : self.sessionID,
-                "param": None,
-                "block": self.action["block"]
-            }
-        except KeyError:
-            request = {
-                "type": "action",
-                "sessionID" : self.sessionID,
-                "param": None,
-                "block": self.action
-            }
-        try:
-            self.ret = self.invoker.startExecution(request)
-        except Exception as e:
-            print '-' * 60
-            traceback.print_exc(file=sys.stdout)
-            print '-' * 60
-            self.ret = ({"error": str(e)}, 500)
-
 class ParallelExecutionHandler(BlockExecutionHandler):
     def __init__(self, default, configs, sessionID, plist):
         self.default = default
@@ -498,6 +416,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
             self.actList.append(h)
 
     def start(self):
+
         def fit(actions, nodes):
             couples = []
             actL = deepcopy(actions)[1:]
@@ -514,14 +433,16 @@ class ParallelExecutionHandler(BlockExecutionHandler):
 
                     if len(actL) == 0:
                         # No more actions to assign
-                        couples.append((a, n['_id'] , NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
+                        couples.append((a, n['_id'],
+                                        NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
                         return couples
 
                     ret = fit(actL, nodeL)
                     if not ret:
                         continue
                     else:
-                        couples.append((a, n['_id'] , NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
+                        couples.append((a, n['_id'],
+                                        NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
                         couples += ret
                         return couples
 
@@ -533,6 +454,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         nodesL = self.sortedMem(nodesRes)
 
         coupling = fit(self.actList, nodesL)
+
         if coupling:
             for c in coupling:
                 act, nodeName, inv = c
