@@ -235,7 +235,6 @@ class SeqExecutionHandler:
                         break
                 
                 except Exception as e:
-                    self.cleanRes()
                     self.log("Local Exception")
                     print '-' * 60
                     traceback.print_exc(file=sys.stdout)
@@ -612,14 +611,21 @@ class ParallelExecutionHandler(BlockExecutionHandler):
             t.join()
 
         for h in handlers:
-            mes, status_code = h.ret
+            ret, status_code = h.ret
             self.logList += h.logList
             if status_code >= 400:
                 self.log("Error")
-                self.ret = mes, status_code
+                self.ret = ret, status_code
                 return self.ret
+
+            if h.__class__ == AsActionExecutionHandler:
+                self.results[h.action["id"]] = ret
+            else:
+                for k in ret:
+                    self.results[k] = ret[k]
+
         self.log("end execution")
-        self.ret = "OK", 200
+        self.ret = self.results, 200
         return self.ret
     
 
