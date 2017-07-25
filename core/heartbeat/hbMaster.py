@@ -5,6 +5,7 @@ from time import sleep
 from threading import Thread
 from core.databaseMongo import nodesDB as db
 import psutil
+from core.databaseMongo.localDB import getAvUsedMem
 
 def getRes(id, IP):
     PORT = 9999
@@ -17,7 +18,7 @@ def getRes(id, IP):
 
         data = {
             'cpu': cpu,
-            'memory': memory
+            'memory': memory + getAvUsedMem()
         }
         try:
             db.updateResources(id, data)
