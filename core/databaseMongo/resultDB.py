@@ -14,6 +14,7 @@ r = db.results
 def deleteAllRes(sessionID):
     r.delete_many({'_id': {'$regex': '^' + sessionID} })
 
+
 def insertResult(sessionID, actionID, value):
     id = sessionID + "|" + actionID
     value['_id'] = id
@@ -28,6 +29,7 @@ def getResult(sessionID, actionID):
 
 
 def getSubParam(sessionID, actID, paramName):
-    res = r.find_one({'_id': sessionID + "|" + actID})
-
+    res = None
+    while not res:
+        res = r.find_one({'_id': sessionID + "|" + actID})
     return res[paramName]

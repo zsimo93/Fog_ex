@@ -51,5 +51,8 @@ def getContList():
     return client.containers.list()
 
 def getUsedMem(contName):
-    stats = client.containers.get(contName).stats(decode=True, stream=False)
+    try:
+        stats = client.containers.get(contName).stats(decode=True, stream=False)
+    except:
+        stats = client.containers.get(contName).stats(decode=True, stream=False)
     return stats["memory_stats"]["usage"]
