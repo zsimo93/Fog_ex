@@ -57,8 +57,8 @@ if checkMaster():
         sys.exit("run the script with the IP of the localnode")
     ip = sys.argv[1]
     os.environ["TH_MASTERIP"] = ip
-    #setup(ip)
-    #createNodeMaster(ip)
+    setup(ip)
+    createNodeMaster(ip)
     from core.gridFS.files import removeChunks
     
             
