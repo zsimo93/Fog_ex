@@ -416,7 +416,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             singleCase = True
                             break
                         else:
-                            name, invoker = self.chooseNode(self.blockList[:i])
+                            name, invoker = self.chooseBlockNode(self.blockList[:i])
                             singleCase = False
                     
                     if not singleCase:
