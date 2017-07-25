@@ -270,7 +270,6 @@ class SeqExecutionHandler:
                         self.results[key] = r[key]
                 
             except Exception as e:
-                self.cleanRes()
                 self.log("Local Exception")
                 print '-' * 60
                 traceback.print_exc(file=sys.stdout)
