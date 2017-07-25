@@ -1,5 +1,5 @@
 from actionmanager import ActionManager
-from core.databaseMongo import resultDB, localDB
+from core.databaseMongo import localDB
 import json
 
 class BlockManager():
@@ -32,9 +32,7 @@ class BlockManager():
 
 
     def getData(self):
-        print self.param
         for act in self.actList:
-            print act["map"]
             for s in act["map"].values():
                 vals = s.split("/")
                 if vals[0] not in self.localiDs:
@@ -63,9 +61,6 @@ class BlockManager():
             self.localparams[manager.myID + "/" + k] = result[k]
         if not allLocal(manager.next):
             self.result[manager.myID] = result
-            # resultDB.insertResult(self.sessionID, manager.myID, result)
-
-
 
     def run(self):
         for (manager, thread) in self.aManagers:

@@ -1,6 +1,5 @@
 from core.utils.httpUtils import post
 import json
-from core.databaseMongo import resultDB as rdb
 from threading import Thread
 import sys, traceback
 

@@ -1,5 +1,5 @@
 from core.databaseMongo.sequencesDB import getSequence
-from core.databaseMongo import resultDB as rdb, actionsDB, nodesDB
+from core.databaseMongo import actionsDB, nodesDB
 from requests import ConnectionError
 from invokers import NodeInvoker, AWSInvoker, InvokerThread
 from threading import Thread
@@ -199,10 +199,6 @@ class SeqExecutionHandler:
         self.results = {}
 
         self.logList = []
-
-
-    def cleanRes(self):
-        rdb.deleteAllRes(self.sessionID)
 
     def finalizeResult(self):
         """

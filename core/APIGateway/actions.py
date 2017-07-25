@@ -66,7 +66,6 @@ def actualdelete(actionname):
 
     for n in getNodesIP():
         try:
-            print "sending.. " + n.ip
             post(str(n.ip), 8080, "/internal/delete/" + str(actionname), payload)
         except ConnectionError:
             pass

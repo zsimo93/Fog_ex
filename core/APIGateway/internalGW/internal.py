@@ -9,20 +9,6 @@ from core.container.dockerInterface import pullImage
 from core.databaseMongo import localDB
 
 def invoke(request):
-    
-    def prepareInput(map, seqID):
-        from core.databaseMongo import resultDB
-        inParam = {}
-
-        for newKey in map:
-            source = map[newKey]
-            list = source.split("/")
-            refId = list[0]
-            param = list[1]
-            inParam[newKey] = resultDB.getSubParam(seqID, refId, param)
-        return inParam
-
-
     req = request.json
 
     # current node ARM or x86?
