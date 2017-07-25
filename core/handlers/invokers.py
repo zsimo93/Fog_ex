@@ -2,6 +2,7 @@ from core.utils.httpUtils import post
 import json
 from core.databaseMongo import resultDB as rdb
 from threading import Thread
+import sys, traceback
 
 class NodeInvoker:
     def __init__(self, ip):
@@ -74,7 +75,7 @@ class InvokerThread(Thread):
                 "type": "action",
                 "sessionID" : self.sessionID,
                 "param": None,
-                "block": self.action
+                "action": self.action
             }
         try:
             self.ret = self.invoker.startExecution(request)
