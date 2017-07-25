@@ -4,10 +4,10 @@ from threading import Thread
 def send():
     payload = {
         "param": {
-            "id": "a6225083-bc26-4b3f-b6e1-9188c9c5d13f",
+            "id": "50faf500-3e7a-4b0e-b447-192ada6f9332",
             "text": "RANDOM TEXT!!!"},
         "default": {
-            "actionClass": "large"
+            "actionClass": "small"
         },
         "log": False
     }

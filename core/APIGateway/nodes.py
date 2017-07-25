@@ -29,7 +29,8 @@ def newNode(request):
     resp = clean(resp)  # remove unwanted fields before storing in DB
     try:
         id = db.insertNode(resp)
-    except OperationFailure:
+    except OperationFailure as e:
+        print e
         return make_response(jsonify({"error": "First run the mongoDB instance on the target node"}), 400)
     # computeAvailability(resp, id)
     

@@ -1,6 +1,7 @@
 #!thesis/DB
 
 import mainDB
+from time import sleep
 
 db = mainDB.db
 r = db.results
@@ -32,4 +33,5 @@ def getSubParam(sessionID, actID, paramName):
     res = None
     while not res:
         res = r.find_one({'_id': sessionID + "|" + actID})
+        sleep(0.5)
     return res[paramName]
