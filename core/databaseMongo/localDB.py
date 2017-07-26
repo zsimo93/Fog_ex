@@ -9,18 +9,19 @@ mongoclient = MongoClient(host='localhost', port=27017,
 availableCont = mongoclient.local.avCont
 allCont = mongoclient.local.allCont
 allCont.create_index("createTime", expireAfterSeconds=60)
+availableCont.create_index("createTime", expireAfterSeconds=60)
 
 def insertContainer(actionName, contId, ip):
     # insert container in availableDB.
-    memused = insertInAll(contId, actionName)
+    memused, createTime = insertInAll(contId, actionName)
     inDB = {
         "_id": contId,
         "actionName": actionName,
         "memused": memused,
-        "ip": ip
+        "ip": ip,
+        "createTime": createTime
     }
     availableCont.insert_one(inDB)
-    insertInAll(contId, actionName)
 
 def findContainer(actionName):
     # if container available, delete from available and update t-o in all.
@@ -35,17 +36,18 @@ def findContainer(actionName):
 def insertInAll(contId, actionName):
     # if container alreasy in ALL update t-o, otherwise insert.
     # return base memory used by container
-    memused = updateTimeout(contId)
+    memused, createTime = updateTimeout(contId)
     if not memused:
         memused = getUsedMem(contId)
+        createTime = datetime.utcnow()
         inDB = {
             "_id": contId,
             "actionName": actionName,
             "memused": memused,
-            "createTime": datetime.utcnow()
+            "createTime": createTime
         }
         allCont.insert_one(inDB)
-    return memused
+    return memused, createTime
 
 def updateTimeout(contId):
     # if container in allDB update t-o and return base memory used by container
@@ -54,8 +56,8 @@ def updateTimeout(contId):
     if newCont:
         newCont["createTime"] = datetime.utcnow()
         allCont.find_one_and_replace({"_id": contId}, newCont)
-        return newCont["memused"]
-    return None
+        return newCont["memused"], newCont["createTime"]
+    return None, None
 
 def deleteActionContainers(actName):
     # delete all containers of a certain actionand kill them

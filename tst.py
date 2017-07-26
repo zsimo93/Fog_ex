@@ -13,7 +13,7 @@ def send(id):
         "log": False
     }
 
-    r = requests.post("http://192.168.1.50:8080/api/invoke/s4", json=payload)
+    r = requests.post("http://192.168.1.50:8080/api/invoke/s2", json=payload)
     print r.elapsed
     print r.json()
 n = int(sys.argv[1])

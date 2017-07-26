@@ -8,7 +8,7 @@ class NodeInvoker:
         self.ip = ip
 
     def startExecution(self, request):
-        ret = post(self.ip, "8080", "/internal/invoke", request, 50)
+        ret = post(self.ip, "8080", "/internal/invoke", request, 100)
         return (ret.text, ret.status_code)
 
 class AWSInvoker:
