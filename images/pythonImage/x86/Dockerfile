@@ -1,6 +1,6 @@
 FROM python:2.7-slim
 
-RUN pip install --no-cache-dir gevent==1.2.1 flask==0.12 pymongo==3.4.0
+RUN pip install --no-cache-dir gevent==1.2.1 flask==0.12 pymongo==3.4.0 Pillow
 
 ENV FLASK_PROXY_PORT 8080
 
