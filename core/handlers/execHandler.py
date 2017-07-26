@@ -55,8 +55,11 @@ def createAction(name, default, configs, myID, map, timeout,
 
 def calcBlockMemory(actList):
     memory = 0
+    actNameList = []
     for a in actList:
-        memory += a["memory"]
+        if a["name"] not in actNameList:
+            actNameList.append(a["name"])
+            memory += a["memory"]
     return memory
 
 
@@ -305,10 +308,6 @@ class BlockExecutionHandler(ActionExecutionHandler):
                               a["containerName"])
             self.ids.append(a["id"])
             self.blockList.append(ar)
-
-        self.memory = 0
-        for ar in self.blockList:
-            self.memory += ar["memory"]
 
 
     def prepareBlockInput(self, actionList):
