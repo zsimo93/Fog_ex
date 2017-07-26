@@ -152,7 +152,7 @@ class ActionExecutionHandler:
                     self.ret = ({"error": text}, 500)
                     self.log("ERROR in remote execution")
                     return self.ret
-                self.ret = (text, 200)
+                self.ret = (json.loads(text), 200)
                 self.log("EXECUTED in node " + name)
                 self.ret = self.ret
                 return self.ret
@@ -176,6 +176,7 @@ class ActionExecutionHandler:
         actID = self.action["id"] if self.action["id"] else ""
         id = "ACTION " + actID + " " + self.action['name']
         logStr = ts + " - " + id + ": " + message
+        print logStr
         self.logList.append(logStr)
 
 class AsActionExecutionHandler(ActionExecutionHandler):
@@ -281,6 +282,7 @@ class SeqExecutionHandler:
         ts = datetime.now().isoformat()
         id = "SEQUENCE " + self.name
         logStr = ts + " - " + id + ": " + message
+        print logStr
         self.logList.append(logStr)
             
 
@@ -356,6 +358,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         return self.ret
                 
                 self.results[h.action["id"]] = json.loads(text)
+
                 self.ret = self.results, 200
                 return self.ret
 
@@ -446,6 +449,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
         ts = datetime.now().isoformat()
         id = "BLOCK"
         logStr = ts + " - " + id + ": " + message
+        print logStr
         self.logList.append(logStr)
 
 class AsBlockExecutionHandler(BlockExecutionHandler):
@@ -510,7 +514,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                 """
             self.actList.append(h)
 
-    def start(self):
+    def startD(self):
 
         def fit(actions, nodes):
             couples = []
@@ -589,7 +593,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
 
     
     # DUMB START, just parallel start
-    def startDumb(self):
+    def start(self):
         self.log("start Dumb execution")
         handlers = []
         threads = []
@@ -603,6 +607,8 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                                                self.param,
                                                h["ids"],
                                                h["memory"])
+                handlers.append(hand)
+
             t = hand.startThreaded()
             t.start()
             threads.append(t)
@@ -633,4 +639,5 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         ts = datetime.now().isoformat()
         id = "PARALLEL"
         logStr = ts + " - " + id + ": " + message
+        print logStr
         self.logList.append(logStr)

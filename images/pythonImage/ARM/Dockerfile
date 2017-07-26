@@ -9,4 +9,6 @@ RUN mkdir -p /pythonAction
 ADD actionproxy.py /pythonAction/
 RUN mkdir -p /action
 
+EXPOSE 8080
+
 CMD ["/bin/bash", "-c", "cd pythonAction && python -u actionproxy.py"]

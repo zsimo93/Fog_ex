@@ -47,7 +47,7 @@ def validateActionRequest(request):
     elif req['language'] == "docker":
         try:
             ret["containerName"] = req["containerName"]
-        except KeyError:
+        except KeyError as e:
             return (False, {"error": "Field '" + str(e) + "' not present. Specify a valid container name"})
         
 

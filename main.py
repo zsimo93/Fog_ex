@@ -60,7 +60,6 @@ if checkMaster():
     setup(ip)
     createNodeMaster(ip)
     from core.gridFS.files import removeChunks
-    
             
     # thread for cleaning up chunks table for user data
     # removed after TTL
