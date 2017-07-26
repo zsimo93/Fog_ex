@@ -514,7 +514,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                 """
             self.actList.append(h)
 
-    def startD(self):
+    def start(self):
 
         def fit(actions, nodes):
             couples = []
@@ -593,7 +593,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
 
     
     # DUMB START, just parallel start
-    def start(self):
+    def startDumb(self):
         self.log("start Dumb execution")
         handlers = []
         threads = []
