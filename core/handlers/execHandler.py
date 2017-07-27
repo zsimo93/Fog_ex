@@ -38,6 +38,7 @@ def createAction(name, default, configs, myID, map, timeout,
         action["timeout"] = fromDB['timeout']
         action["language"] = fromDB['language']
         action["cloud"] = fromDB['cloud']
+        action["contTag"] = fromDB['contTag']
         try:
             action["containerName"] = fromDB["containerName"]
         except KeyError:
@@ -70,7 +71,7 @@ class NoResourceException(Exception):
 class ActionExecutionHandler:
     def __init__(self, default, configs, name, sessionID, param,
                  myID=None, map=None, next=None, timeout=None,
-                 language=None, cloud=None, contTag="base", containerName=None):
+                 language=None, cloud=None, contTag=None, containerName=None):
 
         self.param = self.prepareInput(map, param)
         self.sessionID = sessionID
@@ -227,6 +228,7 @@ class SeqExecutionHandler:
                                                  timeout=a["timeout"],
                                                  language=a["language"],
                                                  cloud=a["cloud"], next=a["next"],
+                                                 contTag=a["contTag"],
                                                  containerName=a["containerName"])
 
                 try:
