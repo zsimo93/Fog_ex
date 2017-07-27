@@ -20,10 +20,11 @@ def giveMeHandler(param, default, configs, name, sessionID):
 
 
 def createAction(name, default, configs, myID, map, timeout,
-                 language, cloud, next, containerName):
+                 language, cloud, next, contTag, containerName):
     action = {"name": name,
               'id': myID,  # None if single action execution
-              "map": map}  # None if single action execution
+              "map": map,
+              "contTag": contTag}  # None if single action execution
     
     if configs and name in configs:
         conf = configs[name]
@@ -69,12 +70,12 @@ class NoResourceException(Exception):
 class ActionExecutionHandler:
     def __init__(self, default, configs, name, sessionID, param,
                  myID=None, map=None, next=None, timeout=None,
-                 language=None, cloud=None, containerName=None):
+                 language=None, cloud=None, contTag="base", containerName=None):
 
         self.param = self.prepareInput(map, param)
         self.sessionID = sessionID
         self.action = createAction(name, default, configs, myID, map, timeout,
-                                   language, cloud, next, containerName)
+                                   language, cloud, next, contTag, containerName)
         self.logList = []
 
     def prepareInput(self, map, param):
@@ -305,7 +306,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
             ar = createAction(a["name"], self.default, self.configs,
                               a["id"], a["map"], a["timeout"],
                               a["language"], a["cloud"], a["next"],
-                              a["containerName"])
+                              a["contTag"], a["containerName"])
             self.ids.append(a["id"])
             self.blockList.append(ar)
 
@@ -487,7 +488,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                 h = createAction(a["name"], self.default, self.configs,
                                  a["id"], a["map"], a["timeout"],
                                  a["language"], a["cloud"], a["next"],
-                                 a["containerName"])
+                                 a["contTag"], a["containerName"])
                 h["type"] = "action"
 
             else:
@@ -498,7 +499,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                     ar = createAction(b["name"], self.default, self.configs,
                                       b["id"], b["map"], b["timeout"],
                                       b["language"], b["cloud"], b["next"],
-                                      b["containerName"])
+                                      a["contTag"], b["containerName"])
                     blockList.append(ar)
                     ids.append(b["id"])
                 h["memory"] = calcBlockMemory(blockList)

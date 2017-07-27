@@ -4,7 +4,7 @@ from core.databaseMongo import localDB
 from core.utils.httpUtils import post
 from requests import ConnectionError, ConnectTimeout
 from threading import Thread
-import json, traceback
+import traceback
 
 
 """request = {
@@ -22,6 +22,7 @@ class ActionManager():
         self.timeout = request['timeout']
         self.language = request['language']
         self.myID = request["id"]
+        self.contTag = request["contTag"]
         try:
             self.containerName = request["containerName"]
         except KeyError:
@@ -47,7 +48,7 @@ class ActionManager():
         else:
             containerName = ""
             if self.language == "python":
-                containerName = "python-image"
+                containerName = "zsimo/python-image:" + self.contTag
             elif self.language == "docker":
                 containerName = self.containerName
             else:

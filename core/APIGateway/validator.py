@@ -37,6 +37,11 @@ def validateActionRequest(request):
         'timeout': int(req['timeout']),
         'in/out': req['in/out'],
     }
+    try:
+        ret["contTag"] = req["containerTag"]
+    except:
+        ret["contTag"] = "base"
+
     if req['language'] == "python":
         if 'file' not in request.files:
             return (False, {"error": "No file field!!!"})

@@ -1,4 +1,4 @@
-FROM python-image:base
+FROM zsimo/python-image:base
 
 RUN mkdir buildPIL && cd buildPIL
 COPY jpegsrc.v8c.tar.gz ./
