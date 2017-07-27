@@ -1,5 +1,4 @@
 from pymongo import MongoClient
-import os
 
 c = MongoClient(host='localhost', port=27017, replicaset="foo")
 db = c.my_db
@@ -7,33 +6,25 @@ print "connectiong to db"
 
 def resetReplicaSet():
     cl = MongoClient(host='localhost', port=27017)
-    ip = os.environ.get("TH_MASTERIP")
-    config = {'_id': 'foo',
-              'version': 1,
-              'members': [
-                  {'_id': 0, 'host': ip + ':27017',
-                   "votes": 1, "priority": 1}]}
-    cl.admin.command("replSetReconfig", config, force=True)
+    config = cl.admin.command("replSetGetConfig")['config']
+    statusMembers = cl.admin.command("replSetGetConfig")['members']
+    configMembers = config["members"]
 
-    node = {
-        '_id': 'raspi1',
-        'name': 'raspi1',
-        'ip': ip,
-        'role': 'MASTER',
-        'architecture': 'ARM',
-        'replica_id': 0
-    }
+    deadMembers = []
+    for m in statusMembers:
+        if m["health"] < 1:
+            deadMembers.append(m["_id"])
+    configMembers = [m for m in configMembers if m["_id"] not in deadMembers]
+    config["members"] = configMembers
+    config["version"] += 1
+
+    cl.admin.command("replSetReconfig", config, force=True)
 
     n = db.nodes
     nrs = db.nodesRes
-    nrs.remove()
-    n.remove()
-    n.insert_one(node)
-    info = {
-        '_id': 'raspi1',
-        'cpu': '',
-        'memory': ''}
-    nrs.insert_one(info)
+    for m in deadMembers:
+        old = n.find_one_and_delete({"replica_id": m})
+        nrs.delete_one({"_id": old["_id"]})
 
 def insertNodeReplicaSet(value):
 
