@@ -356,7 +356,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         self.ret = {"error": text}, 500
                         return self.ret
                 
-                self.results[h.action["id"]] = json.loads(text)
+                self.results[h.action["id"]] = text
 
                 self.ret = self.results, 200
                 return self.ret
@@ -404,8 +404,8 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             if code >= 400:
                                 self.ret = {"error": text}, 500
                                 return self.ret
-                            self.results[h.action["id"]] = json.loads(text)
-                            self.param[h.action["id"]] = json.loads(text)
+                            self.results[h.action["id"]] = text
+                            self.param[h.action["id"]] = text
 
                             self.ids = self.ids[i:]
                             self.blockList = self.blockList[i:]
