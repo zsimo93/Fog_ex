@@ -239,7 +239,7 @@ class SeqExecutionHandler:
                         return self.ret
                     else:
                         self.results[handler.action["id"]] = r
-                        break
+                        continue
                 
                 except Exception as e:
                     self.log("Local Exception")

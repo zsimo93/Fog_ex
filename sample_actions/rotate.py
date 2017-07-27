@@ -9,7 +9,7 @@ def main(args):
     data = fm.loadFile(args["id"])
     image = Image.open(io.BytesIO(data))
     
-    image.thumbnail((200,200), Image.ANTIALIAS)
+    image = image.rotate(180)
     newImage = io.BytesIO()
     image.save(newImage, args["formatOut"])
     bin = Binary(newImage.getvalue())
