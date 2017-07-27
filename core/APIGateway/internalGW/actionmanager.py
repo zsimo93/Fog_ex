@@ -73,8 +73,12 @@ class ActionManager():
                     print "BLOCKING"
                     r = None
                     continue
+                except ConnectTimeout:
+                    raise ConnectTimeout
                 else:
+                    print "DONE!!!"
                     break
+        print r
         if not r:
             raise ConnectionError
 
