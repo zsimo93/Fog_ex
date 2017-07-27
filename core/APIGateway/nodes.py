@@ -52,6 +52,6 @@ def getNodes(request):
     nodes = db.getNodes()
     return make_response(jsonify({"nodes": nodes}), 200)
 
-def reset(request):
+def reset():
     mainDB.resetReplicaSet()
     return make_response("OK", 200)
