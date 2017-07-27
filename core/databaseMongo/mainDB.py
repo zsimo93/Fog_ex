@@ -7,7 +7,7 @@ print "connectiong to db"
 def resetReplicaSet():
     cl = MongoClient(host='localhost', port=27017)
     config = cl.admin.command("replSetGetConfig")['config']
-    statusMembers = cl.admin.command("replSetGetConfig")['members']
+    statusMembers = cl.admin.command("replSetGetStatus")['members']
     configMembers = config["members"]
 
     deadMembers = []
