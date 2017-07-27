@@ -8,6 +8,7 @@ print "connectiong to db"
 def resetReplicaSet():
     ip = os.environ.get("TH_MASTERIP")
     config = {'_id': 'foo',
+              'version': 1,
               'members': [
                   {'_id': 0, 'host': ip + ':27017',
                    "votes": 1, "priority": 1}]}
