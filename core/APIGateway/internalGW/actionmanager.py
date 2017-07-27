@@ -76,11 +76,7 @@ class ActionManager():
                 except ConnectTimeout:
                     raise ConnectTimeout
                 else:
-                    print "DONE!!!"
                     break
-        print r
-        if not r:
-            raise ConnectionError
 
         self.response = r.text
         self.code = r.status_code
