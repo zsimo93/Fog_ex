@@ -355,7 +355,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                 self.blockList = []
                 self.ret = text, code
                 if code >= 400:
-                        self.log("ERROR " + text)
+                        self.log("ERROR " + json.dumps(text))
                         self.ret = {"error": text}, 500
                         return self.ret
                 
