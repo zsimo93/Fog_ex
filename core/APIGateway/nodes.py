@@ -1,6 +1,6 @@
 #!thesis/api
 from flask import make_response, jsonify
-from core.databaseMongo import nodesDB as db
+from core.databaseMongo import nodesDB as db, mainDB
 from validator import validateNodeRequest as validate, cleanUpNode as clean
 from pymongo.errors import OperationFailure
 """
@@ -51,3 +51,7 @@ def deleteNode(request, token):
 def getNodes(request):
     nodes = db.getNodes()
     return make_response(jsonify({"nodes": nodes}), 200)
+
+def reset(request):
+    mainDB.resetReplicaSet()
+    return make_response("OK", 200)

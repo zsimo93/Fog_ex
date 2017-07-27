@@ -30,6 +30,12 @@ def getNodes():
         return abort(404)
     return nodes.getNodes(request)
 
+@app.route('/api/nodes/reset', methods=["GET"])
+def resetNodes():
+    if not checkMaster():
+        return abort(404)
+    return nodes.reset()
+
 #########################
 @app.route('/api/actions', methods=['GET'])
 def getActions():

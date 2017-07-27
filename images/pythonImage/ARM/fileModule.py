@@ -8,7 +8,7 @@ class NoFileException(Exception):
 
 class FileManager:
 
-    mongoclient = MongoClient(host='172.17.0.1', port=27017,  replicaset="foo")
+    mongoclient = MongoClient(host='172.17.0.1', port=27017, replicaset="foo")
     mongodb = mongoclient.my_db
     coll = mongodb.userdata
     fs = GridFS(mongodb, collection="userdata")

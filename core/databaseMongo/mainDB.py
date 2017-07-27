@@ -1,8 +1,37 @@
 from pymongo import MongoClient
+import os
 
 c = MongoClient(host='localhost', port=27017, replicaset="foo")
 db = c.my_db
 print "connectiong to db"
+
+def resetReplicaSet():
+    ip = os.environ.get("TH_MASTERIP")
+    config = {'_id': 'foo',
+              'members': [
+                  {'_id': 0, 'host': ip + ':27017',
+                   "votes": 1, "priority": 1}]}
+    c.admin.command("replSetReconfig", config, force=True)
+
+    node = {
+        '_id': 'raspi1',
+        'name': 'raspi1',
+        'ip': ip,
+        'role': 'MASTER',
+        'architecture': 'ARM',
+        'replica_id': 0
+    }
+
+    n = db.nodes
+    nrs = db.nodesRes
+    nrs.remove()
+    n.remove()
+    n.insert_one(node)
+    info = {
+        '_id': 'raspi1',
+        'cpu': '',
+        'memory': ''}
+    nrs.insert_one(info)
 
 def insertNodeReplicaSet(value):
 

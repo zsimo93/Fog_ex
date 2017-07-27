@@ -16,7 +16,7 @@ def setup(ip):
     c.admin.command("replSetInitiate", config)
     
 def createNodeMaster(ip):
-    from core.databaseMongo import nodesDB as db1, mainDB
+    from core.databaseMongo import mainDB
 
     node = {
         '_id': 'raspi1',
@@ -37,10 +37,6 @@ def createNodeMaster(ip):
         'cpu': '',
         'memory': ''}
     nrs.insert_one(info)
-
-    res = {"cpu": 12,
-           "memory": long(300000000)}
-    db1.updateResources('raspi1', res)
 
 def execute():
     from core.APIGateway import run
