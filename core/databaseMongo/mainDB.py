@@ -6,13 +6,14 @@ db = c.my_db
 print "connectiong to db"
 
 def resetReplicaSet():
+    cl = MongoClient(host='localhost', port=27017)
     ip = os.environ.get("TH_MASTERIP")
     config = {'_id': 'foo',
               'version': 1,
               'members': [
                   {'_id': 0, 'host': ip + ':27017',
                    "votes": 1, "priority": 1}]}
-    c.admin.command("replSetReconfig", config, force=True)
+    cl.admin.command("replSetReconfig", config, force=True)
 
     node = {
         '_id': 'raspi1',
