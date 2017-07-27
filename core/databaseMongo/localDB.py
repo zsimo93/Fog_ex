@@ -90,7 +90,7 @@ def removeTimedOutCont():
                         availableCont.delete_one({"_id": cname})
                 except Exception:
                     pass
-        time.sleep(30)
+        time.sleep(45)
 
 def getAvUsedMem():
     tot = 0

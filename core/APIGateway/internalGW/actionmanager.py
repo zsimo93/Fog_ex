@@ -63,13 +63,19 @@ class ActionManager():
         return Thread(target=self.startCont)
 
     def makeRequest(self):
-        while True:
+        i = 0
+        while i < 10:
                 try:
                     r = post(self.ip, 8080, "/run", self.param, self.timeout)
                 except ConnectionError:
+                    i += 1
+                    print "BLOCKING"
+                    r = None
                     continue
                 else:
                     break
+        if not r:
+            raise ConnectionError
 
         self.response = r.text
         self.code = r.status_code
