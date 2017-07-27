@@ -499,7 +499,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                     ar = createAction(b["name"], self.default, self.configs,
                                       b["id"], b["map"], b["timeout"],
                                       b["language"], b["cloud"], b["next"],
-                                      a["contTag"], b["containerName"])
+                                      b["contTag"], b["containerName"])
                     blockList.append(ar)
                     ids.append(b["id"])
                 h["memory"] = calcBlockMemory(blockList)
