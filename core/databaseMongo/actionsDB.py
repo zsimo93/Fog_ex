@@ -50,7 +50,9 @@ def getActions():
         data = {
             "name": k["_id"],
             "description": k["description"],
-            "in/out": k["in/out"]
+            "in/out": k["in/out"],
+            "contTag": k["contTag"],
+            "cloud": k["cloud"]
         }
         ret.append(data)
 

@@ -39,7 +39,7 @@ def validateActionRequest(request):
     }
     try:
         ret["contTag"] = req["containerTag"]
-    except:
+    except KeyError:
         ret["contTag"] = "base"
 
     if req['language'] == "python":

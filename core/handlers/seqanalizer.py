@@ -72,6 +72,7 @@ class Act:
         self.timeout = fromDB['timeout']
         self.language = fromDB['language']
         self.cloud = fromDB['cloud']
+        self.contTag = fromDB['contTag']
         try:
             self.containerName = fromDB["containerName"]
         except KeyError:
@@ -87,6 +88,7 @@ class Act:
             "timeout": self.timeout,
             "language": self.language,
             "cloud": self.cloud,
+            "contTag": self.contTag,
             "containerName": self.containerName
         }
         return ret
