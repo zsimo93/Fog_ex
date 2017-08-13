@@ -1,5 +1,4 @@
 from PIL import Image, ImageFile
-from bson.binary import Binary
 import fileModule
 import io
 
@@ -12,7 +11,5 @@ def main(args):
     image = image.convert('1')
     newImage = io.BytesIO()
     image.save(newImage, args["formatOut"])
-    bin = Binary(newImage.getvalue())
-    retId = fm.saveFile(bin, "image." + args["formatOut"])
-    return { "retId" : retId } 
-
+    retId = fm.saveFile(newImage, "image." + args["formatOut"])
+    return { "retId" : retId }

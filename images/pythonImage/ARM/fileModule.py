@@ -2,8 +2,13 @@ import uuid
 from gridfs import GridFS
 from pymongo import MongoClient
 from datetime import datetime
+from bson import Binary
+from io import BytesIO
 
 class NoFileException(Exception):
+    pass
+
+class WrongTypeException(Exception):
     pass
 
 class FileManager:
@@ -14,8 +19,18 @@ class FileManager:
     fs = GridFS(mongodb, collection="userdata")
 
     def saveFile(self, file, filename):
+        # Pass as file a io.BytesIO data type
+        # or directly a bson.Binary data type
+
         id = str(uuid.uuid4())
-        self.fs.put(file, _id=id, filename=filename,
+        if (type(file) == Binary):
+            toSave = file
+        elif (type(file) == BytesIO):
+            toSave = Binary(file.getvalue())
+        else:
+            raise WrongTypeException("cannot save the data in the type given")
+
+        self.fs.put(toSave, _id=id, filename=filename,
                     uploadDate=datetime.utcnow())
         return id
 

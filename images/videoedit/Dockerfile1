@@ -1,0 +1,19 @@
+FROM tgogos/ffmpeg
+
+USER root
+
+RUN apt-get update && \
+    apt-get -qy install ca-certificates python python-pip && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get -qy clean all
+
+RUN pip install --no-cache-dir gevent==1.2.1 flask==0.12 pymongo==3.4.0 ffmpy 
+
+ADD fileModule.py /usr/local/lib/python2.7/
+RUN mkdir -p /pythonAction
+ADD actionproxy.py /pythonAction/
+RUN mkdir -p /action
+
+EXPOSE 8080
+
+CMD ["/bin/bash", "-c", "cd pythonAction && python -u actionproxy.py"]

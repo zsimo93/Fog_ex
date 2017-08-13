@@ -1,10 +1,9 @@
-FROM tgogos/ffmpeg
+FROM zsimo/python-image:base
 
-USER root
+RUN mkdir -p /ffmpeg-static
+ADD ffmpeg-static /ffmpeg-static
+ENV PATH="/ffmpeg-static:${PATH}"
 
-RUN apt-get update && \
-    apt-get -qy install ca-certificates python python-pip && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get -qy clean all
+RUN pip install ffmpy
 
-RUN pip install --no-cache-dir gevent==1.2.1 flask==0.12 ffmpy
+CMD ["/bin/bash", "-c", "cd pythonAction && python -u actionproxy.py"]
