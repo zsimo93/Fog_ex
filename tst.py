@@ -1,21 +1,11 @@
-import requests, time
-from threading import Thread
-import sys
+from ffmpy import FFmpeg
+import io
+ff = FFmpeg(
+    inputs={'pipe:0': '-vcodec libx264'},
+    outputs={'final.avi': None})
 
-def send(id):
-    payload = {
-        "param": {
-            "id": id,
-            "text": "RANDOM TEXT!!!"},
-        "default": {
-            "actionClass": "small"
-        },
-        "log": False
-    }
+print ff.cmd
 
-    r = requests.post("http://192.168.1.50:8080/api/invoke/s2", json=payload)
-    print r.elapsed
-    print r.json()
-n = int(sys.argv[1])
-for i in range(0, n):
-    Thread(target=send, args=(sys.argv[2],)).start()
+file = open("small.mp4", "rb")
+buff = io.BytesIO
+ff.run(input_data=file.read())

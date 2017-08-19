@@ -141,6 +141,9 @@ def validateInvoke(request):
     actionClasses = {"small": 128,
                      "medium": 256,
                      "large": 512}
+    cpu_quota = {"small": 0.75,
+                 "medium": 1,
+                 "large": 1.5}
     if not req:
         return (False, {"error": "Not a JSON"})
     try:
@@ -152,6 +155,7 @@ def validateInvoke(request):
     except KeyError, e:
             return (False, {"error": "Field '" + str(e) + "' not present"})
     req['default']['memory'] = actionClasses[defClass]
+    req['default']['cpu_quota'] = cpu_quota[defClass]
 
     try:
         for e in req["except"]:
@@ -159,6 +163,7 @@ def validateInvoke(request):
             if (eClass not in actionClasses):
                 return (False, {"error": "actionClass must be 'small', 'medium' or 'large'"})
             req["except"][e]['memory'] = actionClasses[eClass]
+            req["except"][e]['cpu_quota'] = cpu_quota[defClass]
     except KeyError, e:
         req["except"] = {}
     

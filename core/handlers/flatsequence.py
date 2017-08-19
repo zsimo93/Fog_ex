@@ -4,8 +4,8 @@ from copy import deepcopy
 def unrollAndDAG(sequence):
     full = unrollSequence(sequence)[0]
     fullNext = computeNext(full)
-    computePrev(fullNext)
-    return fullNext
+    fullPN = computePrev(fullNext)
+    return fullPN
 
 def unrollSequence(sequence, superID=None, superMap={}):
     # take a nested sequence and create a unique sequence with adjusted ids
@@ -64,6 +64,7 @@ def computePrev(sequence):
         for p in a["prev"]:
             nPrev |= getPrevFromId(p)
         a["prev"] = list(nPrev)
+    return sequence
 
 def computeNext(sequence):
     # for every action find all the actions that uses its output

@@ -37,6 +37,6 @@ class FileManager:
     def loadFile(self, fileID):
         f = self.fs.find_one(str(fileID))
         if f:
-            return f.read()
+            return f
         else:
             raise NoFileException("No file with id " + str(fileID))

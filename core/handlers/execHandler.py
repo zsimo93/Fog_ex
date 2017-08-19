@@ -31,6 +31,7 @@ def createAction(name, default, configs, myID, map, timeout,
     else:
         conf = default
     action["memory"] = conf["memory"]
+    action["cpu_quota"] = conf["cpu_quota"]
 
     if not myID:
         # single action execution. Retrieve information.
