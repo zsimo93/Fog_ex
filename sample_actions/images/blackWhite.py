@@ -6,7 +6,7 @@ def main(args):
     ImageFile.LOAD_TRUNCATED_IMAGES = True
     fm = fileModule.FileManager()
     data = fm.loadFile(args["id"])
-    image = Image.open(io.BytesIO(data))
+    image = Image.open(io.BytesIO(data.read()))
     
     image = image.convert('1')
     newImage = io.BytesIO()

@@ -7,16 +7,16 @@ def main(args):
     ImageFile.LOAD_TRUNCATED_IMAGES = True
     fm = fileModule.FileManager()
     data = fm.loadFile(args["id1"])
-    image0 = Image.open(io.BytesIO(data))
+    image0 = Image.open(io.BytesIO(data.read()))
 
     data = fm.loadFile(args["id2"])
-    image1 = Image.open(io.BytesIO(data))
+    image1 = Image.open(io.BytesIO(data.read()))
 
     data = fm.loadFile(args["id3"])
-    image2 = Image.open(io.BytesIO(data))
+    image2 = Image.open(io.BytesIO(data.read()))
 
     data = fm.loadFile(args["id4"])
-    image3 = Image.open(io.BytesIO(data))
+    image3 = Image.open(io.BytesIO(data.read()))
     
     base_width = image0.width
     base_height = image0.height

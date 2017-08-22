@@ -3,18 +3,23 @@ import commands
 
 client = docker.DockerClient(base_url='unix://var/run/docker.sock')
 
-def runContainer(name, memory, cpu_quota, path_dir):
+def runContainer(name, memory, path_dir):
     volumes = {
         path_dir: {"bind": "/action", "mode": "rw"}
     }
 
-    a = client.containers.run(name,
-                              volumes=volumes,
-                              detach=True)
     if (memory):
-        updateContainerMem(a.id, memory, cpu_quota)
+        a = client.containers.run(name,
+                                  mem_limit=str(memory) + "m",
+                                  volumes=volumes,
+                                  detach=True)
+    else:
+        a = client.containers.run(name,
+                                  volumes=volumes,
+                                  detach=True)
+    id = str(a.id)
 
-    ip = getIP(a.id)
+    ip = getIP(id)
 
     return a.name, ip
 
@@ -32,11 +37,9 @@ def killContainer(conId):
     c.kill()
     c.remove(v=True)
 
-def updateContainerMem(contId, memory, cpu_quota):
-    command = "docker update -m %s --cpus %s %s" % (str(memory) + "m",
-                                                    str(cpu_quota), contId)
-
-    commands.getoutput(command)
+def updateContainerMem(contId, memLimit):
+    container = client.containers.get(contId)
+    container.update(mem_limit=str(memLimit) + "m")
 
 def pullImage(contName):
     client.images.pull(contName)

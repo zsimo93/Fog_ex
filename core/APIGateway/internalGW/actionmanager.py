@@ -19,7 +19,6 @@ class ActionManager():
     def __init__(self, request, param=None, sessionID=None, map=None, next=[]):
         self.action = request['name']
         self.memory = request['memory']
-        self.cpu_quota = request['cpu_quota']
         self.timeout = request['timeout']
         self.language = request['language']
         self.myID = request["id"]
@@ -36,7 +35,7 @@ class ActionManager():
         self.ip = ""
 
     def setContainerMem(self):
-        updateContainerMem(self.cont, self.memory, self.cpu_quota)
+        updateContainerMem(self.cont, self.memory)
 
     def startCont(self):
         c = localDB.findContainer(self.action)
@@ -58,7 +57,6 @@ class ActionManager():
             self.path = files.loadActionFile(self.action)
             self.cont , self.ip = runContainer(containerName,
                                                self.memory,
-                                               self.cpu_quota,
                                                self.path)
             localDB.insertInAll(self.cont, self.action)
 
