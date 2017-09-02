@@ -25,7 +25,7 @@ def createAction(name, default, configs, myID, map, timeout,
               'id': myID,  # None if single action execution
               "map": map,
               "contTag": contTag}  # None if single action execution
-    
+
     if configs and name in configs:
         conf = configs[name]
     else:
@@ -100,9 +100,7 @@ class ActionExecutionHandler:
         return sorted(avList, key=lambda node: node['memory'])
 
     def chooseActionNode(self, action):
-        """
-        Select the node with more free cpu and enought memory
-        """
+        # Select the node with more free cpu and enought memory
         req_mem = long(action["memory"]) * 1000000
         nodesRes = nodesDB.allRes()
 
@@ -135,7 +133,7 @@ class ActionExecutionHandler:
         raise NoResourceException("Not enought memory resources in the " +
                                   "system to execute " + action["name"] +
                                   " using " + str(action["memory"]) + "MB")
-    
+
     def startThreaded(self):
         return Thread(target=self.start)
 
@@ -148,7 +146,7 @@ class ActionExecutionHandler:
 
                 request = {
                     "type": "action",
-                    "sessionID" : self.sessionID,
+                    "sessionID": self.sessionID,
                     "param": self.param,
                     "action": self.action
                 }
@@ -198,21 +196,20 @@ class SeqExecutionHandler:
         self.name = name
         self.default = default
         self.configs = configs
-
         s = getSequence(name)
         self.sequence = s["execSeq"]
         self.lastID = s["resultActionID"]
         self.results = {}
-
         self.logList = []
 
     def finalizeResult(self):
         """
-        take last result of the sequence and delete all the sequence intermediate results.
+        Take last result of the sequence and delete all the sequence intermediate results.
+
         Return the result.
         """
         res = self.results[self.lastID]
-        
+
         return (res, 200)
 
     def start(self):
@@ -240,7 +237,7 @@ class SeqExecutionHandler:
                     else:
                         self.results[handler.action["id"]] = r
                         continue
-                
+
                 except Exception as e:
                     self.log("Local Exception")
                     print '-' * 60
@@ -260,7 +257,7 @@ class SeqExecutionHandler:
 
                 handler = ParallelExecutionHandler(self.default, self.configs,
                                                    self.sessionID, a["list"], param)
-            else :
+            else:
                 # a["type"] == "block"
                 handler = BlockExecutionHandler(self.default, self.configs,
                                                 self.sessionID, a["list"], param)
@@ -274,7 +271,7 @@ class SeqExecutionHandler:
                 else:
                     for key in r:
                         self.results[key] = r[key]
-                
+
             except Exception as e:
                 self.log("Local Exception")
                 print '-' * 60
@@ -290,7 +287,7 @@ class SeqExecutionHandler:
         logStr = ts + " - " + id + ": " + message
         print logStr
         self.logList.append(logStr)
-            
+
 
 class BlockExecutionHandler(ActionExecutionHandler):
     def __init__(self, default, configs, sessionID, list, param):
@@ -302,7 +299,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
         self.param = param
 
         self.results = {}
-        
+
         self.blockList = []
         for a in list:
             ar = createAction(a["name"], self.default, self.configs,
@@ -311,7 +308,6 @@ class BlockExecutionHandler(ActionExecutionHandler):
                               a["contTag"], a["containerName"])
             self.ids.append(a["id"])
             self.blockList.append(ar)
-
 
     def prepareBlockInput(self, actionList):
         inParam = {}
@@ -324,7 +320,6 @@ class BlockExecutionHandler(ActionExecutionHandler):
                     if refId not in inParam:
                         inParam[refId] = self.param[refId]
         return inParam
-
 
     def chooseBlockNode(self, actList):
         memory = calcBlockMemory(actList) * 1000000
@@ -340,10 +335,10 @@ class BlockExecutionHandler(ActionExecutionHandler):
 
     def start(self):
         self.log("Executing block with actions: " + str(self.ids))
-        
+
         while self.blockList:
             invoker = None
-            
+
             if len(self.blockList) == 1:
                 # one action left in the block. Execute as single action
                 param = self.prepareBlockInput(self.blockList)
@@ -358,7 +353,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         self.log("ERROR " + json.dumps(text))
                         self.ret = {"error": text}, 500
                         return self.ret
-                
+
                 self.results[h.action["id"]] = text
 
                 self.ret = self.results, 200
@@ -371,7 +366,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                     param = self.prepareBlockInput(self.blockList)
                     payload = {
                         "type": "block",
-                        "sessionID" : self.sessionID,
+                        "sessionID": self.sessionID,
                         "param": param,
                         "block": self.blockList
                     }
@@ -383,7 +378,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
 
                     self.log("EXECUTE " + str(self.ids) + " on node " + name)
                     self.blockList = []
-                    
+
                     retJson = json.loads(text)
                     for k in retJson:
                         self.results[k] = retJson[k]
@@ -417,14 +412,14 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         else:
                             name, invoker = self.chooseBlockNode(self.blockList[:i])
                             singleCase = False
-                    
+
                     if not singleCase:
                         # execute the sub-block selected and reiterate with
                         # remaining actions in block
                         param = self.prepareBlockInput(self.blockList[:i])
                         payload = {
                             "type": "block",
-                            "sessionID" : self.sessionID,
+                            "sessionID": self.sessionID,
                             "param": param,
                             "block": self.blockList[:i]
                         }
@@ -433,7 +428,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             self.log("ERROR " + text)
                             self.ret = {"error": text}, 500
                             return self.ret
-                        
+
                         retJson = json.loads(text)
                         for k in retJson:
                             self.results[k] = retJson[k]
@@ -442,7 +437,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         self.log("EXECUTE " + str(self.ids[:i]) + " on node " + name)
                         self.blockList = self.blockList[i:]
                         self.ids = self.ids[i:]
-        
+
         self.log("END")
         self.ret = "OK", 200
         return self.ret
@@ -519,6 +514,15 @@ class ParallelExecutionHandler(BlockExecutionHandler):
     def start(self):
 
         def fit(actions, nodes):
+            """
+            Search a feasible parallel assignement of actions in nodes.
+
+            If action fit (memory) in the first most free node, make the couple,
+            remove the used memory from the available in the node, and put node
+            at the end of the list.
+            Recursively call itself removing the assigned action and with the new
+            ordered node list.
+            """
             couples = []
             actL = deepcopy(actions)[1:]
 
@@ -552,7 +556,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         self.log("start execution")
         threads = []
         nodesRes = nodesDB.allRes()
-        nodesL = self.sortedMem(nodesRes)
+        nodesL = self.sortedMem(nodesRes)  # Sort available nodes by memory
 
         coupling = fit(self.actList, nodesL)
 
@@ -593,9 +597,9 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         self.ret = self.results, 200
         return self.ret
 
-    
     # DUMB START, just parallel start
     def startDumb(self):
+        """Manage the parallel actions as if they come in separate calls (with threads)."""
         self.log("start Dumb execution")
         handlers = []
         threads = []
@@ -635,7 +639,6 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         self.log("end execution")
         self.ret = self.results, 200
         return self.ret
-    
 
     def log(self, message):
         ts = datetime.now().isoformat()

@@ -9,6 +9,7 @@ def checkMaster():
     role = os.environ.get("TH_ROLE")
     return role == "MASTER"
 
+
 app = Flask(__name__)
 
 ########################
@@ -79,14 +80,14 @@ def flatSeq(token):
     return sequences.flatSeq(token)
 
 
-# #######################
+########################
 @app.route('/api/invoke/<token>', methods=['POST'])
 def invoke(token):
     if not checkMaster():
         return abort(404)
     return invoker.invoke(token, request)
 
-# #######################
+########################
 
 @app.route('/api/aws', methods=["POST"])
 def createAWSConnection():
@@ -106,7 +107,7 @@ def checkAWSConnection():
         return abort(404)
     return aws.check(request)
 
-# #######################
+########################
 
 @app.route('/api/file/upload', methods=['POST'])
 def uploadFile():
@@ -127,7 +128,7 @@ def downloadFile(token):
     return userfile.download(token)
 
 
-# #######################
+########################
 @app.route('/internal/invoke', methods=['POST'])
 def intInvoke():
     return internal.invoke(request)
@@ -142,6 +143,7 @@ def setupVar():
 
 def run(debug):
     app.run(host='0.0.0.0', port=8080, threaded=True, debug=debug)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, threaded=True)

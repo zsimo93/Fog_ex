@@ -8,8 +8,11 @@ def unrollAndDAG(sequence):
     return fullPN
 
 def unrollSequence(sequence, superID=None, superMap={}):
-    # take a nested sequence and create a unique sequence with adjusted ids
-    # and map processes added before a new sequence.
+    """
+    Take a nested sequence and create a unique sequence.
+
+    Adjusts ids and map processes added before a new sequence.
+    """
     final = []
     midMap = {}
     for act in sequence:
@@ -50,7 +53,7 @@ def unrollSequence(sequence, superID=None, superMap={}):
     return final, id
 
 def computePrev(sequence):
-    # compute the full list of actions that comes before every action
+    """Compute the full list of actions that comes before every action."""
     def getPrevFromId(id):
         if id == "param":
             return set()
@@ -67,7 +70,7 @@ def computePrev(sequence):
     return sequence
 
 def computeNext(sequence):
-    # for every action find all the actions that uses its output
+    """For every action find all the actions that uses its output."""
     s = []
     for ind in range(0, len(sequence)):
         follows = []

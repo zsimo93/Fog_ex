@@ -15,7 +15,7 @@ def newSequence(request):
         return make_response(jsonify(resp), 400)
 
     name = resp.pop("name")
-    
+
     if not db.availableSeqName(name) or not adb.availableActionName(name):
         return make_response(jsonify({'error': name + " already in use"}), 406)
 
@@ -24,7 +24,7 @@ def newSequence(request):
     ok, errorMsg = db.checkSequence(proc, resp["in/out"])
     if not ok:
         return make_response(jsonify({"error" : errorMsg}), 400)
-    
+
     resp = clean(resp)  # remove unwanted fields before storing in DB
     resp["fullSeq"] = unrollAndDAG(proc)
     resp["execSeq"] = SequenceAnalizer(resp["fullSeq"]).__json__()
@@ -35,19 +35,19 @@ def newSequence(request):
 
 
 def deleteSequence(request, actionname):
-    
+
     def actualdelete():
         db.deleteSequence(actionname)
         tdb.deleteToken(actionname)
         return make_response("OK", 200)
-    
+
     if db.availableSeqName(actionname):
         return make_response(jsonify({'error': "No sequence with name" + actionname}), 406)
 
     deplist = depdb.getDependencies(actionname)
     if not deplist:
         return actualdelete()
-        
+
     try:
         token = request.json['token']
         if tdb.checkToken(actionname, token):
@@ -55,13 +55,13 @@ def deleteSequence(request, actionname):
 
     except Exception:
         pass
-        
+
     newtoken = tdb.newToken(actionname)
-    
-    resp = {"message": "By deleting this action also the actions in the list will be deleted. Resend the request with the token to confirm." ,
+
+    resp = {"message": "By deleting this sequence also the actions in the list will be deleted. Resend the request with the token to confirm." ,
             "dependencies": deplist,
             "token": newtoken}
-    return make_response(jsonify(resp), 200)
+    return make_response(jsonify(resp), 304)
 
 def getSequences(request):
     seq = db.getSequences()
@@ -69,5 +69,5 @@ def getSequences(request):
 
 def flatSeq(token):
     seq = db.getSequence(token)
-    
+
     return make_response(jsonify(seq["execSeq"]), 200)

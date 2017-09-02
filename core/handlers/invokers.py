@@ -24,7 +24,7 @@ class AWSInvoker:
         self.sessionID = request['sessionID']
         self.myID = request["action"]['id']
         self.param = request['param']
-        
+
         conn = AwsActionInvoker(request['action']['name'], self.param,
                                 request['action']["actionClass"])
         r = conn.invoke()
@@ -49,14 +49,14 @@ class InvokerThread(Thread):
         if self.actType == "block":
             request = {
                 "type": "block",
-                "sessionID" : self.sessionID,
+                "sessionID": self.sessionID,
                 "param": self.param,
                 "block": self.action["block"]
             }
         else:
             request = {
                 "type": "action",
-                "sessionID" : self.sessionID,
+                "sessionID": self.sessionID,
                 "param": self.param,
                 "action": self.action
             }

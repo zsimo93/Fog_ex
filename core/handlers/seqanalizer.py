@@ -10,7 +10,7 @@ class Block(object):
 
     def getPrev(self):
         return self.nodeList[0].prev
-        
+
     def getNext(self):
         nextNodes = set()
         for node in self.nodeList:
@@ -28,6 +28,7 @@ class Block(object):
         return ids
 
     def __json__(self):
+        """Return a formatted json string for the class."""
         jlist = []
         for a in self.nodeList:
             jlist.append(a.__json__())
@@ -50,6 +51,7 @@ class Paral(Block):
         return "PARALLEL_" + self.nodeList[0].id
 
     def __json__(self):
+        """Return a formatted json string for the class."""
         jlist = []
         for a in self.nodeList:
             jlist.append(a.__json__())
@@ -79,6 +81,7 @@ class Act:
             self.containerName = None
 
     def __json__(self):
+        """Return a formatted json string for the class."""
         ret = {
             "id": self.id,
             "type": "action",
@@ -104,16 +107,19 @@ class SequenceAnalizer:
         self.finalProc = self.createParallels()
 
     def __json__(self):
+        """Return a formatted json string for the class."""
         jlist = []
         for a in self.finalProc:
             jlist.append(a.__json__())
 
         return jlist
 
-
     def completeInfo(self):
-        # build a list af Act object, that contains all the information needed.
-        # every node contains next, prev, id and the full action object
+        """
+        Build a list af Act object, that contains all the information needed.
+
+        Every node contains next, prev, id and the full action object.
+        """
         l = []
         for act in self.sequence:
             id = act["id"]
@@ -154,7 +160,7 @@ class SequenceAnalizer:
             self.doneIds += ret.getIds()
 
         return ret
-    
+
     def createBlocks(self):
         newProcess = []
         for node in self.finalProc:
@@ -173,11 +179,10 @@ class SequenceAnalizer:
 
         return ret
 
-
     def getFollowingsInBlock(self, node):
-        
+
         def containsParallel(nodes):
-            # check if in a list of nodes' id there are parallels
+            """Check if in a list of nodes' id there are parallels."""
             l = len(nodes)
             if l == 1:
                 return False
@@ -188,7 +193,6 @@ class SequenceAnalizer:
                     if set(node1.prev) == set(node2.prev):
                         return True
             return False
-
 
         def isNext(prev1, id1, prev2):
             nset1 = set(prev1)

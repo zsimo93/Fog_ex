@@ -22,7 +22,7 @@ def newAction(request):
     valid, resp = validate(request)
 
     file = request.files['file']
-    
+
     if not valid:
         return make_response(jsonify(resp), 400)
 
@@ -30,11 +30,11 @@ def newAction(request):
 
     if not db.availableActionName(name) or not sdb.availableSeqName(name):
         return make_response(jsonify({'error': name + " already in use"}), 406)
-    
-    if resp["cloud"] :
+
+    if resp["cloud"]:
         if not aws.checkPresence():
             resp["cloud"] = False
-        
+
         else:
             ac = AwsActionCreator(name, resp["language"],
                                   resp["description"], resp["timeout"],
@@ -69,19 +69,19 @@ def actualdelete(actionname):
             post(str(n.ip), 8080, "/internal/delete/" + str(actionname), payload)
         except ConnectionError:
             pass
-    
+
 
 def deleteAction(request, actionname):
 
     if db.availableActionName(actionname):   # action name not present
         return make_response(jsonify({'error': "No action with name " + actionname}),
                              406)
-    
+
     deplist = depdb.getDependencies(actionname)
     if not deplist:
         actualdelete(actionname)
         return make_response("OK", 200)
-    
+
     try:
         token = str(request.json['token'])
         if tdb.checkToken(actionname, token):
@@ -89,13 +89,13 @@ def deleteAction(request, actionname):
             return make_response("OK", 200)
     except Exception:
         pass
-        
+
     newtoken = tdb.newToken(actionname)
-    resp = {"message": "By deleting this action also the actions in the list will be deleted. Resend the request with the token to confirm." ,
+    resp = {"message": "By deleting this action also the actions in the list will be deleted. Resend the request with the token to confirm.",
             "dependencies": deplist,
             "token": newtoken}
-    return make_response(jsonify(resp), 200)
-    
+    return make_response(jsonify(resp), 304)
+
 
 def getActions(request):
     actions = db.getActions()
