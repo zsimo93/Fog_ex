@@ -9,7 +9,7 @@ class ConnectionManager():
     def __init__(self, masterIP):
         port = 8080
         ip = masterIP
-        baseAddress = "http://" + ip + ":" + str(port) + "/api/"
+        baseAddress = "http://" + ip + ":" + str(port) + "/api"
 
         self.action = ActionsManager(baseAddress + "/actions")
         self.sequence = SequencesManager(baseAddress + "/sequences")

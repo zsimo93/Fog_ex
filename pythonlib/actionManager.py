@@ -1,6 +1,7 @@
 import requests
 import os
 import json
+import encode_multipart
 
 class ActionsManager():
     def __init__(self, address):
@@ -8,18 +9,22 @@ class ActionsManager():
 
     def new(self, name, description, language,
             containerTag, in_out, cloud, timeout, filePath):
-        data = {
+        fields = {
             "type": "action",
             "name": name,
             "description": description,
             "language": language,
             "containerTag": containerTag,
-            "in/out": in_out,
+            "in/out": json.dumps(in_out),
             "cloud": cloud,
-            "timeout": timeout,
-            "file": (os.path.basename(filePath), open(filePath, "rb"))
+            "timeout": str(timeout)
         }
-        resp = requests.post(self.address, files=data)
+        files = {
+            "file": {'filename': os.path.basename(filePath), 'content': open(filePath, "rb").read()}
+        }
+        data, headers = encode_multipart.encode_multipart(fields, files)
+
+        resp = requests.post(self.address, data=data, headers=headers)
         return resp.status_code, resp.text
 
     def list(self):
@@ -33,7 +38,7 @@ class ActionsManager():
         else:
             resp = requests.delete(address)
 
-        if (resp.status_code == 304):
+        if (resp.status_code == 202):
             if (force):
                 token = json.loads(resp.text)["token"]
 

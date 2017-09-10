@@ -7,7 +7,7 @@ class SequencesManager(ActionsManager):
 
     def new(self, name, description, in_out, sequence):
         data = {
-            "type": "action",
+            "type": "sequence",
             "name": name,
             "description": description,
             "in/out": in_out,

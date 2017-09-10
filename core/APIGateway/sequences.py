@@ -23,7 +23,7 @@ def newSequence(request):
     proc = resp['sequence']
     ok, errorMsg = db.checkSequence(proc, resp["in/out"])
     if not ok:
-        return make_response(jsonify({"error" : errorMsg}), 400)
+        return make_response(jsonify({"error": errorMsg}), 400)
 
     resp = clean(resp)  # remove unwanted fields before storing in DB
     resp["fullSeq"] = unrollAndDAG(proc)
@@ -61,7 +61,7 @@ def deleteSequence(request, actionname):
     resp = {"message": "By deleting this sequence also the actions in the list will be deleted. Resend the request with the token to confirm." ,
             "dependencies": deplist,
             "token": newtoken}
-    return make_response(jsonify(resp), 304)
+    return make_response(jsonify(resp), 202)
 
 def getSequences(request):
     seq = db.getSequences()

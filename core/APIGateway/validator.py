@@ -19,7 +19,7 @@ def validateActionRequest(request):
             return (False, {"error": "Cloud must be a boolean"})
         req['in/out'] = json.loads(req['in/out'])
         if (type(req['in/out']['in']) != list or
-           type(req['in/out']['out']) != list) :
+           type(req['in/out']['out']) != list):
             return (False, {"error": "the in/out field must contain the keys in \
                              and out with values lists"})
         req['description']
@@ -48,30 +48,19 @@ def validateActionRequest(request):
 
         if request.files['file'].filename == '':
             return (False, {"error": "no file selected"})
-        
+
     elif req['language'] == "docker":
         try:
             ret["containerName"] = req["containerName"]
         except KeyError as e:
             return (False, {"error": "Field '" + str(e) + "' not present. Specify a valid container name"})
-        
-
     return (True, ret)
-
-"""def cleanUpAct(req):
-    fields = ("name", "description", "language", "cloud", "timeout")
-    for k in req.keys():
-        if k not in fields:
-            del req[k]
-    return req"""
-
 
 def validateNodeRequest(request):
     req = request.json
-        
+
     pattern = re.compile('((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}')
     supportedArch = ("arm")
-    
 
     if not req:
         return (False, {"error": "Not a JSON"})
@@ -118,7 +107,7 @@ def validateSequence(request):
         if req['name'] == "":
             return (False, {"error": "Sequence name needed"})
         if (type(req['in/out']['in']) != list or
-           type(req['in/out']['out']) != list) :
+           type(req['in/out']['out']) != list):
             return (False, {"error": "the in/out field must contain the keys in \
                              and out with values lists"})
         req['sequence']
@@ -161,7 +150,7 @@ def validateInvoke(request):
             req["except"][e]['memory'] = actionClasses[eClass]
     except KeyError, e:
         req["except"] = {}
-    
+
     return (True, req)
 
 def validateAWS(request):

@@ -99,6 +99,9 @@ class ActionExecutionHandler:
         # sort the available nodes per free memory
         return sorted(avList, key=lambda node: node['memory'])
 
+    def sortedAvg(self, avList):
+        return sorted(avList, key=lambda node: (node["cpu"] + node["memory"]) / 2)
+
     def chooseActionNode(self, action):
         # Select the node with more free cpu and enought memory
         req_mem = long(action["memory"]) * 1000000

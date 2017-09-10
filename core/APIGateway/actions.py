@@ -94,7 +94,7 @@ def deleteAction(request, actionname):
     resp = {"message": "By deleting this action also the actions in the list will be deleted. Resend the request with the token to confirm.",
             "dependencies": deplist,
             "token": newtoken}
-    return make_response(jsonify(resp), 304)
+    return make_response(jsonify(resp), 202)
 
 
 def getActions(request):
