@@ -14,13 +14,12 @@ class InvokeManager():
                 newparam[paramID] = text
 
         data = {
+            "name": name,
             "param": newparam,
             "default": {"actionClass": default_conf_class},
             "except": except_conf,
             "log": log
         }
-        address = self.address + "/" + name
-
-        resp = requests.post(address, json=data)
+        resp = requests.post(self.address, json=data)
 
         return resp.status_code, resp.text

@@ -81,11 +81,11 @@ def flatSeq(token):
 
 
 ########################
-@app.route('/api/invoke/<token>', methods=['POST'])
-def invoke(token):
+@app.route('/api/invoke', methods=['POST'])
+def invoke():
     if not checkMaster():
         return abort(404)
-    return invoker.invoke(token, request)
+    return invoker.invoke(request)
 
 ########################
 

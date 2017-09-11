@@ -133,6 +133,7 @@ def validateInvoke(request):
     if not req:
         return (False, {"error": "Not a JSON"})
     try:
+        req["name"]
         if type(req['param']) != dict:
             return (False, {"error": "'param' must contain a formatted json"})
         defClass = req['default']['actionClass']

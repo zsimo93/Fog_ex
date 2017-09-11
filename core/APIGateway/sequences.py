@@ -58,7 +58,7 @@ def deleteSequence(request, actionname):
 
     newtoken = tdb.newToken(actionname)
 
-    resp = {"message": "By deleting this sequence also the actions in the list will be deleted. Resend the request with the token to confirm." ,
+    resp = {"message": "By deleting this sequence also the actions in the list will be deleted. Resend the request with the token to confirm.",
             "dependencies": deplist,
             "token": newtoken}
     return make_response(jsonify(resp), 202)
