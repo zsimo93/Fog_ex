@@ -163,6 +163,7 @@ class ActionExecutionHandler:
                 self.ret = self.ret
                 return self.ret
             except ConnectionError:
+                self.log("Deleting node %s for not responding" % name)
                 nodesDB.deleteNode(name)
             except Exception, e:
                 self.log("Exception in local")
@@ -186,6 +187,8 @@ class ActionExecutionHandler:
         self.logList.append(logStr)
 
 class AsActionExecutionHandler(ActionExecutionHandler):
+    # This classis used when the "action" json is already formed.
+    #   in case of single execution in block and parallel
     def __init__(self, sessionID, action, param):
         self.param = self.prepareInput(action["map"], param)
         self.sessionID = sessionID
@@ -249,7 +252,6 @@ class SeqExecutionHandler:
                     return {"error": str(e)}, 500
 
             if a["type"] == "parallel":
-
                 actList = []
                 for act in a["list"]:
                     if a["type"] == "action":
