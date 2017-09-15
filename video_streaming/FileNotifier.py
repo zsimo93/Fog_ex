@@ -28,7 +28,7 @@ def main():
         param = {
             "videoId": "",
             "inConf": "",
-            "outConf": "-f mpegts -vf hue=s=0 -c:a copy",
+            "outConf": "-f avi -vf hue=s=0 -c:a copy",
             "namePrefix": ""}
         res = cm.invoker.invoke("streamProcess", param, "small",
                         {"videoEdit": {"actionClass": "large"}}, filePath=path, paramID="videoId")
@@ -40,7 +40,7 @@ def main():
             addr = streamingServerIP + name + "/" + stream + "/" + filename
             requests.post(addr, json={"id": idsOut[stream]})
 
-            if filename.split(".")[0].endswith("001"):
+            if filename.split(".")[0].endswith("002"):
                 addr = streamingServerIP + name + "/" + stream
                 requests.get(addr)
 

@@ -1,3 +1,3 @@
-from pythonlib.sample_init.imageProcess import init
+from pythonlib.sample_init.videoStream import init
 
 init()

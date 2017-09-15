@@ -3,11 +3,20 @@ import os
 from ..pythonlib import connectionManager
 import subprocess
 from threading import Thread
-from shutil import copyfile
 
 app = Flask(__name__)
 cm = connectionManager.ConnectionManager("192.168.1.50")
 targetPlayingAddress = "192.168.1.4:1234"
+
+def playlistFile(name, stream):
+    path = os.path.join(name, stream, "playlist.txt")
+    f = open(path, "w+")
+
+    str = ""
+    for i in range(0, 400):
+        str += "file '.\\%s\\%s\\output%03d.avi'\n" % (name, stream, i)
+    f.write(str)
+    f.close()
 
 @app.route("/", methods=["POST"])
 def new():
@@ -18,7 +27,7 @@ def new():
     os.makedirs(name)
     for f in streamsOut:
         os.makedirs(os.path.join(name, f))
-        copyfile("playlist.txt", os.path.join(name, f, "playlist.txt"))
+        playlistFile(name, f)
 
     return make_response("OK", 200)
 
@@ -28,8 +37,8 @@ def retrieveStreamChunck(name, stream, filename):
         path = os.path.join(name, stream, filename)
         ret = cm.file.download(request["id"])
         if ret[0] == 200:
-            f = open(path, "w+")
-            f.write(ret[1].read())
+            f = open(path, "wb")
+            f.write(ret[1].getvalue())
             f.close()
 
     Thread(target=startThread, args=(request.json, stream, filename, )).start()

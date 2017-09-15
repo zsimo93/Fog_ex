@@ -12,11 +12,17 @@ class FileManager():
         return resp.status_code, resp.text
 
     def download(self, fileId):
-        address = self.address + "/fileId"
+        address = self.address + "/" + fileId
         resp = requests.get(address)
-        return resp.status_code, BytesIO(resp.content), resp.headers["Content-Type"]
+        buff = BytesIO()
+
+        for chunk in resp.iter_content(chunk_size=255):
+            if chunk:
+                buff.write(chunk)
+        buff.seek(0)
+        return resp.status_code, buff, resp.headers["Content-Type"]
 
     def delete(self, fileId):
-        address = self.address + "/fileId"
+        address = self.address + "/" + fileId
         resp = requests.delete(address)
         return resp.status_code, resp.text
