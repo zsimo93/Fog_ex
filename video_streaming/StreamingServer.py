@@ -1,8 +1,9 @@
 from flask import Flask, make_response, request
 import os
-from ..pythonlib import connectionManager
+from pythonlib import connectionManager
 import subprocess
 from threading import Thread
+from time import sleep
 
 app = Flask(__name__)
 cm = connectionManager.ConnectionManager("192.168.1.50")
@@ -14,7 +15,7 @@ def playlistFile(name, stream):
 
     str = ""
     for i in range(0, 400):
-        str += "file '.\\%s\\%s\\output%03d.avi'\n" % (name, stream, i)
+        str += "file '.\\%s\\%s\\output%03d.ts'\n" % (name, stream, i)
     f.write(str)
     f.close()
 
@@ -33,7 +34,7 @@ def new():
 
 @app.route("/<name>/<stream>/<filename>", methods=["POST"])
 def retrieveStreamChunck(name, stream, filename):
-    def startThread(request, stream, filename):
+    def download(request, stream, filename):
         path = os.path.join(name, stream, filename)
         ret = cm.file.download(request["id"])
         if ret[0] == 200:
@@ -41,21 +42,29 @@ def retrieveStreamChunck(name, stream, filename):
             f.write(ret[1].getvalue())
             f.close()
 
-    Thread(target=startThread, args=(request.json, stream, filename, )).start()
+    Thread(target=download, args=(request.json, stream, filename, )).start()
     return make_response("OK", 200)
 
 @app.route("/<name>/<stream>", methods=["GET"])
 def startStream(name, stream):
-    def startThread():
-        plst = os.path.join(name, stream, "playlist.txt")
+    def startEncode():
+        folder = os.path.join(name, stream)
+        plst = os.path.join(folder, "playlist.txt")
+        outputfile = os.path.join(folder, "fullout.ts")
         address = "udp://" + targetPlayingAddress + "/" + name + "/" + stream
         print "start streaming to " + address
-        # cmd = ["ffmpeg", "-re", "-f", "concat", "-i", plst, "-vcodec", "libx264",
-        #       "-tune", "zerolatency", "-b", "900k", "-f", "mpegts", address]
-        cmd = ["ffplay", "-f", "concat", "-i", plst]
+        cmd = ["ffmpeg", "-re", "-f", "concat", "-safe", "0", "-i", plst,
+               "-b", "900k", "-f", "mpegts", outputfile]
         subprocess.call(cmd)
 
-    Thread(target=startThread).start()
+    def play():
+        sleep(5)
+        outputfile = os.path.join(name, stream, "fullout.ts")
+        cmd = ["ffplay", "-i", outputfile]
+        subprocess.call(cmd)
+
+    Thread(target=startEncode).start()
+    Thread(target=play).start()
     return make_response("OK", 200)
 
 

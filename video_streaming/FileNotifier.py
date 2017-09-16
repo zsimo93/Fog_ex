@@ -8,7 +8,7 @@ from threading import Thread
 
 def main():
     name = sys.argv[1]
-    streamingServerIP = "http://0.0.0.0:2222/"
+    streamingServerIP = "http://192.168.1.8:2222/"
     streamsOut = sys.argv[2:]
 
     def createFolders():
@@ -28,10 +28,13 @@ def main():
         param = {
             "videoId": "",
             "inConf": "",
-            "outConf": "-f avi -vf hue=s=0 -c:a copy",
+            "outConf": "-f mpegts -vf hue=s=0 ",
             "namePrefix": ""}
         res = cm.invoker.invoke("streamProcess", param, "small",
-                        {"videoEdit": {"actionClass": "large"}}, filePath=path, paramID="videoId")
+                                {"streamProcess": {"actionClass": "large"}}, filePath=path, paramID="videoId")
+        if res[0] != 200:
+            res = cm.invoker.invoke("streamProcess", param, "small",
+                                    {"streamProcess": {"actionClass": "large"}}, filePath=path, paramID="videoId")
         print res
         idsOut = json.loads(res[1])["fileIds"]
         filename = os.path.basename(path)
@@ -46,17 +49,17 @@ def main():
 
     class VideoComplete(pyinotify.ProcessEvent):
         def process_IN_MOVED_TO(self, event):
-            Thread(target=streamVideo, args=(event.pathname,))
+            Thread(target=streamVideo, args=(event.pathname,)).start()
 
         def process_IN_CLOSE_WRITE(self, event):
-            Thread(target=streamVideo, args=(event.pathname,))
+            Thread(target=streamVideo, args=(event.pathname,)).start()
 
     createFolders()
     wm = pyinotify.WatchManager()
     notifier = pyinotify.Notifier(wm, VideoComplete())
 
     mask = pyinotify.ALL_EVENTS
-    path = '/home/simone/workspace/opencv/files'
+    path = './files'
     wm.add_watch(path, mask, rec=True, auto_add=True)
     notifier.loop()
 

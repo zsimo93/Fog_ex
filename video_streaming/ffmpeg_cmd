@@ -1,5 +1,10 @@
 # capture and save
+#avi
 ffmpeg -f v4l2 -framerate 25 -video_size 640x480 -i /dev/video0 -c copy -map 0 -segment_time 5 -f segment -reset_timestamps 1 output%03d.avi
+
+#ts
+ffmpeg -f v4l2 -framerate 25 -video_size 640x480 -i /dev/video0 -c copy -map 0 -segment_time 10 -f segment -vcodec libx264 -reset_timestamps 1 output%03d.ts
+
 
 #stream to upd
 ffmpeg -re -f concat -i playlist.txt -vcodec libx264 -tune zerolatency -b 900k -f mpegts udp://0.0.0.0:1234
