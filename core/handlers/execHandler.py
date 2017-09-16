@@ -142,7 +142,7 @@ class ActionExecutionHandler:
 
     def start(self):
         i = 0
-        while(i < 2):
+        while(i < 3):
             try:
 
                 name, invoker = self.chooseActionNode(self.action)
@@ -164,7 +164,7 @@ class ActionExecutionHandler:
                 return self.ret
             except ConnectionError:
                 self.log("Deleting node %s for not responding" % name)
-                nodesDB.deleteNode(name)
+                # nodesDB.deleteNode(name)
             except Exception, e:
                 self.log("Exception in local")
                 print '-' * 60
