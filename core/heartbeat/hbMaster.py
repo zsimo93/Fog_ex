@@ -49,7 +49,7 @@ def getRes(id, IP):
         if recJson:
             db.updateResources(id, recJson)
         else:
-            db.deleteNode(id)
+            #db.deleteNode(id)
     except Exception:
         pass
     return
