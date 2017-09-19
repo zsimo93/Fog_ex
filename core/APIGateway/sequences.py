@@ -26,9 +26,18 @@ def newSequence(request):
         return make_response(jsonify({"error": errorMsg}), 400)
 
     resp = clean(resp)  # remove unwanted fields before storing in DB
-    resp["fullSeq"] = unrollAndDAG(proc)
+
+    # if the "out" is a mapping, the mapping is extracted and out is placed as a list of keys.
+    if type(resp["in/out"]["out"]) == dict:
+        resp["outMap"] = resp["in/out"]["out"]
+        resp["in/out"]["out"] = resp["outMap"].keys()
+    else:
+        lastId = proc[-1]["id"]
+        for k in resp["in/out"]["out"]:
+            resp["outMap"][k] = lastId + "/" + k
+
+    resp["fullSeq"], resp["outMapFLAT"] = unrollAndDAG(proc, resp["outMap"])
     resp["execSeq"] = SequenceAnalizer(resp["fullSeq"]).__json__()
-    resp["resultActionID"] = resp["fullSeq"][-1]["id"]
     db.insertSequence(name, resp)  # save seq in db
     depdb.computeDep(name, proc)  # save all the dependencies usefull for delete
     return make_response(name, 201)

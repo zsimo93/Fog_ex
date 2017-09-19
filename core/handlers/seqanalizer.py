@@ -202,7 +202,7 @@ class SequenceAnalizer:
 
         block = [node]
         id = node.id
-        nextNodes = node.next
+        nextNodes = [n for n in node.next if n != "__out__"]
         prevNodes = node.prev
         if containsParallel(nextNodes):
             pass

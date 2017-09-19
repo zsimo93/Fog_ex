@@ -16,7 +16,7 @@ class BlockManager():
             self.localiDs.append(action['id'])
             actionMan = ActionManager(action, map=action['map'],
                                       next=action['next'], sessionID=sessionID)
-            
+
             if action["name"] not in self.managerActionMap:
                 self.managerActionMap[action["name"]] = [actionMan]
                 thread = actionMan.startThreadContainer()
@@ -47,12 +47,12 @@ class BlockManager():
         return inParam
 
     def finalizeIntermediate(self, manager, result):
-        
+
         def allLocal(next):
-            if not next:
-                # case of last action of a sequence. No next but need to save in DB
-                return False
             for n in next:
+                if n == "__out__":
+                    # if out is needed for last return, save
+                    return False
                 if n not in self.localiDs:
                     return False
             return True
@@ -65,13 +65,13 @@ class BlockManager():
     def run(self):
         for (manager, thread) in self.aManagers:
             manager.param = self.prepareSingleInput(manager.map)
-            
+
             if thread:
                 thread.join()
-            
+
             manager.setContainerMem()
             resp, error = manager.run()
-            
+
             actionName = manager.action
             amList = self.managerActionMap[actionName]
             amList.remove(manager)
