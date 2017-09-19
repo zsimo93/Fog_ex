@@ -12,17 +12,17 @@ def getClient():
 
 class AwsActionCreator(object):
     def __init__(self, name, language, description,
-                 timeout, file):
+                 timeout, file, contTag):
         self.name = name
         self.file = file
         self.language = language + "2.7" if language == "python" else language
         self.description = description
         self.timeout = timeout
-        self.package = self.initPackage(file)
+        self.package = self.initPackage(file, contTag)
         self.client = getClient()
 
-    def initPackage(self, file):
-        pc = PackageCreator(self.name, file)
+    def initPackage(self, file, contTag):
+        pc = PackageCreator(self.name, file, contTag)
         return pc.createPackage()
 
     def create(self):
@@ -44,7 +44,7 @@ class AwsActionCreator(object):
                 MemorySize=actionClasses[c],
                 Publish=True
             )
-        
+
 class AwsActionInvoker(object):
     def __init__(self, name, param, actClass):
         self.client = getClient()

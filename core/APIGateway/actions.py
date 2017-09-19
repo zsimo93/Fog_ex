@@ -10,7 +10,7 @@ from core.gridFS import files as fs
 from core.utils.httpUtils import post
 from validator import validateActionRequest as validate
 from requests import ConnectionError
-from core.awsLambda.awsconnector import AwsActionCreator, AwsActionDeletor
+from core.aws.lambdaconnector import AwsActionCreator, AwsActionDeletor
 """
 def computeAvailability(name, request):
     nList = [n["_id"] for n in getNodes()]
@@ -38,7 +38,7 @@ def newAction(request):
         else:
             ac = AwsActionCreator(name, resp["language"],
                                   resp["description"], resp["timeout"],
-                                  file)
+                                  file, resp["contTag"])
             ac.create()
 
     fs.saveActionFile(file, name)

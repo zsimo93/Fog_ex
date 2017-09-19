@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime
 from bson import Binary
 from io import BytesIO
+import os
 
 class NoFileException(Exception):
     pass
@@ -20,18 +21,30 @@ class FileManager:
 
     def saveFile(self, file, filename):
         # Pass as file a io.BytesIO data type
-        # or directly a bson.Binary data type
+        # or bytes
 
         id = str(uuid.uuid4())
-        if (type(file) == Binary):
-            toSave = file
+        if (type(file) == unicode):
+            toSave = Binary(str(file))
         elif (type(file) == BytesIO):
             toSave = Binary(file.getvalue())
         else:
-            raise WrongTypeException("cannot save the data in the type given")
+            try:
+                toSave = Binary(file)
+            except:
+                try:
+                    toSave = Binary(file.read())
+                except:
+                    raise WrongTypeException("cannot save the data in the type given")
 
         self.fs.put(toSave, _id=id, filename=filename,
                     uploadDate=datetime.utcnow())
+        ids = os.environ.get("savedIds", "")
+        if not ids:
+            os.environ["savedIds"] = id
+        else:
+            os.environ["savedIds"] = ids + "|" + id
+
         return id
 
     def loadFile(self, fileID):

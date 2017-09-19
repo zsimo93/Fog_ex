@@ -5,6 +5,7 @@ from core.utils.httpUtils import post
 from requests import ConnectionError, ConnectTimeout
 from threading import Thread
 import traceback
+import json
 
 
 """request = {
@@ -55,9 +56,9 @@ class ActionManager():
                 containerName = "python"
 
             self.path = files.loadActionFile(self.action)
-            self.cont , self.ip = runContainer(containerName,
-                                               self.memory,
-                                               self.path)
+            self.cont, self.ip = runContainer(containerName,
+                                              self.memory,
+                                              self.path)
             localDB.insertInAll(self.cont, self.action)
 
     def startThreadContainer(self):
@@ -95,6 +96,12 @@ class ActionManager():
             tb = traceback.format_exc()
             self.error = True
             self.response = tb
+
+        if not self.error:
+            r = json.loads(self.response)
+            files.uploadFilesToAWS(r["__savedIds__"])
+            del r["__savedIds__"]
+            self.response = json.dumps(r)
 
         return self.response, self.error
 

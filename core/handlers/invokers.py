@@ -2,6 +2,7 @@ from core.utils.httpUtils import post
 import json
 from threading import Thread
 import sys, traceback
+from core.gridFS.files import saveFilesFromAWS
 
 class NodeInvoker:
     def __init__(self, ip):
@@ -16,10 +17,15 @@ class AWSInvoker:
         pass
 
     def finalizeResult(self):
-        return json.loads(self.response), 200
+        res = json.loads(self.response)
+
+        saveFilesFromAWS(res["__savedIds__"])
+        del res["__savedIds__"]
+
+        return res, 200
 
     def startExecution(self, request):
-        from core.awsLambda.awsconnector import AwsActionInvoker
+        from core.aws.lambdaconnector import AwsActionInvoker
         self.map = request["action"]['map']
         self.sessionID = request['sessionID']
         self.myID = request["action"]['id']

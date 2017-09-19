@@ -1,6 +1,8 @@
 from flask import make_response, send_file
 from io import BytesIO
 from core.gridFS import files
+from core.databaseMongo import awsCredential as aws
+from core.aws.s3connector import uploadFile as awsUpload, deleteFile as awsDelete
 
 def upload(request):
     if 'file' not in request.files:
@@ -12,12 +14,14 @@ def upload(request):
         return make_response('No selected file')
 
     fileid = files.saveUserData(file)
-
+    if aws.checkPresence():
+        awsUpload(file, fileid)
     return make_response(fileid, 200)
 
 def delete(token):
     files.deleteUserData(token)
-
+    if aws.checkPresence():
+        awsDelete(token)
     return make_response("OK", 200)
 
 def download(token):

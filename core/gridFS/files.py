@@ -3,6 +3,9 @@ from core.utils.fileutils import unzip
 from core.databaseMongo.mainDB import c as mongoclient
 import os, uuid
 from datetime import datetime
+from aws.s3connector import download, uploadFile
+from io import BytesIO
+from core.databaseMongo.awsCredential import checkPresence as awsCheck
 
 mongodb = mongoclient.my_db
 fs = gridfs.GridFS(mongodb)
@@ -22,7 +25,7 @@ def saveActionFile(file, actionName):
            filename=file.filename)
 
 def loadActionFile(actionName):
-    
+
     path = "/tmp/" + actionName
     try:
         os.stat(path)
@@ -44,7 +47,7 @@ def loadActionFile(actionName):
         if name.endswith(".zip"):
             unzip(pathfile, path)
             os.remove(pathfile)
-            
+
     return path
 
 def removeActionFile(actionName):
@@ -67,6 +70,18 @@ def loadUserData(token):
     else:
         return None
 
+def saveFilesFromAWS(ids):
+    for id in ids:
+        file = download(id)
+        fsUserData.put(file, _id=id, filename=file.filename,
+                       uploadDate=datetime.utcnow())
+
+def uploadFilesToAWS(ids):
+    if awsCheck():
+        for id in ids:
+            file = loadUserData(id)
+            uploadFile(BytesIO(file.read()), id, file.filename)
+
 def removeChunks():
     import time
 
@@ -74,7 +89,7 @@ def removeChunks():
         try:
             chunksCollection = userdata.chunks
             chunks = chunksCollection.find()
-            
+
             for c in chunks:
                 chunkid = c["_id"]
                 fileid = c["files_id"]
