@@ -1,6 +1,6 @@
 FROM  resin/raspberry-pi-python:2.7-slim
 
-RUN pip install --no-cache-dir gevent==1.2.1 flask==0.12 pymongo==3.4.0 Pillow
+RUN pip install --no-cache-dir gevent==1.2.1 flask==0.12 pymongo==3.4.0
 
 ENV FLASK_PROXY_PORT 8080
 

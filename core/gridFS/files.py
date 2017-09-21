@@ -80,7 +80,8 @@ def uploadFilesToAWS(ids):
     if awsCheck():
         for id in ids:
             file = loadUserData(id)
-            uploadFile(BytesIO(file.read()), id, file.filename)
+            if file:
+                uploadFile(BytesIO(file.read()), id, file.filename)
 
 def removeChunks():
     import time
