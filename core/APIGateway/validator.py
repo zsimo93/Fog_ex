@@ -109,7 +109,7 @@ def validateSequence(request):
         if req['name'] == "":
             return (False, {"error": "Sequence name needed"})
         if (type(req['in/out']['in']) != list or
-           type(req['in/out']['out']) != list):
+           type(req['in/out']['out']) not in (list, dict)):
             return (False, {"error": "the in/out field must contain the keys in \
                              and out with values lists"})
         req['sequence']
