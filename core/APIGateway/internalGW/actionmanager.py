@@ -50,8 +50,8 @@ class ActionManager():
             containerName = ""
             if self.language == "python":
                 containerName = "zsimo/python-image:" + self.contTag
-            elif self.language == "docker":
-                containerName = self.containerName
+                # elif self.language == "docker":
+                #     containerName = self.containerName
             else:
                 containerName = "python"
 

@@ -30,7 +30,6 @@ class BlockManager():
 
         self.result = {}
 
-
     def getData(self):
         for act in self.actList:
             for s in act["map"].values():

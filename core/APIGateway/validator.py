@@ -15,8 +15,8 @@ def validateActionRequest(request):
         if not req['language'].lower() in supportedLanguages:
             return (False, {"error": "Language supported are: " +
                     str(supportedLanguages)})
-        if not req['cloud'].lower() in ("true", "false"):
-            return (False, {"error": "Cloud must be a boolean"})
+        if not str(req['cloud']) in ("0", "1", "2"):
+            return (False, {"error": "Cloud must have values 0, 1 or 2"})
         req['in/out'] = json.loads(req['in/out'])
         if (type(req['in/out']['in']) != list or
            type(req['in/out']['out']) != list):
@@ -33,7 +33,7 @@ def validateActionRequest(request):
         'name': req['name'],
         'description': req['description'],
         'language': req['language'],
-        'cloud': req['cloud'] == 'true',
+        'cloud': str(req['cloud']),
         'timeout': int(req['timeout']),
         'in/out': req['in/out'],
     }
@@ -49,11 +49,11 @@ def validateActionRequest(request):
         if request.files['file'].filename == '':
             return (False, {"error": "no file selected"})
 
-    elif req['language'] == "docker":
-        try:
-            ret["containerName"] = req["containerName"]
-        except KeyError as e:
-            return (False, {"error": "Field '" + str(e) + "' not present. Specify a valid container name"})
+    # elif req['language'] == "docker":
+    #     try:
+    #         ret["containerName"] = req["containerName"]
+    #     except KeyError as e:
+    #         return (False, {"error": "Field '" + str(e) + "' not present. Specify a valid container name"})
     return (True, ret)
 
 def validateNodeRequest(request):

@@ -103,6 +103,11 @@ class ActionExecutionHandler:
         return sorted(avList, key=lambda node: (node["cpu"] + node["memory"]) / 2)
 
     def chooseActionNode(self, action):
+
+        if action["cloud"] == "2":
+            # cloud execution forced
+            return ("_cloud", AWSInvoker())
+
         # Select the node with more free cpu and enought memory
         req_mem = long(action["memory"]) * 1000000
         nodesRes = nodesDB.allRes()
@@ -478,15 +483,6 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         self.actList = []
         for a in plist:
             if a["type"] == "action":
-                """
-                h = ActionExecutionHandler(self.default, self.configs,
-                                           a["name"], self.sessionID,
-                                           myID=a["id"], map=a["map"],
-                                           timeout=a["timeout"],
-                                           language=a["language"],
-                                           cloud=a["cloud"], next=a["next"],
-                                           containerName=a["containerName"])
-                """
                 h = createAction(a["name"], self.default, self.configs,
                                  a["id"], a["map"], a["timeout"],
                                  a["language"], a["cloud"], a["next"],
@@ -510,10 +506,6 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                 h["id"] = str(ids)
                 h["type"] = "block"
 
-                """
-                h = BlockExecutionHandler(self.default, self.configs,
-                                          self.sessionID, a["list"])
-                """
             self.actList.append(h)
 
     def start(self):
@@ -532,27 +524,46 @@ class ParallelExecutionHandler(BlockExecutionHandler):
             actL = deepcopy(actions)[1:]
 
             a = actions[0]
-            for n in nodes:
-                actMem = a["memory"] * 1000000
-                if actMem <= n["memory"]:
-                    nodeL = deepcopy(nodes)
-                    nodeL.remove(n)
-                    newNode = deepcopy(n)
-                    newNode["memory"] = n["memory"] - actMem
-                    nodeL.append(newNode)
 
+            if a["type"] == "action" and a["cloud"] == "2":
+                couples.append((a, "_cloud", AWSInvoker()))
+                if len(actL) == 0:
+                    return couples
+                ret = fit(actL, nodes)
+                if ret:
+                    couples += ret
+                    return couples
+            else:
+                for n in nodes:
+                    actMem = a["memory"] * 1000000
+                    if actMem <= n["memory"]:
+                        nodeL = deepcopy(nodes)
+                        nodeL.remove(n)
+                        newNode = deepcopy(n)
+                        newNode["memory"] = n["memory"] - actMem
+                        nodeL.append(newNode)
+
+                        if len(actL) == 0:
+                            # No more actions to assign
+                            couples.append((a, n['_id'],
+                                            NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
+                            return couples
+
+                        ret = fit(actL, nodeL)
+                        if not ret:
+                            continue
+                        else:
+                            couples.append((a, n['_id'],
+                                            NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
+                            couples += ret
+                            return couples
+                if a["type"] == "action" and a["cloud"] == "1":
+                    # no node available, i can go on cloud, offload!
+                    couples.append((a, "_cloud", AWSInvoker()))
                     if len(actL) == 0:
-                        # No more actions to assign
-                        couples.append((a, n['_id'],
-                                        NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
                         return couples
-
                     ret = fit(actL, nodeL)
-                    if not ret:
-                        continue
-                    else:
-                        couples.append((a, n['_id'],
-                                        NodeInvoker(nodesDB.getNode(n['_id'])['ip'])))
+                    if ret:
                         couples += ret
                         return couples
 

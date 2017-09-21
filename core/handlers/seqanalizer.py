@@ -165,7 +165,9 @@ class SequenceAnalizer:
         newProcess = []
         for node in self.finalProc:
             if node.id not in self.doneIds:
-                node = self.computeBlockNode(node)
+                if node.cloud != "2":
+                    # if forced in cloud, don't create a bloctk
+                    node = self.computeBlockNode(node)
                 newProcess.append(node)
         return newProcess
 
@@ -199,6 +201,10 @@ class SequenceAnalizer:
             nset2 = set(prev2)
             nset2.remove(id1)
             return nset2.issubset(nset1)
+
+        if node.cloud != "2":
+            # recurcìsive call for action that can be inserted bu has 2.
+            return []
 
         block = [node]
         id = node.id

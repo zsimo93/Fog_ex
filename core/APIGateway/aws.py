@@ -1,7 +1,7 @@
 from core.databaseMongo import awsCredential
 from validator import validateAWS
 from flask import make_response, jsonify
-from core.aws.lambdaconnector import initBucket
+from core.aws.s3connector import initBucket
 
 def create(request):
     check, mess = validateAWS(request)

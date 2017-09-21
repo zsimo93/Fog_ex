@@ -12,7 +12,7 @@ def computeAvailability(resp, nodeId):
 """
 
 def newNode(request):
-    
+
     valid, resp = validate(request)
     if not valid:
         return make_response(jsonify(resp), 400)
@@ -33,18 +33,18 @@ def newNode(request):
         print e
         return make_response(jsonify({"error": "First run the mongoDB instance on the target node"}), 400)
     # computeAvailability(resp, id)
-    
+
     return make_response(id, 200)
 
 
 def deleteNode(request, token):
-    
+
     if not db.getNode(token):
         return make_response(jsonify({'error': "No node with id " + token}),
                              406)
 
     msg = db.deleteNode(token)
-    
+
     return make_response(msg, 200)
 
 

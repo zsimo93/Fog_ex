@@ -31,9 +31,14 @@ def newAction(request):
     if not db.availableActionName(name) or not sdb.availableSeqName(name):
         return make_response(jsonify({'error': name + " already in use"}), 406)
 
-    if resp["cloud"]:
+    if resp["cloud"] == "2" and not aws.checkPresence():
+        return make_response(jsonify({'error': "Forced execution on cloud but no AWS credentials"}), 406)
+
+    if resp["cloud"] == "0":
+        pass
+    else:  # cloud 1 or 2
         if not aws.checkPresence():
-            resp["cloud"] = False
+            resp["cloud"] = "0"
 
         else:
             ac = AwsActionCreator(name, resp["language"],
