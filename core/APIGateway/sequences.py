@@ -33,6 +33,7 @@ def newSequence(request):
         resp["in/out"]["out"] = resp["outMap"].keys()
     else:
         lastId = proc[-1]["id"]
+        resp["outMap"] = {}
         for k in resp["in/out"]["out"]:
             resp["outMap"][k] = lastId + "/" + k
 

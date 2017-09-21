@@ -202,7 +202,7 @@ class SequenceAnalizer:
             nset2.remove(id1)
             return nset2.issubset(nset1)
 
-        if node.cloud != "2":
+        if node.cloud == "2":
             # recursive call for action that can be inserted bu has 2.
             return []
 
