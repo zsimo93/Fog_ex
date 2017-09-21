@@ -46,7 +46,8 @@ def newAction(request):
                                   file, resp["contTag"])
             ac.create()
 
-    fs.saveActionFile(file, name)
+    if resp["cloud"] != "2":
+        fs.saveActionFile(file, name)
 
     db.insertAction(name, resp)
 
