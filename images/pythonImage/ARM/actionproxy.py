@@ -29,9 +29,9 @@ def run():
         return make_response(str(e), 502)
 
     if result and isinstance(result, dict):
-        res = json.dumps(result)
         ids = os.environ.get('savedIds', '')
-        res['__savedIds__'] = ids.split('|')
+        result['__savedIds__'] = ids.split('|')
+        res = json.dumps(result)
         return make_response(res, 200)
     else:
         return make_response('The action did not return a dictionary.', 502)
