@@ -3,7 +3,7 @@ from core.utils.fileutils import unzip
 from core.databaseMongo.mainDB import c as mongoclient
 import os, uuid
 from datetime import datetime
-from aws.s3connector import download, uploadFile
+from core.aws.s3connector import download, uploadFile
 from io import BytesIO
 from core.databaseMongo.awsCredential import checkPresence as awsCheck
 
