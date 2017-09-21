@@ -69,7 +69,7 @@ class PackageCreator(object):
             zf.external_attr = 644 << 16L
             zf.external_attr |= 444 << 16L
             zf.external_attr |= 0777 << 16L
-            zf.write("./__handler__.py", arcname="__handler__.py")
+            zf.write(handlerPath, arcname="__handler__.py")
             zf.write(self.modulePath, arcname="fileModule.py")
             zf.write(self.path + self.filename, self.filename)
 
