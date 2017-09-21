@@ -38,10 +38,10 @@ def init():
     in_out = {"in": ["text", "id"], "out": {"4": "4/return", "3": "3/return"}}
     sequence = [{"id": "1",
                  "name": "getFile",
-                 "map": {"id": "param/id"}},
+                 "map": {"fileid": "param/id"}},
                 {"id": "2",
                  "name": "getFileCloud",
-                 "map": {"id": "param/id"}},
+                 "map": {"fileid": "param/id"}},
                 {"id": "3",
                  "name": "concat",
                  "map": {"text": "1/return", "text2": "2/return"}},
