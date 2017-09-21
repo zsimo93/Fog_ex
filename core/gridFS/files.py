@@ -72,16 +72,18 @@ def loadUserData(token):
 
 def saveFilesFromAWS(ids):
     for id in ids:
-        file = download(id)
-        fsUserData.put(file, _id=id, filename=file.filename,
-                       uploadDate=datetime.utcnow())
+        if id:
+            file = download(id)
+            fsUserData.put(file, _id=id, filename=file.filename,
+                           uploadDate=datetime.utcnow())
 
 def uploadFilesToAWS(ids):
     if awsCheck():
         for id in ids:
-            file = loadUserData(id)
-            if file:
-                uploadFile(BytesIO(file.read()), id, file.filename)
+            if id:
+                file = loadUserData(id)
+                if file:
+                    uploadFile(BytesIO(file.read()), id, file.filename)
 
 def removeChunks():
     import time

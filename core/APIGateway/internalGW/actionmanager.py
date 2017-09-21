@@ -99,7 +99,6 @@ class ActionManager():
 
         if not self.error:
             r = json.loads(self.response)
-            print "to AWS " + str(r["__savedIds__"])
             files.uploadFilesToAWS(r["__savedIds__"])
             del r["__savedIds__"]
             self.response = json.dumps(r)

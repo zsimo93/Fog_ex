@@ -18,8 +18,6 @@ class AWSInvoker:
 
     def finalizeResult(self):
         res = json.loads(self.response)
-
-        print "to grid " + str(res["__savedIds__"])
         saveFilesFromAWS(res["__savedIds__"])
         del res["__savedIds__"]
 
