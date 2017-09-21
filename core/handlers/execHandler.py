@@ -209,18 +209,21 @@ class SeqExecutionHandler:
         self.configs = configs
         s = getSequence(name)
         self.sequence = s["execSeq"]
-        self.lastID = s["resultActionID"]
+        self.outMap = s["outMapFLAT"]
         self.results = {}
         self.logList = []
 
     def finalizeResult(self):
         """
-        Take last result of the sequence and delete all the sequence intermediate results.
+        Compose the results based on the out Map
 
         Return the result.
         """
-        res = self.results[self.lastID]
-
+        res = {}
+        for k in self.outMap:
+            v = self.outMap[k]
+            rid, p = v.plit("/")
+            res[v] = self.results[rid][p]
         return (res, 200)
 
     def start(self):
