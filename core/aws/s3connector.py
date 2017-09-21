@@ -53,10 +53,4 @@ def download(fileID):
 
 
 def deleteFile(id):
-    getBucket.delete_objects(
-        Delete={
-            'Objects': [
-                {'Key': id}
-            ]
-        }
-    )
+    getClient().delete_object(Bucket=BUCKETNAME, Key=id)
