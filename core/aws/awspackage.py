@@ -4,6 +4,8 @@ from core.utils.fileutils import uniqueName, deleteActionFiles as delFolder
 
 class PackageCreator(object):
     abspath = "/tmp/aws/"
+    basedir = os.path.join(os.environ["BASE_DIR"], "core", "aws")
+    modulePath = os.path.join(basedir, "fileModule.py")
 
     def __init__(self, actionName, file, contTag):
         self.path = self.abspath + uniqueName() + "/"
@@ -46,8 +48,9 @@ class PackageCreator(object):
         funct += "    ret['__savedIds__'] = ids.split('|')\n"
         funct += "    return ret\n"
 
+        handlerPath = os.path.join(self.path, "__handler__.py")
         program = header + funct
-        hnd = open("__handler__.py", "w")
+        hnd = open(handlerPath, "w")
         hnd.write(program)
         hnd.close()
 
@@ -57,8 +60,8 @@ class PackageCreator(object):
             zf.external_attr = 644 << 16L
             zf.external_attr |= 444 << 16L
             zf.external_attr |= 0777 << 16L
-            zf.write("./__handler__.py", arcname="__handler__.py")
-            zf.write("fileModule.py", arcname="fileModule.py")
+            zf.write(handlerPath, arcname="__handler__.py")
+            zf.write(self.modulePath, arcname="fileModule.py")
 
         else:
             self.writeFile()
@@ -67,15 +70,17 @@ class PackageCreator(object):
             zf.external_attr |= 444 << 16L
             zf.external_attr |= 0777 << 16L
             zf.write("./__handler__.py", arcname="__handler__.py")
-            zf.write("fileModule.py", arcname="fileModule.py")
+            zf.write(self.modulePath, arcname="fileModule.py")
             zf.write(self.path + self.filename, self.filename)
 
         zf.close()
 
         if self.contTag == "ffmpeg":
-            subprocess.call(["cd", "ffmpeg", "&", "zip", "-ur", self.zipPath, "./*"])
+            subprocess.call(["cd", os.path.join(self.basedir, "ffmpeg"), "&",
+                             "zip", "-ur", self.zipPath, "./*"])
         elif self.contTag == "imageProc":
-            subprocess.call(["cd", "ffmpeg", "&", "zip", "-ur", self.zipPath, "./*"])
+            subprocess.call(["cd", os.path.join(self.basedir, "imageProc"),
+                             "&", "zip", "-ur", self.zipPath, "./*"])
 
         retFile = open(self.zipPath, "r")
         retBytes = retFile.read()

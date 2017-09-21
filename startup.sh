@@ -6,6 +6,9 @@ read role
 TH_ROLE=$role
 export TH_ROLE
 
+BASE_DIR=`pwd`
+export BASE_DIR
+
 docker run --name mongoDB --network host -d zsimo/rpi-mongo --replSet foo
 
 
