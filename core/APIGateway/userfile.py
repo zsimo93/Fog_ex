@@ -15,7 +15,7 @@ def upload(request):
 
     fileid = files.saveUserData(file)
     if aws.checkPresence():
-        awsUpload(file, fileid)
+        awsUpload(file, fileid, file.filename)
     return make_response(fileid, 200)
 
 def delete(token):
