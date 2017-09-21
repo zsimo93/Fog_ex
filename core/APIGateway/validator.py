@@ -39,6 +39,8 @@ def validateActionRequest(request):
     }
     try:
         ret["contTag"] = req["containerTag"]
+        if ret["contTag"] not in ("base", "ffmpeg", "imageProc"):
+            return (False, {"error": "'contTag' must be base, ffmpeg or imageProc"})
     except KeyError:
         ret["contTag"] = "base"
 

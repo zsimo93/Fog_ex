@@ -1,6 +1,8 @@
 import boto3, json
 from awspackage import PackageCreator
 from core.databaseMongo import awsCredential
+import s3connector
+from io import BytesIO
 
 def getClient():
     cred = awsCredential.getCred()
@@ -26,6 +28,7 @@ class AwsActionCreator(object):
         return pc.createPackage()
 
     def create(self):
+        s3connector.getBucket().upload_fileobj(BytesIO(self.package), self.name + ".zip")
         actionClasses = {"small": 128,
                          "medium": 256,
                          "large": 512}
@@ -37,7 +40,8 @@ class AwsActionCreator(object):
                 Role=awsCredential.getCred()["ARN"],
                 Handler='__handler__.my_handler',
                 Code={
-                    'ZipFile': self.package,
+                    'S3Bucket': s3connector.BUCKETNAME,
+                    'S3Key': self.name + ".zip"
                 },
                 Description=self.description,
                 Timeout=self.timeout,
@@ -71,3 +75,4 @@ class AwsActionDeletor(object):
             self.client.delete_function(
                 FunctionName=self.name + "_" + v
             )
+        s3connector.deleteFile(self.name + ".zip")

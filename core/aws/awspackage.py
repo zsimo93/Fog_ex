@@ -1,4 +1,5 @@
 import zipfile, os
+import subprocess
 from core.utils.fileutils import uniqueName, deleteActionFiles as delFolder
 
 class PackageCreator(object):
@@ -34,6 +35,12 @@ class PackageCreator(object):
 
         header = "from " + name + " import main\nimport os\n\n"
         funct = "def my_handler(event, context):\n"
+
+        if self.contTag == "ffmpeg":
+            funct += "    import subprocess\n"
+            funct += "    subprocess.call(['cp', '/var/task/ffmpeg', '/tmp/'])\n"
+            funct += "    subprocess.call(['chmod', '755', '/tmp/ffmpeg'])\n"
+
         funct += "    ret = main(event)\n"
         funct += "    ids = os.environ.get('savedIds', '')\n"
         funct += "    ret['__savedIds__'] = ids.split('|')\n"
@@ -63,10 +70,12 @@ class PackageCreator(object):
             zf.write("./fileModule.py", arcname="fileModule.py")
             zf.write(self.path + self.filename, self.filename)
 
-        # add contTag files to the zips
-        # TODO
-
         zf.close()
+
+        if self.contTag == "ffmpeg":
+            subprocess.call(["cd", "ffmpeg", "&", "zip", "-ur", self.zipPath, "./*"])
+        elif self.contTag == "imageProc":
+            subprocess.call(["cd", "ffmpeg", "&", "zip", "-ur", self.zipPath, "./*"])
 
         retFile = open(self.zipPath, "r")
         retBytes = retFile.read()
