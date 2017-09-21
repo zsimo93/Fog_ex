@@ -225,7 +225,7 @@ class SeqExecutionHandler:
         res = {}
         for k in self.outMap:
             v = self.outMap[k]
-            rid, p = v.plit("/")
+            rid, p = v.split("/")
             res[v] = self.results[rid][p]
         return (res, 200)
 
