@@ -163,7 +163,10 @@ class ActionExecutionHandler:
                     self.ret = ({"error": text}, 500)
                     self.log("ERROR in remote execution")
                     return self.ret
-                self.ret = (json.loads(text), 200)
+                try:
+                    self.ret = (json.loads(text), 200)
+                except TypeError:
+                    self.ret = (text, 200)
                 self.log("EXECUTED in node " + name)
                 self.ret = self.ret
                 return self.ret
@@ -359,15 +362,19 @@ class BlockExecutionHandler(ActionExecutionHandler):
                                              self.blockList[0],
                                              param)
                 text, code = h.start()
+                try:
+                    retJson = json.loads(text)
+                except TypeError:
+                    retJson = text
                 self.logList += h.logList
                 self.blockList = []
-                self.ret = text, code
+                self.ret = retJson, code
                 if code >= 400:
-                        self.log("ERROR " + json.dumps(text))
-                        self.ret = {"error": text}, 500
+                        self.log("ERROR " + json.dumps(retJson))
+                        self.ret = {"error": retJson}, 500
                         return self.ret
 
-                self.results[h.action["id"]] = text
+                self.results[h.action["id"]] = retJson
 
                 self.ret = self.results, 200
                 return self.ret
@@ -392,7 +399,11 @@ class BlockExecutionHandler(ActionExecutionHandler):
                     self.log("EXECUTE " + str(self.ids) + " on node " + name)
                     self.blockList = []
 
-                    retJson = json.loads(text)
+                    try:
+                        retJson = json.loads(text)
+                    except TypeError:
+                        retJson = text
+
                     for k in retJson:
                         self.results[k] = retJson[k]
                     self.ret = self.results, 200
@@ -411,12 +422,16 @@ class BlockExecutionHandler(ActionExecutionHandler):
                                                          self.blockList[0],
                                                          param)
                             text, code = h.start()
+                            try:
+                                retJson = json.loads(text)
+                            except TypeError:
+                                retJson = text
                             self.logList += h.logList
                             if code >= 400:
-                                self.ret = {"error": text}, 500
+                                self.ret = {"error": retJson}, 500
                                 return self.ret
-                            self.results[h.action["id"]] = text
-                            self.param[h.action["id"]] = text
+                            self.results[h.action["id"]] = retJson
+                            self.param[h.action["id"]] = retJson
 
                             self.ids = self.ids[i:]
                             self.blockList = self.blockList[i:]
@@ -437,12 +452,16 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             "block": self.blockList[:i]
                         }
                         text, code = invoker.startExecution(payload)
+
                         if code >= 400:
                             self.log("ERROR " + text)
                             self.ret = {"error": text}, 500
                             return self.ret
 
-                        retJson = json.loads(text)
+                        try:
+                            retJson = json.loads(text)
+                        except TypeError:
+                            retJson = text
                         for k in retJson:
                             self.results[k] = retJson[k]
                             self.param[k] = retJson[k]
@@ -602,12 +621,15 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                     self.log("ERROR in remote execution")
                     return self.ret
                 else:
-                    resJson = json.loads(text)
+                    try:
+                        retJson = json.loads(text)
+                    except TypeError:
+                        retJson = text
                     if t.actType == "block":
-                        for k in resJson:
-                            self.results[k] = resJson[k]
+                        for k in retJson:
+                            self.results[k] = retJson[k]
                     else:
-                        self.results[t.action["id"]] = resJson
+                        self.results[t.action["id"]] = retJson
 
         else:
             self.ret = self.startDumb()
