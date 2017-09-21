@@ -31,9 +31,11 @@ def getBucket():
 
 def initBucket():
     s3 = getClient()
-    s3.create_bucket(Bucket=BUCKETNAME,
-                     CreateBucketConfiguration={'LocationConstraint': 'eu-central-1'})
-
+    try:
+        s3.create_bucket(Bucket=BUCKETNAME,
+                         CreateBucketConfiguration={'LocationConstraint': 'eu-central-1'})
+    except Exception as e:
+        print e
 
 def uploadFile(data, id, filename):
     delta = timedelta(seconds=1000)
