@@ -15,6 +15,7 @@ def upload(request):
 
     fileid = files.saveUserData(file)
     if aws.checkPresence():
+        file.seek(0)
         awsUpload(file, fileid, file.filename)
     return make_response(fileid, 200)
 

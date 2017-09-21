@@ -19,9 +19,11 @@ class ActionsManager():
             "cloud": cloud,
             "timeout": str(timeout)
         }
+        f = open(filePath, "rb")
         files = {
-            "file": {'filename': os.path.basename(filePath), 'content': open(filePath, "rb").read()}
+            "file": {'filename': os.path.basename(filePath), 'content': f.read()}
         }
+        f.close()
         data, headers = encode_multipart.encode_multipart(fields, files)
 
         resp = requests.post(self.address, data=data, headers=headers)
