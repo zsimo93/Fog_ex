@@ -6,13 +6,13 @@ def init():
     in_out = {"in": ["videoID", "inConf", "outConf", "namePrefix"], "out": ["outID"]}
     actionPath = "C:/Users/Simone/workspace_thesis/sample_actions/videos/genericFFmpeg.py"
     r = cm.action.new("videoEdit", "generic ffmpeg editor",
-                      "python", "ffmpeg", in_out, "false", 25, actionPath)
+                      "python", "ffmpeg", in_out, "0", 25, actionPath)
     print r
 
     in_out = {"in": ["original", "bw"], "out": ["fileIds"]}
     actionPath = "C:/Users/Simone/workspace_thesis/sample_actions/videos/aggregateId.py"
     r = cm.action.new("aggregId", "compose id output", "python", "base",
-                      in_out, "false", 2, actionPath)
+                      in_out, "0", 2, actionPath)
     print r
 
     in_out = {"in": ["videoId", "inConf", "outConf", "namePrefix"], "out": ["fileIds"]}
