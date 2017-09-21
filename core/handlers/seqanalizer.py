@@ -203,7 +203,7 @@ class SequenceAnalizer:
             return nset2.issubset(nset1)
 
         if node.cloud != "2":
-            # recurcìsive call for action that can be inserted bu has 2.
+            # recursive call for action that can be inserted bu has 2.
             return []
 
         block = [node]
