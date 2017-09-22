@@ -1,7 +1,7 @@
 from core.databaseMongo import awsCredential
 from validator import validateAWS
 from flask import make_response, jsonify
-from core.aws.s3connector import initBucket
+# from core.aws.s3connector import initBucket
 
 def create(request):
     check, mess = validateAWS(request)
@@ -13,7 +13,7 @@ def create(request):
     arn = request.json["ARN"]
 
     retMsg = awsCredential.createCred(accessKeyID, secretAccessID, arn)
-    initBucket()
+    # initBucket()
     return make_response(retMsg, 200)
 
 

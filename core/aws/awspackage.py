@@ -76,11 +76,11 @@ class PackageCreator(object):
         zf.close()
 
         if self.contTag == "ffmpeg":
-            subprocess.Popen(["zip", "-ur", self.zipPath, "./*"],
-                             cwd=os.path.join(self.basedir, "ffmpeg"))
+            subprocess.Popen(["zip", "-ur", self.zipPath, "./"],
+                             cwd=os.path.join(self.basedir, "ffmpeg")).wait()
         elif self.contTag == "imageProc":
-            subprocess.Popen(["zip", "-ur", self.zipPath, "./*"],
-                             cwd=os.path.join(self.basedir, "imageProc"))
+            subprocess.Popen(["zip", "-ur", self.zipPath, "./"],
+                             cwd=os.path.join(self.basedir, "imageProc")).wait()
 
         retFile = open(self.zipPath, "r")
         retBytes = retFile.read()
