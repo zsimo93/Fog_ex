@@ -1,5 +1,4 @@
 from PIL import Image, ImageFile
-from bson.binary import Binary
 import fileModule
 import io
 
@@ -8,11 +7,10 @@ def main(args):
     fm = fileModule.FileManager()
     data = fm.loadFile(args["id"])
     image = Image.open(io.BytesIO(data.read()))
-    
-    image.thumbnail((200,200), Image.ANTIALIAS)
+
+    image.thumbnail((200, 200), Image.ANTIALIAS)
     newImage = io.BytesIO()
     image.save(newImage, args["formatOut"])
-    bin = Binary(newImage.getvalue())
-    retId = fm.saveFile(bin, "image." + args["formatOut"])
-    return { "retId" : retId } 
-
+    newImage.seek(0)
+    retId = fm.saveFile(newImage, "image." + args["formatOut"])
+    return { "retId" : retId }

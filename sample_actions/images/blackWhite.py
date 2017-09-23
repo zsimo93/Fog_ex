@@ -7,9 +7,10 @@ def main(args):
     fm = fileModule.FileManager()
     data = fm.loadFile(args["id"])
     image = Image.open(io.BytesIO(data.read()))
-    
+
     image = image.convert('1')
     newImage = io.BytesIO()
     image.save(newImage, args["formatOut"])
+    newImage.seek(0)
     retId = fm.saveFile(newImage, "image." + args["formatOut"])
     return { "retId" : retId }

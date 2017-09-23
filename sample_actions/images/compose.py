@@ -1,5 +1,4 @@
 from PIL import Image, ImageFile
-from bson.binary import Binary
 import fileModule
 import io
 
@@ -17,7 +16,7 @@ def main(args):
 
     data = fm.loadFile(args["id4"])
     image3 = Image.open(io.BytesIO(data.read()))
-    
+
     base_width = image0.width
     base_height = image0.height
     new_image = Image.new('RGB', (2 * base_width, 2 * base_height))
@@ -29,7 +28,6 @@ def main(args):
 
     newImage = io.BytesIO()
     new_image.save(newImage, 'PNG')
-    bin = Binary(newImage.getvalue())
-    retId = fm.saveFile(bin, "image." + 'PNG')
-    return { "retId" : retId } 
-
+    newImage.seek(0)
+    retId = fm.saveFile(newImage, "image." + 'PNG')
+    return { "retId" : retId }
