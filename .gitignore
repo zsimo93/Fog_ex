@@ -6,7 +6,7 @@ __pycache__/
 !core/aws/imageProc/*.pyd
 
 # C extensions
-*.so
+.so
 
 # Distribution / packaging
 .Python
