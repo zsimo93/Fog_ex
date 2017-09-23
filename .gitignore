@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.pyc
+!core/aws/imageProc/*.pyd
 
 # C extensions
 *.so
