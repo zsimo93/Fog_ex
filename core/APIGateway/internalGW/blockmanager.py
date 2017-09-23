@@ -23,6 +23,7 @@ class BlockManager():
                 self.aManagers.append((actionMan, thread))
                 thread.start()
             else:
+                # same action found in block. reuse its container without releasing 
                 self.managerActionMap[action["name"]].append(actionMan)
                 self.aManagers.append((actionMan, None))
 

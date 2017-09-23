@@ -13,6 +13,10 @@ filename = None
 
 @proxy.route("/run", methods=["POST"])
 def run():
+    try:
+        del os.environ["savedIds"]
+    except:
+        pass
     args = request.json
     print args
 
