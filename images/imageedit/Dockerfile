@@ -1,18 +1,10 @@
 FROM zsimo/python-image:base
 
-RUN mkdir buildPIL && cd buildPIL
-COPY jpegsrc.v8c.tar.gz ./
-RUN tar xvfz jpegsrc.v8c.tar.gz \
-    && cd jpeg-8c \
-    && ./configure --enable-shared --prefix=$CONFIGURE_PREFIX \
-    && make \
-    && sudo make install
+RUN sudo apt-get update && apt-get install python-imaging
 
-RUN ln -s /usr/lib/arm-linux-gnueabi/libjpeg.so /usr/lib \
-    && ln -s /usr/lib/arm-linux-gnueabi/libfreetype.so /usr/lib \
-    && sudo ln -s /usr/lib/arm-linux-gnueabi/libz.so /usr/lib
-
-RUN apt-get update \
-    && apt-get install libtiff5-dev libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev python-tk
-
-RUN sudo pip install Pillow
+RUN mv /usr/lib/python2.7/dist-packages/PIL/_imaging.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_imaging.so && \
+    mv /usr/lib/python2.7/dist-packages/PIL/_imagingcms.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_imagingcms.so &&\
+    mv /usr/lib/python2.7/dist-packages/PIL/_webp.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_webp.so && \
+    mv /usr/lib/python2.7/dist-packages/PIL/_imagingmath.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_imagingmath.so &&\
+    mv /usr/lib/python2.7/dist-packages/PIL/_imagingft.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_imagingft.so && \
+    mv /usr/lib/python2.7/dist-packages/PIL/_imagingmorph.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_imagingmorph.so

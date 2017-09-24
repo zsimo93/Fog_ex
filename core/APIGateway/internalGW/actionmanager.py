@@ -78,9 +78,11 @@ class ActionManager():
                     raise ConnectTimeout
                 else:
                     break
-
-        self.response = r.text
-        self.code = r.status_code
+        if r:
+            self.response = r.text
+            self.code = r.status_code
+        else:
+            raise ConnectionError
 
     def run(self):
         try:
