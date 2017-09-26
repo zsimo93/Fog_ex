@@ -154,6 +154,17 @@ def validateInvoke(request):
     except KeyError, e:
         req["except"] = {}
 
+    try:
+        req["optimise"] = req["optimise"].lower()
+        if req["optimise"] == "true":
+            req["optimise"] = True
+        elif req["optimise"] == "false":
+            req["optimise"] = False
+        else:
+            return (False, {"error": "'optimise' must be 'true' or 'false'"})
+    except:
+        req["optimise"] = True
+
     return (True, req)
 
 def validateAWS(request):

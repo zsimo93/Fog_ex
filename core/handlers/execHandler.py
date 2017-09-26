@@ -10,13 +10,13 @@ import traceback, sys
 from copy import deepcopy
 
 
-def giveMeHandler(param, default, configs, name, sessionID):
+def giveMeHandler(param, default, configs, name, sessionID, optimise):
     if not actionsDB.availableActionName(name):
         return ActionExecutionHandler(default, configs, name,
                                       sessionID, param)
     else:
         return SeqExecutionHandler(default, configs, name,
-                                   sessionID, param)
+                                   sessionID, param, optimise)
 
 
 def createAction(name, default, configs, myID, map, timeout,
@@ -204,17 +204,21 @@ class AsActionExecutionHandler(ActionExecutionHandler):
         self.logList = []
 
 class SeqExecutionHandler:
-    def __init__(self, default, configs, name, sessionID, param):
+    def __init__(self, default, configs, name, sessionID, param, optimise):
         self.param = param
         self.sessionID = sessionID
         self.name = name
         self.default = default
         self.configs = configs
+        self.logList = []
         s = getSequence(name)
-        self.sequence = s["execSeq"]
+        if not optimise:
+            self.log("Running without optimisations")
+            self.sequence = s["execSeq_noopt"]
+        else:
+            self.sequence = s["execSeq"]
         self.outMap = s["outMapFLAT"]
         self.results = {}
-        self.logList = []
 
     def finalizeResult(self):
         """
@@ -391,6 +395,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         "block": self.blockList
                     }
                     text, code = invoker.startExecution(payload)
+                    # TODO Handle node disconnection
                     if code >= 400:
                         self.log("ERROR " + text)
                         self.ret = {"error": text}, 500
@@ -452,7 +457,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             "block": self.blockList[:i]
                         }
                         text, code = invoker.startExecution(payload)
-
+                        # TODO Handle node disconnection
                         if code >= 400:
                             self.log("ERROR " + text)
                             self.ret = {"error": text}, 500
@@ -641,7 +646,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
     # DUMB START, just parallel start
     def startDumb(self):
         """Manage the parallel actions as if they come in separate calls (with threads)."""
-        self.log("start Dumb execution")
+        self.log("start independent execution")
         handlers = []
         threads = []
         for h in self.actList:

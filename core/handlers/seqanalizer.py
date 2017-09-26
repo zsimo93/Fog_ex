@@ -106,10 +106,10 @@ class SequenceAnalizer:
         self.finalProc = self.createBlocks()
         self.finalProc = self.createParallels()
 
-    def __json__(self):
+    def __json__(self, process):
         """Return a formatted json string for the class."""
         jlist = []
-        for a in self.finalProc:
+        for a in process:
             jlist.append(a.__json__())
 
         return jlist

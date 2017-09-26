@@ -17,8 +17,7 @@ def main(args):
     data = fm.loadFile(args["id4"])
     image3 = Image.open(io.BytesIO(data.read()))
 
-    base_width = image0.width
-    base_height = image0.height
+    base_width, base_height = image0.size
     new_image = Image.new('RGB', (2 * base_width, 2 * base_height))
 
     new_image.paste(image0, (0, 0))

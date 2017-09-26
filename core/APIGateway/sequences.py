@@ -38,7 +38,9 @@ def newSequence(request):
             resp["outMap"][k] = lastId + "/" + k
 
     resp["fullSeq"], resp["outMapFLAT"] = unrollAndDAG(proc, resp["outMap"])
-    resp["execSeq"] = SequenceAnalizer(resp["fullSeq"]).__json__()
+    sa = SequenceAnalizer(resp["fullSeq"])
+    resp["execSeq_noopt"] = sa.__json__(sa.fullProc)
+    resp["execSeq"] = sa.__json__(sa.finalProc)
     db.insertSequence(name, resp)  # save seq in db
     depdb.computeDep(name, proc)  # save all the dependencies usefull for delete
     return make_response(name, 201)

@@ -31,7 +31,7 @@ def invoke(request):
 
     sessionID = uniqueName()
     hand = giveMeHandler(r["param"], r["default"], r["except"],
-                         token, sessionID)
+                         token, sessionID, r["optimise"])
     payload, code = hand.start()
     try:
         result = json.loads(payload)
