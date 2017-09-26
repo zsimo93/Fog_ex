@@ -44,8 +44,8 @@ class PackageCreator(object):
             funct += "    subprocess.call(['chmod', '755', '/tmp/ffmpeg'])\n"
 
         funct += "    ret = main(event)\n"
-        funct += "    ids = os.environ.get('savedIds', '')\n"
-        funct += "    ret['__savedIds__'] = ids.split('|')\n"
+        funct += "    ids = os.environ.get('savedIds', '').split('|')\n"
+        funct += "    ret['__savedIds__'] = [i for i in ids if i in json.dumps(ret)]\n"
         funct += "    return ret\n"
 
         handlerPath = os.path.join(self.path, "__handler__.py")
