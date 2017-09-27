@@ -36,13 +36,12 @@ class PackageCreator(object):
             name = self.filename.split(".")[0]
 
         header = "from " + name + " import main\nimport os\n\n"
-        funct = "def my_handler(event, context):\n"
-
         if self.contTag == "ffmpeg":
-            funct += "    import subprocess\n"
-            funct += "    subprocess.call(['cp', '/var/task/ffmpeg', '/tmp/'])\n"
-            funct += "    subprocess.call(['chmod', '755', '/tmp/ffmpeg'])\n"
+            header += "import subprocess\n"
+            header += "subprocess.call(['cp', '/var/task/ffmpeg', '/tmp/'])\n"
+            header += "subprocess.call(['chmod', '755', '/tmp/ffmpeg'])\n\n"
 
+        funct = "def my_handler(event, context):\n"
         funct += "    ret = main(event)\n"
         funct += "    ids = os.environ.get('savedIds', '').split('|')\n"
         funct += "    ret['__savedIds__'] = [i for i in ids if i in json.dumps(ret)]\n"
