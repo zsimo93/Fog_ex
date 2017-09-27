@@ -6,7 +6,7 @@ class InvokeManager():
         self.address = address
         self.fileManager = fileManager
 
-    def invoke(self, name, param, default_conf_class, except_conf={}, log=True, filePath="", paramID=""):
+    def invoke(self, name, param, default_conf_class, except_conf={}, log=True, filePath="", paramID="", optimise=True):
         newparam = deepcopy(param)
         if (filePath and paramID):
             code, text = self.fileManager.upload(filePath)
@@ -18,6 +18,7 @@ class InvokeManager():
             "param": newparam,
             "default": {"actionClass": default_conf_class},
             "except": except_conf,
+            "optimise": optimise,
             "log": log
         }
         resp = requests.post(self.address, json=data)
