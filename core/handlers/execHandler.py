@@ -167,6 +167,7 @@ class ActionExecutionHandler:
                 if status_code >= 400:
                     self.ret = ({"error": text}, 500)
                     self.log("ERROR in remote execution")
+                    self.logList.append(text)
                     return self.ret
                 try:
                     begin = time.time()
@@ -387,7 +388,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                 self.blockList = []
                 self.ret = retJson, code
                 if code >= 400:
-                        self.log("ERROR " + json.dumps(retJson))
+                        self.log("ERROR")
                         self.ret = {"error": retJson}, 500
                         return self.ret
 
@@ -452,6 +453,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             self.logList += h.logList
                             if code >= 400:
                                 self.ret = {"error": retJson}, 500
+                                self.log("ERROR")
                                 return self.ret
                             self.results[h.action["id"]] = retJson
                             self.param[h.action["id"]] = retJson
