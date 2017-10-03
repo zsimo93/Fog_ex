@@ -17,12 +17,14 @@ def invoke(request):
             action = req['action']
             sessionID = req["sessionID"]
             inparam = req["param"]
-            r = ActionManager(action, inparam, sessionID).initAndRun()
+            nlog = req["log"]
+            r = ActionManager(action, nlog, inparam, sessionID).initAndRun()
         else:
             block = req['block']
             sessionID = req["sessionID"]
             inparam = req["param"]
-            r = BlockManager(block, inparam, sessionID).run()
+            nlog = req["log"]
+            r = BlockManager(block, nlog, inparam, sessionID).run()
 
         return make_response(r)
     except Exception:

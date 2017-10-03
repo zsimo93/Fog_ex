@@ -3,12 +3,14 @@ import json
 from threading import Thread
 import sys, traceback
 from core.gridFS.files import saveFilesFromAWS
+import time
 
 class NodeInvoker:
     def __init__(self, ip):
         self.ip = ip
 
-    def startExecution(self, request):
+    def startExecution(self, request, nlog):
+        request["needlog"] = nlog
         ret = post(self.ip, "8080", "/internal/invoke", request, 100)
         return (ret.text, ret.status_code)
 
@@ -16,14 +18,15 @@ class AWSInvoker:
     def __init__(self):
         pass
 
-    def finalizeResult(self):
+    def finalizeResult(self, nlog):
         res = json.loads(self.response)
         saveFilesFromAWS(res["__savedIds__"])
         del res["__savedIds__"]
-
+        if nlog:
+            res["__log__"] = "Go to CloudWatch"
         return res, 200
 
-    def startExecution(self, request):
+    def startExecution(self, request, nlog):
         from core.aws.lambdaconnector import AwsActionInvoker
         self.map = request["action"]['map']
         self.sessionID = request['sessionID']
@@ -37,10 +40,10 @@ class AWSInvoker:
         if "FunctionError" in r:
             return (self.response, 500)
 
-        return self.finalizeResult()
+        return self.finalizeResult(nlog)
 
 class InvokerThread(Thread):
-    def __init__(self, invoker, action, sessionID, param, actType):
+    def __init__(self, invoker, action, sessionID, param, actType, nlog):
         Thread.__init__(self)
         self.ret = (None, None)
         self.invoker = invoker
@@ -48,6 +51,7 @@ class InvokerThread(Thread):
         self.sessionID = sessionID
         self.param = param
         self.actType = actType
+        self.nlog = nlog
         del self.action["type"]
 
     def run(self):
@@ -66,7 +70,9 @@ class InvokerThread(Thread):
                 "action": self.action
             }
         try:
-            self.ret = self.invoker.startExecution(request)
+            begin = time.time()
+            self.ret = self.invoker.startExecution(request, self.nlog)
+            self.elapsed = time.time() - begin
         except Exception as e:
             print '-' * 60
             traceback.print_exc(file=sys.stdout)

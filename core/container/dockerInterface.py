@@ -9,27 +9,26 @@ def runContainer(name, memory, path_dir):
     }
 
     if (memory):
-        a = client.containers.run(name,
-                                  mem_limit=str(memory) + "m",
-                                  volumes=volumes,
-                                  detach=True)
+        cont = client.containers.run(name,
+                                     mem_limit=str(memory) + "m",
+                                     volumes=volumes,
+                                     detach=True)
     else:
-        a = client.containers.run(name,
-                                  volumes=volumes,
-                                  detach=True)
-    id = str(a.id)
+        cont = client.containers.run(name,
+                                     volumes=volumes,
+                                     detach=True)
+    id = str(cont.id)
 
     ip = getIP(id)
 
-    return a.name, ip
-
+    return cont.name, ip
 
 
 def getIP(id):
     command = "docker inspect --format '{{ .NetworkSettings.IPAddress }}' " + id
 
     ret = commands.getoutput(command)
-    
+
     return ret
 
 def killContainer(conId):
@@ -47,6 +46,9 @@ def pullImage(contName):
 def delImage(contName):
     client.images.remove(image=contName)
 
+def getLog(contName, logstart):
+    return client.containers.get(contName).logs()[logstart:]
+
 def getContList():
     return client.containers.list()
 
@@ -57,4 +59,3 @@ def getUsedMem(contName):
             return stats["memory_stats"]["usage"]
         except:
             continue
-   

@@ -3,7 +3,7 @@ from core.databaseMongo import localDB
 import json
 
 class BlockManager():
-    def __init__(self, block, param, sessionID):
+    def __init__(self, block, nlog, param, sessionID):
         self.actList = block
         self.localparams = {}
         self.aManagers = []
@@ -11,10 +11,12 @@ class BlockManager():
         self.localiDs = []
         self.managerActionMap = {}
         self.sessionID = sessionID
+        self.nlog = nlog
+        self.loglist = []
 
         for action in self.actList:
             self.localiDs.append(action['id'])
-            actionMan = ActionManager(action, map=action['map'],
+            actionMan = ActionManager(action, nlog, map=action['map'],
                                       next=action['next'], sessionID=sessionID)
 
             if action["name"] not in self.managerActionMap:
@@ -23,7 +25,7 @@ class BlockManager():
                 self.aManagers.append((actionMan, thread))
                 thread.start()
             else:
-                # same action found in block. reuse its container without releasing 
+                # same action found in block. reuse its container without releasing
                 self.managerActionMap[action["name"]].append(actionMan)
                 self.aManagers.append((actionMan, None))
 
@@ -71,21 +73,27 @@ class BlockManager():
 
             manager.setContainerMem()
             resp, error = manager.run()
-
+            log = manager.log
+            self.loglist += log
+            newlogl = manager.loglength + len(log)
             actionName = manager.action
             amList = self.managerActionMap[actionName]
             amList.remove(manager)
             if len(amList) == 0:
                 # no one else in the block requires the container.
                 localDB.insertContainer(manager.action, manager.cont,
-                                        manager.ip)
+                                        manager.ip, newlogl)
             else:
                 # redundant but np... set my container to all others.
                 for am in amList:
                     am.cont = manager.cont
                     am.ip = manager.ip
+                    am.loglength = newlogl
             if error:
                 return (resp, 500)
             self.finalizeIntermediate(manager, json.loads(resp))
+
+        if self.nlog:
+            self.result["__log__"] = self.loglist
 
         return (json.dumps(self.result), 200)

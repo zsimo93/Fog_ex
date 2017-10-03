@@ -11,7 +11,7 @@ timedelta = timedelta(seconds=60)
 # allCont.create_index("createTime", expireAfterSeconds=60)
 # availableCont.create_index("createTime", expireAfterSeconds=60)
 
-def insertContainer(actionName, contId, ip):
+def insertContainer(actionName, contId, ip, loglength):
     # insert container in availableDB.
     memused, createTime = insertInAll(contId, actionName)
     inDB = {
@@ -19,6 +19,7 @@ def insertContainer(actionName, contId, ip):
         "actionName": actionName,
         "memused": memused,
         "ip": ip,
+        "loglength": loglength,
         "createTime": createTime
     }
     availableCont.insert_one(inDB)
@@ -29,21 +30,24 @@ def findContainer(actionName):
     if cont:
         id = cont["_id"]
         ip = cont["ip"]
+        logl = cont["loglength"]
         updateTimeout(id)
-        return id, ip
+        return id, ip, logl
     return None
 
-def insertInAll(contId, actionName):
+def insertInAll(contId, actionName, loglength=0):
     # if container alreasy in ALL update t-o, otherwise insert.
     # return base memory used by container
     memused, createTime = updateTimeout(contId)
     if not memused:
+        # create new container
         memused = getUsedMem(contId)
         createTime = datetime.utcnow()
         inDB = {
             "_id": contId,
             "actionName": actionName,
             "memused": memused,
+            "loglength": loglength,
             "createTime": createTime
         }
         allCont.insert_one(inDB)

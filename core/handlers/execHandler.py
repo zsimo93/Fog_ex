@@ -10,13 +10,13 @@ import traceback, sys
 from copy import deepcopy
 
 
-def giveMeHandler(param, default, configs, name, sessionID, optimise):
+def giveMeHandler(param, default, configs, name, sessionID, optimise, log):
     if not actionsDB.availableActionName(name):
         return ActionExecutionHandler(default, configs, name,
-                                      sessionID, param)
+                                      sessionID, param, log)
     else:
         return SeqExecutionHandler(default, configs, name,
-                                   sessionID, param, optimise)
+                                   sessionID, param, optimise, log)
 
 
 def createAction(name, default, configs, myID, map, timeout,
@@ -69,7 +69,7 @@ class NoResourceException(Exception):
     pass
 
 class ActionExecutionHandler:
-    def __init__(self, default, configs, name, sessionID, param,
+    def __init__(self, default, configs, name, sessionID, param, nlog,
                  myID=None, map=None, next=None, timeout=None,
                  language=None, cloud=None, contTag=None, containerName=None):
 
@@ -77,6 +77,7 @@ class ActionExecutionHandler:
         self.sessionID = sessionID
         self.action = createAction(name, default, configs, myID, map, timeout,
                                    language, cloud, next, contTag, containerName)
+        self.nlog = nlog
         self.logList = []
 
     def prepareInput(self, map, param):
@@ -103,9 +104,11 @@ class ActionExecutionHandler:
         return sorted(avList, key=lambda node: (node["cpu"] + node["memory"]) / 2)
 
     def chooseActionNode(self, action):
-
+        begin = time.time()
         if action["cloud"] == "2":
             # cloud execution forced
+            elapsed = time.time() - begin
+            self.log("Time to choose location: " + repr(elapsed))
             return ("_cloud", AWSInvoker())
 
         # Select the node with more free cpu and enought memory
@@ -127,11 +130,15 @@ class ActionExecutionHandler:
                 if req_mem < node['memory']:
                     # most free cpu and enought memory
                     selected = node
+                    elapsed = time.time() - begin
+                    self.log("Time to choose location: " + repr(elapsed))
                     return (selected["_id"],
                             NodeInvoker(nodesDB.getNode(selected['_id'])['ip']))
 
             if not selected:
                 if action["cloud"]:
+                    elapsed = time.time() - begin
+                    self.log("Time to choose location: " + repr(elapsed))
                     return ("_cloud", AWSInvoker())
                 else:
                     time.sleep(0.5)
@@ -149,25 +156,28 @@ class ActionExecutionHandler:
         i = 0
         while(i < 3):
             try:
-
                 name, invoker = self.chooseActionNode(self.action)
-
                 request = {
                     "type": "action",
                     "sessionID": self.sessionID,
                     "param": self.param,
                     "action": self.action
                 }
-                text, status_code = invoker.startExecution(request)
+                text, status_code = invoker.startExecution(request, self.nlog)
                 if status_code >= 400:
                     self.ret = ({"error": text}, 500)
                     self.log("ERROR in remote execution")
                     return self.ret
                 try:
+                    begin = time.time()
                     self.ret = (json.loads(text), 200)
                 except TypeError:
                     self.ret = (text, 200)
-                self.log("EXECUTED in node " + name)
+                elapsed = time.time() - begin
+                if self.nlog:
+                    self.logList += self.ret["__log__"]
+                    del self.ret["__log__"]
+                self.log("EXECUTED in node " + name + " - time:" + repr(elapsed))
                 self.ret = self.ret
                 return self.ret
             except ConnectionError:
@@ -197,19 +207,21 @@ class ActionExecutionHandler:
 class AsActionExecutionHandler(ActionExecutionHandler):
     # This classis used when the "action" json is already formed.
     #   in case of single execution in block and parallel
-    def __init__(self, sessionID, action, param):
+    def __init__(self, sessionID, action, param, nlog):
         self.param = self.prepareInput(action["map"], param)
         self.sessionID = sessionID
         self.action = action
+        self.nlog = nlog
         self.logList = []
 
 class SeqExecutionHandler:
-    def __init__(self, default, configs, name, sessionID, param, optimise):
+    def __init__(self, default, configs, name, sessionID, param, optimise, nlog):
         self.param = param
         self.sessionID = sessionID
         self.name = name
         self.default = default
         self.configs = configs
+        self.nlog = nlog
         self.logList = []
         s = getSequence(name)
         if not optimise:
@@ -276,11 +288,11 @@ class SeqExecutionHandler:
                             actList.append(b)
 
                 handler = ParallelExecutionHandler(self.default, self.configs,
-                                                   self.sessionID, a["list"], param)
+                                                   self.sessionID, a["list"], param, self.nlog)
             else:
                 # a["type"] == "block"
                 handler = BlockExecutionHandler(self.default, self.configs,
-                                                self.sessionID, a["list"], param)
+                                                self.sessionID, a["list"], param, self.nlog)
 
             try:
                 r, status_code = handler.start()
@@ -310,11 +322,12 @@ class SeqExecutionHandler:
 
 
 class BlockExecutionHandler(ActionExecutionHandler):
-    def __init__(self, default, configs, sessionID, list, param):
+    def __init__(self, default, configs, sessionID, list, param, nlog):
         self.default = default
         self.configs = configs
         self.sessionID = sessionID
         self.ids = []
+        self.nlog = nlog
         self.logList = []
         self.param = param
 
@@ -364,7 +377,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                 param = self.prepareBlockInput(self.blockList)
                 h = AsActionExecutionHandler(self.sessionID,
                                              self.blockList[0],
-                                             param)
+                                             param, self.nlog)
                 text, code = h.start()
                 try:
                     retJson = json.loads(text)
@@ -394,20 +407,25 @@ class BlockExecutionHandler(ActionExecutionHandler):
                         "param": param,
                         "block": self.blockList
                     }
-                    text, code = invoker.startExecution(payload)
+                    begin = time.time()
+                    text, code = invoker.startExecution(payload, self.nlog)
+                    elapsed = time.time() - begin
                     # TODO Handle node disconnection
                     if code >= 400:
                         self.log("ERROR " + text)
                         self.ret = {"error": text}, 500
                         return self.ret
 
-                    self.log("EXECUTE " + str(self.ids) + " on node " + name)
                     self.blockList = []
 
                     try:
                         retJson = json.loads(text)
                     except TypeError:
                         retJson = text
+                    if self.nlog:
+                        self.logList += retJson["__log__"]
+                        del retJson["__log__"]
+                    self.log("EXECUTED " + str(self.ids) + " on node " + name + " in " + repr(elapsed))
 
                     for k in retJson:
                         self.results[k] = retJson[k]
@@ -425,7 +443,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             param = self.prepareBlockInput([self.blockList[0]])
                             h = AsActionExecutionHandler(self.sessionID,
                                                          self.blockList[0],
-                                                         param)
+                                                         param, self.nlog)
                             text, code = h.start()
                             try:
                                 retJson = json.loads(text)
@@ -456,7 +474,9 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             "param": param,
                             "block": self.blockList[:i]
                         }
-                        text, code = invoker.startExecution(payload)
+                        begin = time.time()
+                        text, code = invoker.startExecution(payload, self.nlog)
+                        elapsed = time.time() - begin
                         # TODO Handle node disconnection
                         if code >= 400:
                             self.log("ERROR " + text)
@@ -467,11 +487,16 @@ class BlockExecutionHandler(ActionExecutionHandler):
                             retJson = json.loads(text)
                         except TypeError:
                             retJson = text
+
+                        if self.nlog:
+                            self.logList += retJson["__log__"]
+                            del retJson["__log__"]
+
                         for k in retJson:
                             self.results[k] = retJson[k]
                             self.param[k] = retJson[k]
 
-                        self.log("EXECUTE " + str(self.ids[:i]) + " on node " + name)
+                        self.log("EXECUTED " + str(self.ids[:i]) + " on node " + name + " in " + repr(elapsed))
                         self.blockList = self.blockList[i:]
                         self.ids = self.ids[i:]
 
@@ -487,9 +512,10 @@ class BlockExecutionHandler(ActionExecutionHandler):
         self.logList.append(logStr)
 
 class AsBlockExecutionHandler(BlockExecutionHandler):
-    def __init__(self, sessionID, blockList, param, ids, memory):
+    def __init__(self, sessionID, blockList, param, nlog, ids, memory):
         self.sessionID = sessionID
         self.ids = ids
+        self.nlog = nlog
         self.logList = []
         self.param = param
 
@@ -499,12 +525,13 @@ class AsBlockExecutionHandler(BlockExecutionHandler):
 
 
 class ParallelExecutionHandler(BlockExecutionHandler):
-    def __init__(self, default, configs, sessionID, plist, param):
+    def __init__(self, default, configs, sessionID, plist, param, nlog):
         self.default = default
         self.configs = configs
         self.sessionID = sessionID
         self.param = param
         self.results = {}
+        self.nlog = nlog
         self.logList = []
 
         self.actList = []
@@ -600,9 +627,10 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         threads = []
         nodesRes = nodesDB.allRes()
         nodesL = self.sortedMem(nodesRes)  # Sort available nodes by memory
-
+        begin = time.time()
         coupling = fit(self.actList, nodesL)
-
+        elapsed = time.time() - begin
+        self.log("Parallel placement in " + repr(elapsed))
         if coupling:
             for c in coupling:
                 act, nodeName, inv = c
@@ -612,7 +640,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                 except KeyError:
                     param = self.prepareInput(act["map"], self.param)
 
-                t = InvokerThread(inv, act, self.sessionID, param, act["type"])
+                t = InvokerThread(inv, act, self.sessionID, param, act["type"], self.nlog)
                 t.start()
                 self.log("Executing " + act["id"] + " in: " + nodeName)
                 threads.append(t)
@@ -624,12 +652,20 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                 if code >= 400:
                     self.ret = ({"error": text}, 500)
                     self.log("ERROR in remote execution")
+                    self.log(text)
+                    # TODO recovery action
                     return self.ret
                 else:
                     try:
                         retJson = json.loads(text)
                     except TypeError:
                         retJson = text
+
+                    self.log("EXECUTED %s in %s" % (t.action["id"], repr(t.elapsed)))
+                    if self.nlog:
+                        self.logList += retJson["__log__"]
+                        del retJson["__log__"]
+
                     if t.actType == "block":
                         for k in retJson:
                             self.results[k] = retJson[k]
@@ -651,12 +687,13 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         threads = []
         for h in self.actList:
             if h["type"] == "action":
-                hand = AsActionExecutionHandler(self.sessionID, h, self.param)
+                hand = AsActionExecutionHandler(self.sessionID, h, self.param, self.nlog)
                 handlers.append(hand)
             else:
                 hand = AsBlockExecutionHandler(self.sessionID,
                                                h["block"],
                                                self.param,
+                                               self.nlog,
                                                h["ids"],
                                                h["memory"])
                 handlers.append(hand)

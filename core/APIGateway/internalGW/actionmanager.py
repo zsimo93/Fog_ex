@@ -1,5 +1,5 @@
 from core.gridFS import files
-from core.container.dockerInterface import runContainer, updateContainerMem
+from core.container.dockerInterface import runContainer, updateContainerMem, getLog
 from core.databaseMongo import localDB
 from core.utils.httpUtils import post
 from requests import ConnectionError, ConnectTimeout
@@ -17,13 +17,14 @@ import json
 """
 
 class ActionManager():
-    def __init__(self, request, param=None, sessionID=None, map=None, next=[]):
+    def __init__(self, request, nlog, param=None, sessionID=None, map=None, next=[]):
         self.action = request['name']
         self.memory = request['memory']
         self.timeout = request['timeout']
         self.language = request['language']
         self.myID = request["id"]
         self.contTag = request["contTag"]
+        self.nlog = nlog
         try:
             self.containerName = request["containerName"]
         except KeyError:
@@ -32,6 +33,7 @@ class ActionManager():
         self.map = map
         self.param = param
         self.next = next
+        self.loglist = []
         self.cont = ""
         self.ip = ""
 
@@ -45,6 +47,7 @@ class ActionManager():
             self.cont = c[0]
             self.ip = c[1]
             self.setContainerMem()
+            self.loglength = c[2]
 
         else:
             containerName = ""
@@ -59,6 +62,7 @@ class ActionManager():
             self.cont, self.ip = runContainer(containerName,
                                               self.memory,
                                               self.path)
+            self.loglength = 0
             localDB.insertInAll(self.cont, self.action)
 
     def startThreadContainer(self):
@@ -85,6 +89,7 @@ class ActionManager():
             raise ConnectionError
 
     def run(self):
+        # invoked directicly for blocks invocation and by action invocation
         try:
             self.makeRequest()
             self.error = False
@@ -99,6 +104,9 @@ class ActionManager():
             self.error = True
             self.response = tb
 
+        log = getLog(self.cont, self.loglength)
+        self.loglist.append(str(self.myID) + " - CONTAINER log:" + log)
+
         if not self.error:
             r = json.loads(self.response)
             files.uploadFilesToAWS(r["__savedIds__"])
@@ -108,12 +116,17 @@ class ActionManager():
         return self.response, self.error
 
     def finalizeResult(self):
-        return (self.response, 200)
+        r = json.loads(self.response)
+        if self.nlog:
+            r["__log__"] = self.loglist
+        return (json.dumps(r), 200)
 
     def initAndRun(self):
+        # used for single action invocation
         self.startCont()
         self.run()
-        localDB.insertContainer(self.action, self.cont, self.ip)
+        newlogl = self.loglength + len(self.log)
+        localDB.insertContainer(self.action, self.cont, self.ip, newlogl)
         if self.error:
             return (self.response, 500)
         return self.finalizeResult()
