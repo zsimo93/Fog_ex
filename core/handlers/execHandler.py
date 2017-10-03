@@ -254,7 +254,7 @@ class SeqExecutionHandler:
             if a["type"] == "action":
                 handler = ActionExecutionHandler(self.default, self.configs,
                                                  a["name"], self.sessionID,
-                                                 param, myID=a["id"], map=a["map"],
+                                                 param, self.nlog, myID=a["id"], map=a["map"],
                                                  timeout=a["timeout"],
                                                  language=a["language"],
                                                  cloud=a["cloud"], next=a["next"],
