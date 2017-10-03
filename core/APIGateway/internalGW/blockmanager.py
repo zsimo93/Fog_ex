@@ -75,7 +75,7 @@ class BlockManager():
             resp, error = manager.run()
             log = manager.loglist
             self.loglist += log
-            newlogl = manager.loglength + len(log)
+            newlogl = manager.loglength + len(log[0])
             actionName = manager.action
             amList = self.managerActionMap[actionName]
             amList.remove(manager)
