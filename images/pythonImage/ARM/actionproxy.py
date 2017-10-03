@@ -18,8 +18,6 @@ def run():
     except:
         pass
     args = request.json
-    print args
-
     fn = compile(code, filename=filename, mode='exec')
 
     namespace = {}
