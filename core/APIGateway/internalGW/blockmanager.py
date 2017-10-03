@@ -73,7 +73,7 @@ class BlockManager():
 
             manager.setContainerMem()
             resp, error = manager.run()
-            log = manager.log
+            log = manager.loglist
             self.loglist += log
             newlogl = manager.loglength + len(log)
             actionName = manager.action
