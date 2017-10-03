@@ -176,8 +176,8 @@ class ActionExecutionHandler:
                     self.ret = (text, 200)
                 elapsed = time.time() - begin
                 if self.nlog:
-                    self.logList += self.ret["__log__"]
-                    del self.ret["__log__"]
+                    self.logList += self.ret[0]["__log__"]
+                    del self.ret[0]["__log__"]
                 self.log("EXECUTED in node " + name + " - time:" + repr(elapsed))
                 self.ret = self.ret
                 return self.ret
