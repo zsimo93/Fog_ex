@@ -163,18 +163,18 @@ class ActionExecutionHandler:
                     "param": self.param,
                     "action": self.action
                 }
+                begin = time.time()
                 text, status_code = invoker.startExecution(request, self.nlog)
+                elapsed = time.time() - begin
                 if status_code >= 400:
                     self.ret = ({"error": text}, 500)
                     self.log("ERROR in remote execution")
                     self.logList.append(text)
                     return self.ret
                 try:
-                    begin = time.time()
                     self.ret = (json.loads(text), 200)
                 except TypeError:
                     self.ret = (text, 200)
-                elapsed = time.time() - begin
                 if self.nlog:
                     self.logList += self.ret[0]["__log__"]
                     del self.ret[0]["__log__"]
