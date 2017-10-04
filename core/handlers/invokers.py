@@ -19,18 +19,12 @@ class AWSInvoker:
         pass
 
     def finalizeResult(self, nlog):
-        res = json.loads(self.response)
+        res = self.response
         begin = time.time()
         saving = saveFilesFromAWS(res["__savedIds__"])
         elapsed = time.time() - begin
         del res["__savedIds__"]
-        print res
         if nlog:
-            try:
-                log = res["LogResult"]
-                res["__log__"] = [self.myID + "AWS log : " + repr(log)]
-            except KeyError:
-                res["__log__"] = []
             if saving:
                 res["__log__"].append("Download from AWS in %s" % (repr(elapsed)))
         return res, 200
@@ -45,7 +39,11 @@ class AWSInvoker:
         conn = AwsActionInvoker(request['action']['name'], self.param,
                                 request['action']["actionClass"], nlog)
         r = conn.invoke()
-        self.response = r["Payload"].read()
+        payload = r["Payload"].read()
+        self.response = json.loads(payload)
+        if nlog:
+            log = r["LogResult"]
+            self.response["__log__"] = [self.myID + "AWS log : " + repr(log)]
         if "FunctionError" in r:
             return (self.response, 500)
 
