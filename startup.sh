@@ -1,7 +1,7 @@
 git pull
-docker pull zsimo/python-image:imageProc
-docker pull zsimo/python-image:base
-docker pull zsimo/python-image:ffmeg
+#docker pull zsimo/python-image:imageProc
+#docker pull zsimo/python-image:base
+#docker pull zsimo/python-image:ffmpeg
 
 echo "Enter role [ENTER]:"
 read role
