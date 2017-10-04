@@ -71,11 +71,14 @@ def loadUserData(token):
         return None
 
 def saveFilesFromAWS(ids):
+    saving = False
     for id in ids:
         if id:
+            saving = True
             file = download(id)
             fsUserData.put(file, _id=id, filename=file.filename,
                            uploadDate=datetime.utcnow())
+    return saving
 
 def uploadFilesToAWS(ids):
     saving = False

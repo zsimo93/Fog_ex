@@ -50,16 +50,18 @@ class AwsActionCreator(object):
             )
 
 class AwsActionInvoker(object):
-    def __init__(self, name, param, actClass):
+    def __init__(self, name, param, actClass, nlog):
         self.client = getClient()
         self.name = name
         self.param = json.dumps(param)
         self.actClass = actClass
+        self.logType = "Tail" if nlog else "None"
 
     def invoke(self):
         response = self.client.invoke(
             FunctionName=self.name + "_" + self.actClass,
             Payload=self.param,
+            LogType=self.logType
         )
         return response
 
