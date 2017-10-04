@@ -55,7 +55,7 @@ def removeActionFile(actionName):
 
 def saveUserData(file):
     id = str(uuid.uuid4())
-    fsUserData.put(file, _id=id, content_type=file.content_type,
+    fsUserData.put(file, _id=id,
                    filename=file.filename, uploadDate=datetime.utcnow())
 
     return id

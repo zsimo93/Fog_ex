@@ -9,8 +9,8 @@ class FileOut():
         self.data = data
         self.filename = filename
 
-    def read(self):
-        return self.data.read()
+    def read(self, size):
+        return self.data.read(size)
 
 def getClient():
     cred = awsCredential.getCred()
