@@ -50,6 +50,9 @@ class ActionManager():
             self.loglength = c[2]
 
         else:
+            logStr = "%s - Starting new Container" % (self.myID)
+            print logStr
+            self.loglist.append(logStr)
             containerName = ""
             if self.language == "python":
                 containerName = "zsimo/python-image:" + self.contTag
