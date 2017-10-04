@@ -1,13 +1,12 @@
 import boto3
 from core.databaseMongo import awsCredential
 from datetime import datetime, timedelta
-from io import BytesIO
 
 BUCKETNAME = 'my-userdata'
 
 class FileOut():
     def __init__(self, data, filename):
-        self.data = BytesIO(data.read())
+        self.data = data
         self.filename = filename
 
     def read(self, size=None):

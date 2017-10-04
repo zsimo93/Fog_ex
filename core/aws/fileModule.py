@@ -17,7 +17,7 @@ class WrongTypeException(Exception):
 
 class FileOut():
     def __init__(self, data, filename):
-        self.data = data.read()
+        self.data = data
         self.filename = filename
 
     def read(self, nbytes=None):
