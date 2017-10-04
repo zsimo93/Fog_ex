@@ -101,6 +101,7 @@ class ActionManager():
             if self.code >= 400:
                 self.error = True
         except ConnectTimeout as e:
+            localDB.removeCont(self.cont)
             self.error = True
             self.response = str(e)
         except Exception:

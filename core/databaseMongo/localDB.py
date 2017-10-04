@@ -7,7 +7,7 @@ mongoclient = MongoClient(host='localhost', port=27017,
                           readPreference='nearest')
 availableCont = mongoclient.local.avCont
 allCont = mongoclient.local.allCont
-timedelta = timedelta(seconds=60)
+timedelta = timedelta(seconds=75)
 # allCont.create_index("createTime", expireAfterSeconds=60)
 # availableCont.create_index("createTime", expireAfterSeconds=60)
 
@@ -63,8 +63,13 @@ def updateTimeout(contId):
         return newCont["memused"], newCont["createTime"]
     return None, None
 
+def removeCont(cid):
+    allCont.delete_one({"_id": cid})
+    availableCont.delete_one({"_id": cid})
+    killContainer(cid)
+
 def deleteActionContainers(actName):
-    # delete all containers of a certain actionand kill them
+    # delete all containers of a certain action and kill them
     found = allCont.find_one({"actionName": actName})
     while found:
         id = found["_id"]
@@ -86,9 +91,7 @@ def removeTimedOutCont():
         for cont in allCont.find():
             if minAgo > cont["createTime"]:
                 cid = cont["_id"]
-                allCont.delete_one({"_id": cid})
-                availableCont.delete_one({"_id": cid})
-                killContainer(cid)
+                removeCont(cid)
                 print "DELETING " + cid
 
         # clist = getContList()

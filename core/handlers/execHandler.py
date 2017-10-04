@@ -124,7 +124,7 @@ class ActionExecutionHandler:
             # if no node and action no AWS execution, wait and retry later.
 
             for node in sortedNodes:
-                if node["cpu"] > 85:
+                if node["cpu"] > 75:
                     self.log("Selecting node - Jumping node %s because full" % (node["_id"]))
                     continue
                 if req_mem < node['memory']:
@@ -361,7 +361,7 @@ class BlockExecutionHandler(ActionExecutionHandler):
         # sortedNodes = self.sortedMem(nodesRes)  take less memory that fits
         sortedNodes = self.sortedCPU(nodesRes)
         for node in sortedNodes:
-            if node["cpu"] > 85:
+            if node["cpu"] > 75:
                 self.log("Selecting node - Jumping node %s because full" % (node["_id"]))
                 continue
             if memory < node['memory']:
@@ -595,7 +595,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
             else:
                 for n in nodes:
                     nodeL = deepcopy(nodes)
-                    if n["cpu"] > 85:
+                    if n["cpu"] > 75:
                         self.log("Selecting node - Jumping node %s because full" % (n["_id"]))
                         continue
                     actMem = a["memory"] * 1000000
