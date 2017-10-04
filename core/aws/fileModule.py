@@ -17,10 +17,10 @@ class WrongTypeException(Exception):
 
 class FileOut():
     def __init__(self, data, filename):
-        self.data = data
+        self.data = data.read()
         self.filename = filename
 
-    def read(self, nbytes=-1):
+    def read(self, nbytes=None):
         return self.data.read(nbytes)
 
 class FileManager:

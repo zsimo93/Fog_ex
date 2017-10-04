@@ -42,8 +42,8 @@ class AWSInvoker:
         payload = r["Payload"].read()
         self.response = json.loads(payload)
         if nlog:
-            log = r["LogResult"]
-            self.response["__log__"] = [self.myID + "AWS log : " + repr(log)]
+            log = r["LogResult"].decode("base64")
+            self.response["__log__"] = [self.myID + "AWS log : " + log]
         if "FunctionError" in r:
             return (self.response, 500)
 
