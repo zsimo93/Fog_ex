@@ -1,2 +1,1 @@
-import APIGateway, container, databaseMongo, utils, gridFS, awsLambda, heartbeat
-
+import APIGateway, container, databaseMongo, utils, gridFS, aws, heartbeat
