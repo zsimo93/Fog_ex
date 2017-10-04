@@ -100,9 +100,6 @@ class ActionExecutionHandler:
         # sort the available nodes per free memory
         return sorted(avList, key=lambda node: node['memory'])
 
-    def sortedAvg(self, avList):
-        return sorted(avList, key=lambda node: (node["cpu"] + node["memory"]) / 2)
-
     def chooseActionNode(self, action):
         begin = time.time()
         if action["cloud"] == "2":
@@ -127,6 +124,9 @@ class ActionExecutionHandler:
             # if no node and action no AWS execution, wait and retry later.
 
             for node in sortedNodes:
+                if node["cpu"] > 80:
+                    self.log("Selecting node - Jumping node %s because full" % (node["_id"]))
+                    continue
                 if req_mem < node['memory']:
                     # most free cpu and enought memory
                     selected = node
@@ -361,6 +361,9 @@ class BlockExecutionHandler(ActionExecutionHandler):
         # sortedNodes = self.sortedMem(nodesRes)  take less memory that fits
         sortedNodes = self.sortedCPU(nodesRes)
         for node in sortedNodes:
+            if node["cpu"] > 80:
+                self.log("Selecting node - Jumping node %s because full" % (node["_id"]))
+                continue
             if memory < node['memory']:
                 # most free cpu and enought memory
                 return node["_id"], NodeInvoker(nodesDB.getNode(node['_id'])['ip'])
@@ -591,6 +594,9 @@ class ParallelExecutionHandler(BlockExecutionHandler):
                     return couples
             else:
                 for n in nodes:
+                    if n["cpu"] > 80:
+                        self.log("Selecting node - Jumping node %s because full" % (n["_id"]))
+                        continue
                     actMem = a["memory"] * 1000000
                     if actMem <= n["memory"]:
                         nodeL = deepcopy(nodes)

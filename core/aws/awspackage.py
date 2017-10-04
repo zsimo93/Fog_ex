@@ -35,7 +35,7 @@ class PackageCreator(object):
         else:
             name = self.filename.split(".")[0]
 
-        header = "from " + name + " import main\nimport os\n\n"
+        header = "from " + name + " import main\nimport os\nimport json\n\n"
         if self.contTag == "ffmpeg":
             header += "import subprocess\n"
             header += "subprocess.call(['cp', '/var/task/ffmpeg', '/tmp/'])\n"
@@ -75,10 +75,10 @@ class PackageCreator(object):
         zf.close()
 
         if self.contTag == "ffmpeg":
-            subprocess.Popen(["zip", "-ur", self.zipPath, "./"],
+            subprocess.Popen(["zip", "-urq", self.zipPath, "./"],
                              cwd=os.path.join(self.basedir, "ffmpeg")).wait()
         elif self.contTag == "imageProc":
-            subprocess.Popen(["zip", "-ur", self.zipPath, "./"],
+            subprocess.Popen(["zip", "-urq", self.zipPath, "./"],
                              cwd=os.path.join(self.basedir, "imageProc")).wait()
 
         retFile = open(self.zipPath, "r")
