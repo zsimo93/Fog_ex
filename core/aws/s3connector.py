@@ -9,7 +9,7 @@ class FileOut():
         self.data = data
         self.filename = filename
 
-    def read(self, size):
+    def read(self, size=-1):
         return self.data.read(size)
 
 def getClient():
