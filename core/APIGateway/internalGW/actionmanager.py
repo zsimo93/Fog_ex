@@ -79,6 +79,7 @@ class ActionManager():
                 except ConnectionError:
                     i += 1
                     print "BLOCKING"
+                    time.sleep(0.5)
                     r = None
                     continue
                 except ConnectTimeout:
@@ -136,6 +137,7 @@ class ActionManager():
         localDB.insertContainer(self.action, self.cont, self.ip, newlogl)
         if self.error:
             return (self.response, 500)
+
         return self.finalizeResult()
 
     def __repr__(self):
