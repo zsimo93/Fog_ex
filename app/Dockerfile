@@ -3,6 +3,7 @@ FROM cseelye/rpi-nginx-uwsgi-flask
 #Run mounting -v /var/run/docker.sock:/var/run/docker.sock
 # -e TH_ROLE='MASTER'|'NODE'
 
+RUN sudo apt-get update && sudo apt-get wget
 RUN wget -qO- https://get.docker.com | sh
 RUN pip install \
             docker==2.4.2 \
