@@ -47,6 +47,7 @@ def newAction(request):
             ac.create()
 
     if resp["cloud"] != "2":
+        file.stream.seek(0)
         fs.saveActionFile(file, name)
 
     db.insertAction(name, resp)

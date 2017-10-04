@@ -129,7 +129,7 @@ class ActionManager():
         # used for single action invocation
         self.startCont()
         self.run()
-        newlogl = self.loglength + len(self.loglist[0])
+        newlogl = self.loglength + len(self.loglist[0]) - 15
         localDB.insertContainer(self.action, self.cont, self.ip, newlogl)
         if self.error:
             return (self.response, 500)
