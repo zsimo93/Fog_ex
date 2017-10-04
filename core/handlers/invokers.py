@@ -24,9 +24,13 @@ class AWSInvoker:
         saving = saveFilesFromAWS(res["__savedIds__"])
         elapsed = time.time() - begin
         del res["__savedIds__"]
+        print res
         if nlog:
-            log = res["LogResult"]
-            res["__log__"] = [self.myID + "AWS log : " + repr(log)]
+            try:
+                log = res["LogResult"]
+                res["__log__"] = [self.myID + "AWS log : " + repr(log)]
+            except KeyError:
+                res["__log__"] = []
             if saving:
                 res["__log__"].append("Download from AWS in %s" % (repr(elapsed)))
         return res, 200
