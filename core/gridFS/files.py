@@ -78,12 +78,15 @@ def saveFilesFromAWS(ids):
                            uploadDate=datetime.utcnow())
 
 def uploadFilesToAWS(ids):
+    saving = False
     if awsCheck():
         for id in ids:
             if id:
                 file = loadUserData(id)
                 if file:
+                    saving = True
                     uploadFile(BytesIO(file.read()), id, file.filename)
+    return saving
 
 def removeChunks():
     import time

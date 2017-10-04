@@ -5,7 +5,7 @@ from core.utils.httpUtils import post
 from requests import ConnectionError, ConnectTimeout
 from threading import Thread
 import traceback
-import json
+import json, time
 
 
 """request = {
@@ -109,7 +109,11 @@ class ActionManager():
 
         if not self.error:
             r = json.loads(self.response)
-            files.uploadFilesToAWS(r["__savedIds__"])
+            begin = time.time()
+            if files.uploadFilesToAWS(r["__savedIds__"]):
+                elapsed = time.time() - begin
+                self.loglist.append("%s - Uploading files to AWS in %s" %
+                                    (self.myID, repr(elapsed)))
             del r["__savedIds__"]
             self.response = json.dumps(r)
 

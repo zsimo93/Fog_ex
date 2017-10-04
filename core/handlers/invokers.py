@@ -20,10 +20,12 @@ class AWSInvoker:
 
     def finalizeResult(self, nlog):
         res = json.loads(self.response)
+        begin = time.time()
         saveFilesFromAWS(res["__savedIds__"])
+        elapsed = time.time() - begin
         del res["__savedIds__"]
         if nlog:
-            res["__log__"] = "Go to CloudWatch"
+            res["__log__"] = ["Go to CloudWatch", "Download from AWS in %s" % (repr(elapsed))]
         return res, 200
 
     def startExecution(self, request, nlog):
