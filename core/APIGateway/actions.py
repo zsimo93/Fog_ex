@@ -44,7 +44,10 @@ def newAction(request):
             ac = AwsActionCreator(name, resp["language"],
                                   resp["description"], resp["timeout"],
                                   file, resp["contTag"])
-            ac.create()
+            try:
+                ac.create()
+            except Exception:
+                return make_response(jsonify({'error': "AWS lambda creation error. Name already in use or connection error"}), 406)
 
     if resp["cloud"] != "2":
         file.stream.seek(0)
