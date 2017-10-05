@@ -24,11 +24,7 @@ if [ "$TH_ROLE" = "MASTER" ]; then
 else
     echo "Enter local ip [ENTER]:"
     read localip
-    curl -i \
-        -H "Accept: application/json" \
-        -H "Content-Type:application/json" \
-        -X POST --data '{"type": "node", "setup": false, "ip": '"$localip"'", "architecture": "arm", "name": '"$name"'", "role": "NODE" }' \
-        "$ip:8080/api/nodes"
+    python attach_node.py "http://$ip:8080/api/nodes" $localip $name
 
     python main.py
 fi
