@@ -20,7 +20,6 @@ docker run --name mongoDB --network host -d zsimo/rpi-mongo --replSet foo
 
 echo "Enter MASTER IP [ENTER]:"
 read ip
-
 echo "Enter name for node [ENTER]:"
 read name
 

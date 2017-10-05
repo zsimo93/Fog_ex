@@ -28,3 +28,4 @@ fi
 docker stop mongoDB
 docker rm -v mongoDB
 rm -rf /tmp/*
+

@@ -1,8 +1,13 @@
 #!thesis/api
 
 from flask import Flask, request, abort
-import nodes, actions, sequences, invoker, aws, userfile
-import internalGW.internal as internal
+import core.APIGateway.nodes as nodes
+import core.APIGateway.actions as actions
+import core.APIGateway.sequences as sequences
+import core.APIGateway.invoker as invoker
+import core.APIGateway.aws as aws
+import core.APIGateway.userfile as userfile
+import core.APIGateway.internalGW.internal as internal
 import os
 
 def checkMaster():
