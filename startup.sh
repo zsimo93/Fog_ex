@@ -5,23 +5,31 @@ git pull
 
 echo "Enter role [ENTER]:"
 read role
-
-TH_ROLE=$role
-export TH_ROLE
-
-BASE_DIR=`pwd`
-export BASE_DIR
+export TH_ROLE=$role
 
 docker run --name mongoDB --network host -d zsimo/rpi-mongo --replSet foo
 
+echo "Enter MASTER IP [ENTER]:"
+read ip
+export TH_MASTERIP=$ip
+
+echo "Enter name for node [ENTER]:"
+read name
+export TH_NODENAME=$name
+
+export BASE_DIR=`pwd`
 
 if [ "$TH_ROLE" = "MASTER" ]; then
-    echo "Enter local IP [ENTER]:"
-    read ip
     python main.py $ip
 else
-    echo "Add the node to the system and when done press [ENTER]"
-    read enter
+    echo "Enter local ip [ENTER]:"
+    read localip
+    curl -i \
+        -H "Accept: application/json" \
+        -H "Content-Type:application/json" \
+        -X POST --data '{"type": "node", "setup": false, "ip": '"$localip"'", "architecture": "arm", "name": '"$name"'", "role": "NODE" }' \
+        "$ip:8080/api/nodes"
+
     python main.py
 fi
 
