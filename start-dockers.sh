@@ -27,4 +27,8 @@ else
 fi
 
 python main_docker.py &
-gunicorn mainAPI:app -b 0.0.0.0:8080
+gunicorn mainAPI:app -b 0.0.0.0:8080 --threads=100 -t 100
+
+docker stop mongoDB
+docker rm mongoDB
+pkill -f main_docker.py
