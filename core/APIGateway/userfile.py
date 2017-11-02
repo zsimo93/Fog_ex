@@ -6,12 +6,12 @@ from core.aws.s3connector import uploadFile as awsUpload, deleteFile as awsDelet
 
 def upload(request):
     if 'file' not in request.files:
-        return make_response("No file part")
+        return make_response("No file part", 400)
     file = request.files['file']
     # if user does not select file, browser also
     # submit a empty part without filename
     if file.filename == '':
-        return make_response('No selected file')
+        return make_response('No selected file', 400)
 
     fileid = files.saveUserData(file)
     if aws.checkPresence():

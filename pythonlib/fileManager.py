@@ -9,7 +9,7 @@ class FileManager():
     def upload(self, filePath):
         with open(filePath, "rb") as f:
             data = {"file": (os.path.basename(filePath), f.read())}
-        resp = requests.post(self.address + "/upload", files=data)
+        resp = requests.post(self.address, files=data)
         return resp.status_code, resp.text
 
     def download(self, fileId):

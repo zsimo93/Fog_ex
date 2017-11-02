@@ -109,7 +109,7 @@ def checkAWSConnection():
 
 ########################
 
-@app.route('/api/file/upload', methods=['POST'])
+@app.route('/api/file', methods=['POST'])
 def uploadFile():
     if not checkMaster():
         return abort(404)

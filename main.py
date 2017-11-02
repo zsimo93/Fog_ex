@@ -7,7 +7,7 @@ def checkMaster():
 
 def setup(ip):
     from pymongo import MongoClient
-   
+
     config = {'_id': 'foo',
               'version': 1,
               'members': [
@@ -15,13 +15,13 @@ def setup(ip):
                    "votes": 1, "priority": 1}]}
     c = MongoClient(host=ip, port=27017)
     c.admin.command("replSetInitiate", config)
-    
+
 def createNodeMaster(ip):
     from core.databaseMongo import mainDB
-
+    name = os.environ["TH_NODENAME"]
     node = {
-        '_id': 'raspi1',
-        'name': 'raspi1',
+        '_id': name,
+        'name': name,
         'ip': ip,
         'role': 'MASTER',
         'architecture': 'ARM',
@@ -43,7 +43,7 @@ def execute():
     from core.APIGateway import run
     from core.heartbeat import heartbeatMain
     from core.databaseMongo.localDB import removeTimedOutCont
-    
+
     threading.Thread(target=removeTimedOutCont).start()
     heartbeatMain.startHeartBeat()
     run(False)
@@ -57,7 +57,7 @@ if checkMaster():
     setup(ip)
     createNodeMaster(ip)
     from core.gridFS.files import removeChunks
-            
+
     # thread for cleaning up chunks table for user data
     # removed after TTL
     threading.Thread(target=removeChunks).start()

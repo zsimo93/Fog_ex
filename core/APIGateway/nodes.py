@@ -18,7 +18,7 @@ def newNode(request):
         return make_response(jsonify(resp), 400)
     if db.getNode(resp["name"]):
         error = {"error": "Name '" + resp["name"] + "' already in use"}
-        return make_response(jsonify(error), 400)
+        return make_response(jsonify(error), 406)
     """
     if resp.pop('setup'):
         user = resp.pop("ssh_user")

@@ -20,7 +20,7 @@ def checkAvailableAndParam(token, param):
 def invoke(request):
     ok, resp = validateInvoke(request)
     if not ok:
-        return make_response(jsonify(resp), 406)
+        return make_response(jsonify(resp), 400)
 
     r = resp
     param = r["param"]
