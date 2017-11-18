@@ -1,6 +1,6 @@
 FROM zsimo/python-image:base_x86
 
-RUN sudo apt-get update && apt-get install python-imaging
+RUN apt-get update && apt-get install python-imaging
 
 RUN mv /usr/lib/python2.7/dist-packages/PIL/_imaging.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_imaging.so && \
     mv /usr/lib/python2.7/dist-packages/PIL/_imagingcms.arm-linux-gnueabihf.so /usr/lib/python2.7/dist-packages/PIL/_imagingcms.so &&\
