@@ -1,4 +1,4 @@
-FROM zsimo/python-image:basex86
+FROM zsimo/python-image:base_x86
 
 RUN sudo apt-get update && apt-get install python-imaging
 

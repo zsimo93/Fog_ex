@@ -1,4 +1,4 @@
-FROM zsimo/python-image:basex86
+FROM zsimo/python-image:base_x86
 
 RUN mkdir -p /ffmpeg-static
 ADD ffmpeg-static /ffmpeg-static
