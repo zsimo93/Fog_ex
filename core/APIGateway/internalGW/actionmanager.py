@@ -6,7 +6,10 @@ from requests import ConnectionError, ConnectTimeout
 from threading import Thread
 import traceback
 import json, time
+import os
 
+local_arch = os.environ.get("TH_ARCH")
+arch = "_x86" if local_arch == "x86" else ""
 
 """request = {
     "name": "",
@@ -55,7 +58,7 @@ class ActionManager():
             self.loglist.append(logStr)
             containerName = ""
             if self.language == "python":
-                containerName = "zsimo/python-image:" + self.contTag
+                containerName = "zsimo/python-image:" + self.contTag + arch
                 # elif self.language == "docker":
                 #     containerName = self.containerName
             else:

@@ -5,7 +5,7 @@ payload = {
 	"type": "node",
 	"setup": False,
 	"ip": sys.argv[2],
-	"architecture": "arm",
+	"architecture": sys.argv[4],
 	"name": sys.argv[3],
 	"role": "NODE" }
 

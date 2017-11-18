@@ -136,7 +136,7 @@ class ActionExecutionHandler:
                             NodeInvoker(nodesDB.getNode(selected['_id'])['ip']))
 
             if not selected:
-                if action["cloud"]:
+                if action["cloud"] == "1":
                     elapsed = time.time() - begin
                     self.log("Time to choose location: " + repr(elapsed))
                     return ("_cloud", AWSInvoker())
@@ -634,7 +634,7 @@ class ParallelExecutionHandler(BlockExecutionHandler):
         self.log("start execution")
         threads = []
         nodesRes = nodesDB.allRes()
-        nodesL = self.sortedMem(nodesRes)  # Sort available nodes by memory
+        nodesL = self.sortedCPU(nodesRes)  # Sort available nodes by memory
         begin = time.time()
         coupling = fit(self.actList, nodesL)
         elapsed = time.time() - begin

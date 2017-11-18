@@ -13,9 +13,11 @@ filename = None
 
 @proxy.route("/run", methods=["POST"])
 def run():
+    try:
+        del os.environ["savedIds"]
+    except:
+        pass
     args = request.json
-    print args
-
     fn = compile(code, filename=filename, mode='exec')
 
     namespace = {}
@@ -29,7 +31,10 @@ def run():
         return make_response(str(e), 502)
 
     if result and isinstance(result, dict):
-        return make_response(json.dumps(result), 200)
+        ids = os.environ.get('savedIds', '')
+        result['__savedIds__'] = ids.split('|')
+        res = json.dumps(result)
+        return make_response(res, 200)
     else:
         return make_response('The action did not return a dictionary.', 502)
 

@@ -24,7 +24,7 @@ def createNodeMaster(ip):
         'name': name,
         'ip': ip,
         'role': 'MASTER',
-        'architecture': 'ARM',
+        'architecture': os.environ.get("TH_ARCH"),
         'replica_id': 0
     }
 
@@ -34,7 +34,7 @@ def createNodeMaster(ip):
     n.insert_one(node)
 
     info = {
-        '_id': 'raspi1',
+        '_id': name,
         'cpu': '',
         'memory': ''}
     nrs.insert_one(info)
