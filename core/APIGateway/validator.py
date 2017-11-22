@@ -62,7 +62,7 @@ def validateNodeRequest(request):
     req = request.json
 
     pattern = re.compile('((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}')
-    supportedArch = ("arm")
+    supportedArch = ("arm", "x86")
 
     if not req:
         return (False, {"error": "Not a JSON"})
