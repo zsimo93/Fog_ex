@@ -8,7 +8,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).strip()
 
-        cpu = psutil.cpu_percent(interval=0.1)
+        cpu = psutil.cpu_percent()
         memory = psutil.virtual_memory().available
 
         response = {
