@@ -1,8 +1,8 @@
 from pythonlib.connectionManager import ConnectionManager
 
-def init():
-    cm = ConnectionManager("192.168.1.50")
+cm = ConnectionManager("192.168.1.50")
 
+def init():
     in_out = {"in": ["id1", "id2", "id3", "id4"], "out": ["retId"]}
     actionPath = "C:/Users/Simone/workspace_thesis/sample_actions/images/compose.py"
     r = cm.action.new("compose", "combine 4 images in one",
@@ -52,3 +52,10 @@ def init():
     r = cm.sequence.new("imageProc", "transform an image in 4 ways and combine in one",
                         in_out, sequence)
     print r
+
+def remove():
+    print cm.action.delete("compose", force=True)
+    print cm.action.delete("rotate", force=True)
+    print cm.action.delete("resize", force=True)
+    print cm.action.delete("blackWhite", force=True)
+    print cm.action.delete("greyscale", force=True)

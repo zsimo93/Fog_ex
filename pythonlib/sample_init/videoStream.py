@@ -9,23 +9,13 @@ def init():
                       "python", "ffmpeg", in_out, "0", 25, actionPath)
     print r
 
-    in_out = {"in": ["original", "bw"], "out": ["fileIds"]}
-    actionPath = "C:/Users/Simone/workspace_thesis/sample_actions/videos/aggregateId.py"
-    r = cm.action.new("aggregId", "compose id output", "python", "base",
-                      in_out, "0", 2, actionPath)
-    print r
-
-    in_out = {"in": ["videoId", "inConf", "outConf", "namePrefix"], "out": ["fileIds"]}
+    in_out = {"in": ["videoId", "inConf", "outConf", "namePrefix"], "out": {"bw": "1/outID", "original": "param/videoId"}}
     sequence = [{"id": "1",
                  "name": "videoEdit",
                  "map": {"videoID": "param/videoId",
                          "inConf": "param/inConf",
                          "outConf": "param/outConf",
-                         "namePrefix": "param/namePrefix"}},
-                {"id": "2",
-                 "name": "aggregId",
-                 "map": {"original": "param/videoId",
-                         "bw": "1/outID"}}]
+                         "namePrefix": "param/namePrefix"}}]
     r = cm.sequence.new("streamProcess", "output id of video in black&white and original",
                         in_out, sequence)
     print r

@@ -1,0 +1,35 @@
+wsk action create grey_v --kind python:2 greyscale.zip --web true
+wsk action create resize_v --kind python:2 resize.zip --web true
+
+wsk action create videoProc --sequence /guest/resize_v,/guest/grey_v --web true
+
+wsk action create bw_i --kind python:2 bw.zip --web true
+wsk action create grey_i --kind python:2 grey.zip --web true
+wsk action create resize_i --kind python:2 resize.zip --web true
+wsk action create rotate_i --kind python:2 rotate.zip --web true
+wsk action create compose_i --kind python:2 compose.zip --web true
+
+
+wsk api create /image/compose post compose_i --response-type json
+ok: created API /image/compose POST for action /guest/compose_i
+http://172.17.0.1:9001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/image/compose
+
+wsk api create /image/rotate post rotate_i --response-type json
+ok: created API /image/rotate POST for action /guest/rotate_i
+http://172.17.0.1:9001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/image/rotate
+
+wsk api create /image/resize post resize_i --response-type json
+ok: created API /image/resize POST for action /guest/resize_i
+http://172.17.0.1:9001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/image/resize
+
+wsk api create /image/grey post grey_i --response-type json
+ok: created API /image/grey POST for action /guest/grey_i
+http://172.17.0.1:9001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/image/grey
+
+wsk api create /image/bw post bw_i --response-type json
+ok: created API /image/bw POST for action /guest/bw_i
+http://172.17.0.1:9001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/image/bw
+
+wsk api create /video/process post videoProc --response-type json
+ok: created API /video/process POST for action /guest/videoProc
+http://172.17.0.1:9001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/video/process
